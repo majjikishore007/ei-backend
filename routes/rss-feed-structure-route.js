@@ -11,7 +11,7 @@ const { validateRssStructure } = require("./validation/validateRssStructure");
  */
 router.get("/", async (req, res) => {
   try {
-    let docs = await RssFeedStructure.find();
+    let docs = await RssFeedStructure.find().populate("publisherId", "name");
     if (docs.length >= 0) {
       res.status(200).json({
         success: true,
@@ -94,10 +94,13 @@ router.post("/", validateRssStructure, async function (req, res) {
     if (req.body.imageField) {
       structure.imageField = req.body.imageField;
     }
+    if (req.body.categoryField) {
+      structure.categoryField = req.body.categoryField;
+    }
     let insertedStructure = await new RssFeedStructure(structure).save();
     res.status(201).json({
       success: true,
-      message: "Rss feed inserted!",
+      message: "Rss feed structure inserted!",
       rssFeedStructure: insertedStructure,
     });
   } catch (err) {
@@ -122,7 +125,7 @@ router.patch("/:id", async (req, res) => {
     );
     res.status(200).json({
       success: true,
-      message: "Rss structure updated!",
+      message: "Rss feed structure updated!",
       rssFeedStructure: updatedStructure,
     });
   } catch (err) {
@@ -140,7 +143,9 @@ router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     await RssFeedStructure.remove({ _id: id });
-    res.status(200).json({ success: true, message: "Rss structure deleted!" });
+    res
+      .status(200)
+      .json({ success: true, message: "Rss feed structure deleted!" });
   } catch (err) {
     res.json({ error: err });
   }

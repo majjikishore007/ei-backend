@@ -15,8 +15,11 @@ const rssFeedStructureSchema = new Schema({
     ref: "Publisher",
     unique: true,
   },
+  categoryField: { type: String },
   authorField: { type: String },
   imageField: { type: String },
 });
+
+rssFeedStructureSchema.index({ publisherId: 1 }, { unique: true });
 
 module.exports = mongoose.model("RssFeedStructure", rssFeedStructureSchema);

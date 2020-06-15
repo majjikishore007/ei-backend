@@ -18,8 +18,8 @@ router.get('/', (req, res) => {
                           cover: doc.cover,
                           keywords:  doc.keywords.split(','),
                           moderator : doc.moderator,
-                          start_date : req.body.start_date,
-                          end_date: req.body.end_date,
+                          start_date : doc.start_date,
+                          end_date: doc.end_date,
                           id : doc._id
                       }
                   })

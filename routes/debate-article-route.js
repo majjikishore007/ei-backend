@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const DebateArticle = require('../models/debate_article');
 const authCheck = require('../middleware/check-auth');
+const Publisher = require('../models/publisher');
 
 router.get('/', (req, res) => {
     
@@ -25,26 +26,41 @@ router.get('/debatefor/:id/', (req, res) => {
     const debate_id = req.params.id;
     DebateArticle.find({$and: [{debate: debate_id}, {type: true}]})
                  .populate('article')
-                 .exec()
-                 .then(result => {
-                     res.json({success: true, result: result});
-                 })
-                 .catch(err => {
-                     res.json({success: false, error: err});
-                 })
-});
+                 .exec((err, publisher) => {
+                    Publisher.populate(publisher , {
+                        path: 'article.publisher'
+                    })
+                    .then(result => {
+                        res.json({success: true, result: result});
+                    })
+                    .catch(err => {
+                        res.json({success: false, error: err});
+                    })
+                })
+            });
+
+
+
+
+
+
 router.get('/debateagainst/:id/', (req, res) => {
     const debate_id = req.params.id;
     DebateArticle.find({$and: [{debate: debate_id}, {type: false}]})
                  .populate('article')
-                 .exec()
-                 .then(result => {
-                     res.json({success: true, result: result});
-                 })
-                 .catch(err => {
-                     res.json({success: false, error: err});
-                 })
-});
+                 .exec((err, publisher) => {
+                    Publisher.populate(publisher , {
+                        path: 'article.publisher'
+                    })
+                    .then(result => {
+                        res.json({success: true, result: result});
+                    })
+                    .catch(err => {
+                        res.json({success: false, error: err});
+                    })
+                })
+            });
+
 
 router.post('/', authCheck, (req, res) => {
     const debateArticle = new DebateArticle ({

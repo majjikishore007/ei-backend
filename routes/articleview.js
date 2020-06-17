@@ -1,84 +1,42 @@
-const router = require('express').Router();
-const Viewarticle = require('../models/articleview');
+const router = require("express").Router();
 
-router.get('/', (req, res) => {
-    Viewarticle.find()
-       .sort('-_id')
-       .populate('news')
-       .populate('user')
-       .exec()
-        .then(result => {
-            res.json({success: true, code: 200, result: result});
-        })
-        .catch(err => {
-            res.json({success: false, code: 500, error: err});
-        })
-  });
+/**requiring articleview controller functions */
+const {
+  getAllArticleViews,
+  getArticleViewByArticleId,
+  getArticleViewByUserId,
+  saveArticleView,
+} = require("../controllers/articleview");
 
+/**validation function for articleview */
+const { validateOnSaveOfArticleView } = require("./validation/articleview");
 
-  router.get('/byarticle/:articleId', (req, res) => {
-    Viewarticle.find({news : req.params.articleId})
-       .sort('-_id')
-       .populate('news','title')
-       .populate('user','displayName')
-       .exec()
-        .then(result => {
-            res.json({success: true, code: 200, result: result});
-        })
-        .catch(err => {
-            res.json({success: false, code: 500, error: err});
-        })
-  });
+/**
+ * @description   this route is used to get all articleViews
+ * @route   GET      /api/view/
+ * @access  Public
+ */
+router.get("/", getAllArticleViews);
 
-  router.get('/:id', (req, res) => {
-    const id = req.params.id;
-    Viewarticle.find({user:{
-        _id:req.params.id
-    }})
-       .sort('-_id')
-       .populate('news')
-       .populate('user')
-       .exec()
-        .then(result => {
-            
-            res.json({success: true, code: 200, result: result});
+/**
+ * @description   this route is used to get articleViews with articleId
+ * @route   GET      /api/view/byarticle/:articleId
+ * @access  Public
+ */
+router.get("/byarticle/:articleId", getArticleViewByArticleId);
 
+/**
+ * @description   this route is used to get articleViews with articleId
+ * @route   GET      /api/view/:userId
+ * @access  Public
+ */
+router.get("/:userId", getArticleViewByUserId);
 
-        })
-        .catch(err => {
-            res.json({success: false, code: 500, error: err});
-        })
-  });
+/**
+ * @description   this route is used to add a new articleView
+ * @route   POST      /api/view/
+ * @access  Public
+ */
+router.post("/", validateOnSaveOfArticleView, saveArticleView);
 
-router.post('/', (req, res) => {
-
-const view = new Viewarticle ({
-    viewedAt : req.body.viewedAt,
-    news : req.body.news,
-    user : req.body.user
-});
-
-Viewarticle.findOne({news:{_id:req.body.news}},(err,data) => {
-    if (err) {
-        console.log(err)    
-      } 
-      else if (!data){
-
-        view.save()
-.then(result => {
-    res.json({success: true, code: 200, message: result});
-})
-.catch(err => {
-    res.json({success: false, code: 500, error: err});
-})
-  }
-  else{
-      console.log("the article you clicked exists!!")
-  }
-
-
-})
-
-})
-
-module.exports = router
+module.exports = router;

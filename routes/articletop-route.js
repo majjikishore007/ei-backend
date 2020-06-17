@@ -1,98 +1,45 @@
-const router = require('express').Router();
-const ArticleTop = require('../models/article-top');
-const Rating = require('../models/rating');
-const images = require('../config/cloud-storage-setup');
+const router = require("express").Router();
+const ArticleTop = require("../models/article-top");
+const Rating = require("../models/rating");
+const images = require("../config/cloud-storage-setup");
 const Usernotification = require("../models/usernotification");
-const Publisher = require('../models/publisher');
-router.get('/', (req, res) => {
-   ArticleTop.find()
-      .sort('-_id')
-      .populate('article')
-       .exec()
-       .then(result => {
-           res.json({success: true, code: 200, result: result});
-       })
-       .catch(err => {
-           res.json({success: false, code: 500, error: err});
-       })
- });
 
- router.get('/mobile', (req, res) => {
-    ArticleTop.find()
-       .sort('-_id')
-       .populate('article')
-       .exec((err, publisher) => {
-           Publisher.populate(publisher, {
-               path: 'article.publisher'
-           })
-           .then(docs => {
-               const response = {
-                   count: docs.length,
-                   articles : docs.map(
-                       doc => {
-                           return {
-                            title: doc.article.title,
-                            description:  doc.article.description,
-                            price: doc.article.price,
-                            author: doc.article.author,
-                            cover: doc.article.cover,
-                            publisher: doc.article.publisher,
-                            website: doc.article.website,
-                            category: doc.article.category,
-                            time: doc.article.time,
-                            date:doc.article.publishingDate,
-                            id: doc.article.id,
-                            lan : doc.article.lan,
-                            urlStr: doc.article.urlStr
-                           }
-                       }
-                   )
-               }
-               res.json({success: true, articles: response.articles })
-           })
-           .catch(err => {
-               res.json({success: false, error: err})
-           })
-       })
-       
-  });
+/**requiring articletop controller functions */
+const {
+  getAllArticleTop,
+  getAllArticleTopForMobile,
+  saveArticleTop,
+  deleteArticleTopWithId,
+} = require("../controllers/articletop");
 
- router.post('', (req, res, next) => {
-   const articleTop = new ArticleTop({
-      article:req.body.article, 
-    
-   });
-   articleTop.save()
-          .then(result => {
-              //console.log(result);
-              res.json({ success : true , code : 201, message : 'article has been submitted', result: result});
-              
-         
-           })
-          .catch(err => {
-              console.log(err);
+const { validateOnSaveArticleTop } = require("./validation/articletop");
 
-              res.json({success : false, code: 500, message : err});
-          })
-})
+/**
+ * @description   this route is used to get all article tops
+ * @route   GET      /api/articletop/
+ * @access  Public
+ */
+router.get("/", getAllArticleTop);
 
+/**
+ * @description   this route is used to get all article tops for mobile
+ * @route   GET      /api/articletop/mobile
+ * @access  Public
+ */
+router.get("/mobile", getAllArticleTopForMobile);
 
-router.delete('/:id', (req, res) => {
-   const id = req.params.id;
-   ArticleTop.remove({_id: id})
-       .exec()
-       .then(result => {
-           res.json({success: true, code: 200, message: result});
-       })
-       .catch(err => {
-           res.json({success: false, code: 500, error: err});
-       })
-}) 
+/**
+ * @description   this route is used to save article top with given article
+ * @route   GET      /api/articletop/
+ * @access  Public
+ */
+router.post("/", validateOnSaveArticleTop, saveArticleTop);
 
-
-
-
-
-
+/**
+ * @description   this route is used to delete articleTop with Id
+ * @route   GET      /api/articletop/:articletopId
+ * @access  Public
+ */
+router.delete("/:articletopId", deleteArticleTopWithId);
 
 module.exports = router;

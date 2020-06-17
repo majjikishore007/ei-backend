@@ -1,481 +1,196 @@
 const router = require("express").Router();
 const Article = require("../models/article");
 const Publisher = require("../models/publisher");
-const Rating = require("../models/rating");
-const Comment = require("../models/comment");
-const Viewarticle = require("../models/articleview");
 const images = require("../config/cloud-storage-setup");
 const Usernotification = require("../models/usernotification");
 const Follow = require("../models/follow");
-router.get('/', (req,res) => {
-  Article.find().sort('-_id')
-         .exec()
-         .then(docs => {
-             const response = {
-                 count:docs.length,
-                 artciles : docs.map(
-                     doc => {
-                         return {
-                             title: doc.title,
-                             description:  doc.description,
-                             price: doc.price,
-                             author: doc.author,
-                             cover: doc.cover,
-                             publisher: doc.publisher,
-                             website: doc.website,
-                             category: doc.category,
-                             time: doc.time,
-                             date:doc.publishingDate,
-                             id: doc.id,
-                             lan : doc.lan,
-                             urlStr: doc.urlStr,
-                             public : doc.public,
-                             created_at: doc.created_at
-                         };
-                     }
-                 )
-             };
-             if(docs.length >= 0) {
-                 res.json(response);
-             } else {
-                 res.json({success: false, code: 404, message: "No entries found"});
-             }
-         })
-         .catch(err => {
-             console.log(err);
-             res.json({ error: err });
-         });
 
-});
-router.get('/topten', (req,res) => {
-  Article.find().sort('-_id')
-         .populate("publisher")
-         .limit(10)
-         .exec()
-         .then(docs => {
-             const response = {
-                 count:docs.length,
-                 artciles : docs.map(
-                     doc => {
-                         return {
-                             title: doc.title,
-                             description:  doc.description,
-                             price: doc.price,
-                             author: doc.author,
-                             cover: doc.cover,
-                             publisher: doc.publisher,
-                             website: doc.website,
-                             category: doc.category,
-                             time: doc.time,
-                             date:doc.publishingDate,
-                             id: doc.id,
-                             lan : doc.lan,
-                             urlStr: doc.urlStr
-                         };
-                     }
-                 )
-             };
-             if(docs.length >= 0) {
-                 res.json( {success: true, articles: response.artciles });
-             } else {
-                 res.json({success: false, code: 404, message: "No entries found"});
-             }
-         })
-         .catch(err => {
-             console.log(err);
-             res.json({ error: err });
-         });
+const checkAuthAdmin = require("../middleware/check-auth-admin");
+const checkAuthAuthor = require("../middleware/check-auth-author");
+const checkAuthAuthorOrAdmin = require("../middleware/check-auth-authorOrAdmin");
 
-});
-router.get('/page/:num/limit/:limit', (req, res) => {
-  const limit = parseInt(req.params.limit);
-  const page = parseInt(req.params.num)
-  Article.find()
-        .populate('publisher')
-         .sort('-_id')
-         .skip(limit*page)
-         .limit(limit)
-         .exec()
-         .then(docs => {
-          const response = {
-            count:docs.length,
-            artciles : docs.map(
-                doc => {
-                    return {
-                        title: doc.title,
-                        description:  doc.description,
-                        price: doc.price,
-                        author: doc.author,
-                        cover: doc.cover,
-                        publisher: doc.publisher,
-                        website: doc.website,
-                        category: doc.category,
-                        time: doc.time,
-                        date:doc.publishingDate,
-                        id: doc.id,
-                        lan : doc.lan,
-                        urlStr: doc.urlStr,
-                        seo : doc.seo
-                    };
-                  }
-                )
-              };
-              if(docs.length >= 0) {
-                res.json( {success: true, articles: response.artciles });
-            } else {
-                res.json({success: false, code: 404, message: "No entries found"});
-            }
-         }).catch(err => {
-           res.json({success: false, error: err})
-         })
-});
+/**
+ * requiring controller functions from article controller
+ */
+const {
+  getInitialArticles,
+  getNextArticles,
+  getToptenArticles,
+  getArticlesForMobile,
+  uploadArticleAdmin,
+  editArticleCoverAdmin,
+  uploadArticlePublisher,
+  editArticleCover,
+  getArticleById,
+  getArticleByIdForMobile,
+  getArticleByTitle,
+  editArticleById,
+  deleteArticleById,
+  getArticlesByPublisherId,
+  getNoOfArticleForPublisherId,
+  getArticlesByCategoryFilter,
+  getArticlesByCategoryTotal,
+  getArticlesByPublisherIdAndCategory,
+  getArticlesByPublisherIdAndCategoryForMobile,
+  getArticlesWithCommentsAndRatings,
+  getCountOfTotalArticles,
+} = require("../controllers/article");
 
-router.post('/admin', (req, res, next) => {
-  const article = new Article({
-      title:  req.body.title,
-      description :  req.body.description,
-      cover :  req.body.cover,
-      price : req.body.price,
-      author : req.body.author,
-      publisher : req.body.publisher,
-      time : req.body.time,
-      website:  req.body.website,
-      category: req.body.category,
-      content : req.body.content,
-      publishingDate: req.body.publishingDate,
-      created_at: Date.now(),
-      seo : {
-          metaTitle: req.body.metaTitle,
-          metaDescription : req.body.metaDescription,
-          metaKeywords :  req.body.metaKeywords
-        },
-      urlStr : req.body.title.trim().replace(/[&\/\\#, +()$~%.'":;*?<>{}]+/ig, '-'),
-      public : true
+/**validation functions */
+const { validateOnUploadArticle } = require("./validation/article");
+/**
+ * @description   this route is used to get top 10 articles
+ * @route   GET      /api/article/topten
+ * @access  Public
+ */
+router.get("/topten", getToptenArticles);
 
-  });
-  article.save()
-         .then(result => {
-             console.log(result);
-             res.json({ success : true , code : 201, message : 'article has been submitted', result: result});
-             
-        
-          })
-         .catch(err => {
-             console.log(err);
+/**
+ * @description   this route is used to get articles for mobile
+ * @route   GET      /api/article/page/:num/limit/:limit
+ * @access  Public
+ */
+router.get("/page/:num/limit/:limit", getArticlesForMobile);
 
-             res.json({success : false, code: 500, message : err});
-         })
-})
-router.patch('/admin/:id', images.multer.single('cover'), images.sendUploadToGCS, (req, res) => {
-  const id = req.params.id;
-  data = {
-      cover: req.file.cloudStoragePublicUrl
-  }
-  Article.findByIdAndUpdate(id, {$set : data})
-         .exec()
-         .then(result => {
-             res.json({success: true, code: 200, result: result});
+/**
+ * @description   this route is used to upload an article by admin
+ * @route   POST      /api/article/admin
+ * @access  Private
+ */
+router.post(
+  "/admin",
+  checkAuthAdmin,
+  validateOnUploadArticle,
+  uploadArticleAdmin
+);
 
-         })
-         .catch(err => {
-             res.json({success: false, code: 500, error:  err});
-         })
+/**
+ * @description   this route is used to update an article cover image
+ * @route   PATCH      /api/article/admin/:articleId
+ * @access  Private
+ */
+router.patch(
+  "/admin/:articleId",
+  checkAuthAdmin,
+  images.multer.single("cover"),
+  images.sendUploadToGCS,
+  editArticleCoverAdmin
+);
 
+/**
+ * @description   this route is used to upload an article by publisher
+ * @route   POST      /api/article/
+ * @access  Private
+ */
+router.post(
+  "/",
+  checkAuthAuthor,
+  validateOnUploadArticle,
+  uploadArticlePublisher
+);
 
-})
-router.post('/',  (req, res) => {
-  const artcile = new Article({
-      title: req.body.title,
-      description : req.body.description,
-      author: req.body.author,
-      publisher: req.body.publisher,
-      price: req.body.price,
-      time: req.body.time,
-      seo : {
-        metaTitle: req.body.metaTitle,
-        metaDescription : req.body.metaDescription,
-        metaKeywords :  req.body.metaKeywords
-      },
-      publishingDate: req.body.publishingDate,
-      created_at: Date.now(),
-      lan: req.body.lan, 
-      urlStr : req.body.title.trim().replace(/[&\/\\#=, +()$~%.'":;*?<>{}]+/ig, '-')
-  });
-  artcile.save()
-         .then(result => {
-             res.json({success : true, code: 201, result: result});
-         })
-         .catch(err => {
-             res.json({success : false, code: 500, message: err});
-         })
-})
+/**
+ * @description   this route is used to update cover image of article by publisher
+ * @route   PATCH      /api/article/updateCoverImage/:articleId
+ * @access  Private
+ */
+router.patch(
+  "/updateCoverImage/:articleId",
+  checkAuthAuthor,
+  images.multer.single("cover"),
+  images.sendUploadToGCS,
 
-//update Image for article
+  editArticleCover
+);
 
-router.get('/updateCoverImage/:id', images.multer.single('cover'), images.sendUploadToGCS, (req, res) => {
-  const id = req.params.id;
-  data = {
-      cover: req.file.cloudStoragePublicUrl
-  }
-  Article.findByIdAndUpdate(id, {$set : data})
-         .exec()
-         .then(result => {
-             res.json({success: true, code: 200, message: 'Image updated'});
+/**
+ * @description   this route is used to get an article by articleId
+ * @route   POST      /api/article/:articleId
+ * @access  Public
+ */
+router.get("/:articleId", getArticleById);
 
-         })
-         .catch(err => {
-             res.json({success: false, code: 500, error:  err});
-         })
-})
+/**
+ * @description   this route is used to get an article by articleId for mobile device
+ * @route   POST      /api/article/mobile/:articleId
+ * @access  Public
+ */
+router.get("/mobile/:articleId", getArticleByIdForMobile);
 
-router.get("/:id", (req, res) => {
-  const id = req.params.id;
-  Article.findById(id)
-    .populate("publisher")
-    .exec()
-    .then((doc) => {
-      if (doc) {
-        res.json({ success: true, code: 200, artcile: doc });
-      } else {
-        res.json({ success: false, code: 404, message: "No valid entry" });
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-      res.json({ success: false, code: 500, message: err });
-    });
-});
+/**
+ * @description   this route is used to get an article by title
+ * @route   POST      /api/article/article/:title
+ * @access  Public
+ */
+router.get("/article/:title", getArticleByTitle);
 
-router.get("/mobile/:id", (req, res) => {
-  const id = req.params.id;
-  Article.findById(id)
-    .populate("publisher")
-    .exec()
-    .then((doc) => {
-      if (doc) {
-        const result = {
-          title: doc.title,
-          description:  doc.description,
-          price: doc.price,
-          author: doc.author,
-          cover: doc.cover,
-          publisher: doc.publisher,
-          website: doc.website,
-          category: doc.category,
-          time: doc.time,
-          date:doc.publishingDate,
-          id: doc.id,
-          lan : doc.lan,
-          urlStr: doc.urlStr
-        }
-        return res.json({success: true, article: result});
-      } else {
-        res.json({ success: false, code: 404, message: "No valid entry" });
-      }
-    })
-    .catch((err) => {
-      console.log(err);
-      res.json({ success: false, code: 500, message: err });
-    });
-});
+/**
+ * @description   this route is used to update an article by articleId
+ * @route   PATCH      /api/article/:articleId
+ * @access  Private
+ */
+router.patch("/:articleId", checkAuthAuthorOrAdmin, editArticleById);
 
-router.get("/article/:title", (req, res) => {
-  const urlStr = req.params.title;
-  Article.findOne({ urlStr: urlStr })
-    .populate("publisher")
-    .exec()
-    .then((result) => {
-      if (!result) {
-        return res.redirect("/api/article/" + urlStr);
-      }
-      const owner =
-        result.publisher.userId == "5e5378b728d7f105839325b5" ? true : false;
-      res.json({ success: true, code: 200, artcile: result, owner: owner });
-    })
-    .catch((err) => {
-      res.json({ success: false, code: 404, message: "No valid entry" });
-    });
-});
-router.patch("/:id", (req, res, next) => {
-  const id = req.params.id;
-  Article.update({_id:id}, {$set: req.body})
-         .exec()
-         .then(result => {
-             res.json({success: true, code: 200, result : result});
-         })
-         .catch(err => {
-             console.log(err);
-             res.json({success: false, code: 500, message: err});
-         });
-});
+/**
+ * @description   this route is used to delete an article by articleId
+ * @route   DELETE      /api/article/:articleId
+ * @access  Private
+ */
+router.delete("/:articleId", checkAuthAuthorOrAdmin, deleteArticleById);
 
-router.put("/:id", async (req, res, next) => {
-  /*
-    const id = req.params.id;
-    Article.update({_id:id}, {$set: req.body})
-           .exec()
-           .then(result => {
-               res.json({success: true, code: 200, result : result});
-           })
-           .catch(err => {
-               console.log(err);
-               res.json({success: false, code: 500, message: err});
-           });
-*/
+/**
+ * @description   this route is used to get list of articles by publisherId
+ * @route   GET      /api/article/publisher/:publisherId
+ * @access  Public
+ */
+router.get("/publisher/:publisherId", getArticlesByPublisherId);
 
-  try {
-    var article = await Article.findById(req.params.id).exec();
-    article.set(req.body);
-    var result = await article.save();
-    res.send(result);
-  } catch (error) {
-    res.status(500).send(error);
-  }
-});
+/**
+ * @description   this route is used to get number of articles by publisherId
+ * @route   GET      /api/article/noOfArticleForPublisher/:publisherId
+ * @access  Public
+ */
+router.get(
+  "/noOfArticleForPublisher/:publisherId",
+  getNoOfArticleForPublisherId
+);
 
-router.delete("/:id", (req, res, next) => {
-  const id = req.params.id;
-  Article.remove({ _id: id })
-    .exec()
-    .then((result) => {
-      res.json({ success: true, message: "Product deleted" });
-    })
-    .catch((err) => {
-      res.json({ success: false, code: 500, message: err.name });
-    });
-});
-router.get("/publisher/:id", (req, res) => {
-  const id = req.params.id;
-  Article.find({ publisher: id })
-    .populate("publisher", "name")
-    .exec()
-    .then((result) => {
-      res.json({ success: true, count: result.length, articles: result });
-    })
-    .catch((err) => {
-      res.json({ success: false, message: err });
-    });
-});
+/* select article as category*/
 
-router.get("/noOfArticleForPublisher/:id", (req, res) => {
-  const id = req.params.id;
-  Article.find({ publisher: id })
-    .exec()
-    .then((result) => {
-      res.json({ success: true, count: result.length });
-    })
-    .catch((err) => {
-      res.json({ success: false, message: err });
-    });
-});
+/**
+ * @description   this route is used to get list of articles by category filter
+ * @route   GET      /api/article/category/:categorySearch
+ * @access  Public
+ */
+router.get("/category/:categorySearch", getArticlesByCategoryFilter);
 
-// select article as category
+/**
+ * @description   this route is used to get list of articles by category in total
+ * @route   GET      /api/article/category-total/:category
+ * @access  Public
+ */
+router.get("/category-total/:category", getArticlesByCategoryTotal);
 
-router.get("/category/:paramp", async (req, res) => {
- 
-  const cat = req.params.paramp;
-  var article;
+/**
+ * @description   this route is used to get list of articles by with given publisher and given category
+ * @route   GET      /api/article/publisher/:publisherId/category/:categorySearch
+ * @access  Public
+ */
+router.get(
+  "/publisher/:publisherId/category/:categorySearch",
+  getArticlesByPublisherIdAndCategory
+);
 
-  article = await Article.find({ category: new RegExp(cat, "i"), public: true })
-    .sort("-_id")
-    .populate("publisher")
-    .exec();
-
-  result = article.map((doc) => {
-    return {
-      title: doc.title,
-      description: doc.description,
-      price: doc.price,
-      author: doc.author,
-      cover: doc.cover,
-      publisher: doc.publisher,
-      website: doc.website,
-      category: doc.category,
-      time: doc.time,
-      date: doc.publishingDate,
-      id: doc.id,
-      lan: doc.lan,
-      urlStr: doc.urlStr,
-      public: doc.public,
-      seo: doc.seo,
-      publisherId: doc.publisher.id
-    };
-  });
-
-  
-  res.json({ success: true, articles: result });
-
-});
-router.get("/category-total/:paramp", (req, res) => {
-  const cat = req.params.paramp;
-  Article.find({ category: new RegExp(cat, "i") })
-    .sort("-_id")
-    .populate("publisher")
-    .exec()
-    .then((result) => {
-      res.json({ success: true, articles: result });
-    })
-    .catch((err) => {
-      res.json({ success: false, message: err });
-    });
-});
-
-router.get("/publisher/:id/category/:paramp", (req, res) => {
-  const id = req.params.id;
-  const cat = req.params.paramp;
-  Article.find({ $and: [{ publisher: id, category: new RegExp(cat, "i") }] })
-    .populate("publisher")
-    .exec()
-    .then((result) => {
-      res.json({
-        success: true,
-        publisher: req.params.id,
-        count: result.length,
-        articles: result,
-      });
-    })
-    .catch((err) => {
-      res.json({ success: false, message: err });
-    });
-});
-router.get("/mobile/publisher/:id/category/:paramp", (req, res) => {
-  const id = req.params.id;
-  const cat = req.params.paramp;
-  Article.find({ $and: [{ publisher: id, category: new RegExp(cat, "i") }] })
-    .populate("publisher")
-    .exec()
-    .then((docs) => {
-      const result = docs.map((doc) => {
-        return {
-          title: doc.title,
-          description: doc.description,
-          price: doc.price,
-          author: doc.author,
-          cover: doc.cover,
-          publisher: doc.publisher,
-          website: doc.website,
-          category: doc.category,
-          time: doc.time,
-          date: doc.publishingDate,
-          id: doc.id,
-          lan: doc.lan,
-          urlStr: doc.urlStr,
-          public: doc.public,
-          seo: doc.seo,
-          publisherId: doc.publisher.id
-        };
-      });
-      res.json({
-        success: true,
-        publisher: req.params.id,
-        count: result.length,
-        articles: result,
-      });
-    })
-    .catch((err) => {
-      res.json({ success: false, message: err });
-    });
-});
+/**
+ * @description   this route is used to get list of articles by with given publisher and given category
+ *                for mobile device
+ * @route   GET      /api/article/publisher/:publisherId/category/:categorySearch
+ * @access  Public
+ */
+router.get(
+  "/mobile/publisher/:publisherId/category/:categorySearch",
+  getArticlesByPublisherIdAndCategoryForMobile
+);
 
 router.get("/restruture/:id", async (req, res) => {
   category = [
@@ -538,60 +253,56 @@ router.get("/somthing/somthing", (req, res) => {
     });
 });
 
+router.put("/:id", async (req, res, next) => {
+  /*
+    const id = req.params.id;
+    Article.update({_id:id}, {$set: req.body})
+           .exec()
+           .then(result => {
+               res.json({success: true, code: 200, result : result});
+           })
+           .catch(err => {
+               console.log(err);
+               res.json({success: false, code: 500, message: err});
+           });
+*/
 
-router.get("/comment&rating/:userId", async (req, res) => {
-  const publisher = await Publisher.find({ userId: req.params.userId }).exec();
-  const comment = await Comment.find().exec();
-  const articleByuser = [];
-  const articleWithcomments = [];
-  const articefullDetails = [];
-  for (x of publisher) {
-    const data = {
-      pubname: x.name,
-      articles: await Article.find({ publisher: x._id })
-        .sort("-_id")
-        .select("title publisher urlStr")
-        .exec(),
-    };
-    articleByuser.push(data);
+  try {
+    var article = await Article.findById(req.params.id).exec();
+    article.set(req.body);
+    var result = await article.save();
+    res.send(result);
+  } catch (error) {
+    res.status(500).send(error);
   }
-
-  for (x of articleByuser) {
-    for (y of x.articles) {
-      data = {
-        article: y,
-        comments: await Comment.find({ article: y._id }),
-        ratings: await Rating.find({ article: y._id }).exec(),
-      };
-      articleWithcomments.push(data);
-    }
-  }
-
-  for (x of articleWithcomments) {
-    data = {
-      artcile: x.article,
-      comments: x.comments,
-      ratings: x.ratings,
-      views: await Viewarticle.find({ news: x.article._id })
-        .sort("-_id")
-        .populate("user", "displayName")
-        .exec(),
-    };
-    await articefullDetails.push(data);
-  }
-
-  await res.json({ status: 200, data: articefullDetails });
-});
-router.get("/count/article", (req, res) => {
-  Article.countDocuments({})
-    .exec()
-    .then((result) => {
-      res.json({ success: true, count: result });
-    })
-    .catch((err) => {
-      res.json({ success: false, error: err });
-    });
 });
 
+/**
+ * @description   this route is used to get list of  all articles with comments and ratings  for a user
+ * @route   GET      /api/article/comment&rating/:userId
+ * @access  Public
+ */
+router.get("/comment&rating/:userId", getArticlesWithCommentsAndRatings);
+
+/**
+ * @description   this route is used to get count of  all articles
+ * @route   GET      /api/article/count/article
+ * @access  Public
+ */
+router.get("/count/article", getCountOfTotalArticles);
+
+/**
+ * @description   this route is used to get inital limited articles
+ * @route   GET      /api/article/getInitialArticles/:limitCount
+ * @access  Public
+ */
+router.get("/getInitialArticles/:limitCount", getInitialArticles);
+
+/**
+ * @description   this route is used to get every next limited articles
+ * @route   GET      /api/article/nextbatch/:limitCount/:lastArticleId
+ * @access  Public
+ */
+router.get("/nextbatch/:limitCount/:lastArticleId", getNextArticles);
 
 module.exports = router;

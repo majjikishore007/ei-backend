@@ -1,110 +1,89 @@
-const router = require('express').Router();
-const Blog = require('../models/blog');
-const images = require('../config/cloud-storage-setup');
-const checkAuth = require('../middleware/check-auth');
+const router = require("express").Router();
+const images = require("../config/cloud-storage-setup");
+const checkAuthAdmin = require("../middleware/check-auth-admin");
 
-router.get('/', (req, res) => {
-  Blog.find()
-     .sort('-_id')
-     .populate('author' , 'displayName')
-      .exec()
-      .then(result => {
-          res.json({success: true, code: 200, result: result});
-      })
-      .catch(err => {
-          res.json({success: false, code: 500, error: err});
-      })
-});
+/**controller functions for blog */
+const {
+  getAllBlogPosts,
+  getBlogsFilteredByCategory,
+  getBlogById,
+  getBlogByTitle,
+  saveBlog,
+  updateBlogById,
+  deleteBlogById,
+  getNextBatchBlogs,
+} = require("../controllers/blog");
 
-router.get('/category/:paramp', (req, res) => {
-    const cat = req.params.paramp;
-   Blog.find({category: new RegExp(cat, 'i') }).sort('-_id')
-           .limit(10)
-           .populate('author')
-           .exec()
-           .then(result => {
-               res.json({success : true, result : result});
-           })
-           .catch(err => {
-            res.json({success : false, message: err});
-           })
+/**validation function */
+const { validateOnBlogSave } = require("./validation/blog");
 
+/**
+ * @description   this route is used to get limited blog posts
+ * @route   GET      /api/blog/
+ * @access  Public
+ */
+router.get("/", getAllBlogPosts);
 
-});
-router.get('/:id', (req, res) => {
-    const id = req.params.id;
-    Blog.findById(id)
-        .populate('author')
-        .exec()
-        .then(result => {
-            res.json({success: true, code: 200, result: result});
-        })
-        .catch(err => {
-            res.json({success: false, code: 500, error: err});
-        })
-});
+/**
+ * @description   this route is used to get blog posts filtered with category
+ * @param paramp - category of blog post
+ * @route   GET      /api/blog/category/:paramp
+ * @access  Public
+ */
+router.get("/category/:paramp", getBlogsFilteredByCategory);
 
-router.get('/blog/:title', (req, res) => {
-   const urlStr = req.params.title;
-   Blog.findOne({urlStr: urlStr})
-       .populate('author')
-       .exec()
-       .then(result => {
-           res.json({success : true, code: 200, result: result});
-       })
-       .catch(err => {
-            res.json({success: false, code: 500, error: err});
-       })
-});
- router.post('/',checkAuth, images.multer.single('cover'), images.sendUploadToGCS, (req, res) => {
-   const blog = new Blog({
-       title : req.body.title,
-       description : req.body.description,
-       cover : req.file.cloudStoragePublicUrl,
-       author : req.userData.userId,
-       content : req.body.content,
-       category: req.body.category,
-       created_at : Date.now(),
-       updated_at : Date.now(),
-       seo : {
-           metaTitle : req.body.metaTitle,
-           metaKeywords : req.body.metaKeywords,
-           metaDescription : req.body.metaDescription
-       },
-       urlStr : req.body.title.trim().replace(/[&\/\\#, +()$~%.'":*?<>{}]+/ig, '-')
+/**
+ * @description   this route is used to get single blog post with Id
+ * @param id - blogId
+ * @route   GET      /api/blog/:id
+ * @access  Public
+ */
+router.get("/:id", getBlogById);
 
-   });
-   blog.save()
-       .then(result => {
-           res.json({success: true, code: 200, message: result});
-       })
-       .catch(err => {
-           res.json({success: false, code: 500, error: err});
-       })
- });
+/**
+ * @description   this route is used to blog post filtered with title
+ * @param title - urlStr of blog post
+ * @route   GET      /api/blog/blog/:title
+ * @access  Public
+ */
+router.get("/blog/:title", getBlogByTitle);
 
- router.patch('/:id', (req, res) => {
-     const id = req.params.id;
-     Blog.update({_id: id}, {$set: req.body})
-         .exec()
-         .then(result => {
-             res.json({success: true, code: 200, message: 'update blog successfully'})
-         })
-         .catch(err => {
-             res.json({success: true, code: 500, error: err})
-         });
-         
- });
+/**
+ * @description   this route is used to add a new blog post by admin
+ * @route   POST      /api/blog/
+ * @access  Private
+ */
+router.post(
+  "/",
+  checkAuthAdmin,
+  images.multer.single("cover"),
+  images.sendUploadToGCS,
+  validateOnBlogSave,
+  saveBlog
+);
 
-router.delete('/:id', (req, res) => {
-    const id = req.params.id;
-    Blog.remove({_id: id})
-        .exec()
-        .then(result => {
-            res.json({success: true, code: 200, message: result});
-        })
-        .catch(err => {
-            res.json({success: false, code: 500, error: err});
-        })
-}) 
+/**
+ * @description   this route is used to edit a blog post with Id
+ * @param id - blogId
+ * @route   PATCH      /api/blog/:id
+ * @access  Private
+ */
+router.patch("/:id", checkAuthAdmin, updateBlogById);
+
+/**
+ * @description   this route is used to delete blog post with Id
+ * @param id - blogId
+ * @route   DELETE      /api/blog/:id
+ * @access  Private
+ */
+router.delete("/:id", checkAuthAdmin, deleteBlogById);
+
+/**
+ * @description   this route is used to get next batch limited blog posts
+ * @param lastBlogId - last fetched blogId after next blogs need to fetch
+ * @route   GET      /api/blog/nextbatch/:lastBlogId
+ * @access  Public
+ */
+router.get("/nextbatch/:lastBlogId", getNextBatchBlogs);
+
 module.exports = router;

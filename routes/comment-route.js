@@ -1,152 +1,66 @@
 const router = require("express").Router();
-const Article = require("../models/article");
-const Comment = require("../models/comment");
-const Publishernotification = require("../models/publishernotification");
+
 const checkAuth = require("../middleware/check-auth");
-router.get("/", (req, res) => {
-  Comment.find()
-    .exec()
-    .then((docs) => {
-      const response = {
-        count: docs.length,
-        comments: docs.map((doc) => {
-          return {
-            message: doc.message,
-            user: doc.user,
-            article: doc.article,
-            id: doc.id,
-            date: doc.date,
-          };
-        }),
-      };
-      if (docs.length >= 0) {
-        res.json(response);
-      } else {
-        res.json({ success: false, code: 404, message: "No entries found" });
-      }
-    });
-});
-router.post("/", checkAuth, async (req, res) => {
-  try {
-    await Article.findOne({ urlStr: req.body.articleId })
-      .exec()
-      .then(async (result) => {
-        if (result) {
-          const comment = new Comment({
-            message: req.body.message,
-            user: req.userData.userId,
-            article: result._id,
-            date: Date.now(),
-          });
 
-          const publishernotification = new Publishernotification({
-            message: req.body.message,
-            sender: req.userData.userId,
-            reciever: result.publisher,
-            article: result._id,
-            date: Date.now(),
-          });
+/**controller functions */
+const {
+  getAllComments,
+  saveComment,
+  getCommentsByUrlStr,
+  getCommentsByUserId,
+  deleteCommentById,
+  getCommentsInAggregateByArticles,
+  getCommentsByArticleId,
+} = require("../controllers/comment");
 
-          await comment
-            .save()
-            .then((result) => {
-              res.json({ success: true, message: "Comment added" });
-            })
+/**validation function */
+const { validateOnCommentSave } = require("./validation/comment");
 
-            .catch((err) => {
-              res.json({ success: false, error: err });
-            });
+/**
+ * @description   this route is used to get all comments
+ * @route   POST      /api/comment/
+ * @access  Public
+ */
+router.get("/", getAllComments);
 
-          await publishernotification
-            .save()
-            .then((result) => {
-              res.json({
-                success: true,
-                message: "Comment added to notification",
-              });
-            })
+/**
+ * @description   this route is used to post a comment
+ * @route   POST      /api/comment/
+ * @access  Private
+ */
+router.post("/", checkAuth, validateOnCommentSave, saveComment);
 
-            .catch((err) => {
-              res.json({ success: false, error: err });
-            });
-        }
-      });
-  } catch (err) {
-    // Handle error here
-  }
-});
-router.get("/:articleId", (req, res) => {
-  const articleId = req.params.articleId;
-  Article.findOne({ urlStr: articleId })
-    .exec()
-    .then((result) => {
-      Comment.find({ article: result._id })
-        .sort("-_id")
-        .populate("user", "displayName thumbnail")
-        .exec()
-        .then((result) => {
-          res.json({ success: true, comments: result });
-        })
-        .catch((err) => {
-          res.json({ success: false, error: err.name });
-        });
-    });
-});
+/**
+ * @description   this route is used to get a comment by article urlstr
+ * @param urlStr - urlstr of the article
+ * @route   GET      /api/comment/:urlStr
+ * @access  Public
+ */
+router.get("/:urlStr", getCommentsByUrlStr);
 
+/**
+ * @description   this route is used to get a comment by userId
+ * @param userId
+ * @route   GET      /api/comment/user/userId
+ * @access  Public
+ */
+router.get("/user/:userId", getCommentsByUserId);
 
+/**
+ * @description   this route is used to delete a comment by its id
+ * @param id
+ * @route   DELETE      /api/comment/:id
+ * @access  Private
+ */
+router.delete("/:id", checkAuth, deleteCommentById);
 
+/**
+ * @description   this route is used to get all comments with grouped by article
+ * @route   GET      /api/comment/aggregate/all
+ * @access  Public
+ */
+router.get("/aggregate/all", getCommentsInAggregateByArticles);
 
-
-
-
-
-
-
-router.get("/user/:userId", (req, res) => {
-  const userId = req.params.userId;
-  Comment.find({ user: userId })
-    .populate("Article")
-    .exec()
-    .then((result) => {
-      res.json({ success: true, comments: result });
-    })
-    .catch((err) => {
-      res.json({ success: false, error: err });
-    });
-});
-
-router.patch("/:id", (req, res) => {});
-
-router.delete("/:id", checkAuth, (req, res) => {
-  const id = req.params.id;
-  Comment.deleteOne({ _id: id })
-    .exec()
-    .then((result) => {
-      res.json({ success: true, message: "message has been deleted" });
-    })
-    .catch((err) => {
-      res.json({ success: false, error: err });
-    });
-});
-
-router.get("/aggregate/all", (req, res) => {
-  Comment.aggregate([
-    {
-      $group: {
-        _id: "$article",
-        total: { $sum: 1 },
-      },
-    },
-  ])
-    .exec()
-    .then((result) => {
-      comments = {};
-      for (var i = 0; i < result.length; i++) {
-        comments[result[i]._id] = result[i].total;
-      }
-      res.json(comments);
-    });
-});
 /*
 router.get("/article/:id", (req, res) => {
   const articleId = req.params.id;
@@ -161,18 +75,12 @@ router.get("/article/:id", (req, res) => {
     });
 });
 */
-router.get("/article/:articleId", (req, res) => {
 
-  Comment.find({ article: req.params.articleId })
-    .sort("-_id")
-    
-    .exec()
-    .then((result) => {
-      res.json({ success: true, comments: result });
-    })
-    .catch((err) => {
-      res.json({ success: false, error: err.name });
-    });
-
-});
+/**
+ * @description   this route is used to get a comment by its articleId
+ * @param articleId
+ * @route   GET      /api/comment/article/:articleId
+ * @access  Public
+ */
+router.get("/article/:articleId", getCommentsByArticleId);
 module.exports = router;

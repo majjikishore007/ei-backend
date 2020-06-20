@@ -1,51 +1,21 @@
-const router = require('express').Router();
-const chekAuth = require('../middleware/check-auth');
-const Keyword = require('../models/keyword');
-const Article = require('../models/article');
+const router = require("express").Router();
+const chekAuth = require("../middleware/check-auth");
 
-router.get('/', (req, res) => {
-    Article.find()
-           .select('category')
-           .exec()
-           .then(result => {
-                 
-               category = result.map(doc => {
-                  
-                       if(doc.category) {
-                          return  {
-                        cat:  addToDatabase(doc.category)
-                           }
+/**controller functions for keyword */
+const { getAllKeywords, saveKeywords } = require("../controllers/keyword");
 
-                       }else {
-                        return  {
-                            cat:  "undefined"
-                               }
-                       }
-                   
-                
-               })
-               res.json(category)
-           })
-})
+/**
+ * @description   this route is used to get all categories from article and stor them to keyward collections
+ * @route   GET      /api/keyword
+ * @access  Public
+ */
+router.post("/", saveKeywords);
 
-function addToDatabase(str){
-    const val = (str +"").split(',')
-    for(i=0;i<val.length;i++) {
-        const keyword = new Keyword({
-            keyword : val[i].trim(),
-        });
-        keyword.save()
-               .then(result => {
-                   console.log(result);
-               })
-               .catch(err => {
-                   if(err.code === 11000) {
-                       Keyword.update({keyword: val[i].trim()}, {$inc: {count: 1}}).exec()
-                   }
-               });
-    }
-    return "done"
-}
-
+/**
+ * @description   this route is used to get all keywords from keyward collections
+ * @route   GET      /api/keyword
+ * @access  Public
+ */
+router.get("/", getAllKeywords);
 
 module.exports = router;

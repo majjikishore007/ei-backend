@@ -37,6 +37,9 @@ const debateCommentRoute = require("./routes/debate-comment-route");
 const debateCommentVoteRoute = require("./routes/debate-comment-vote-route");
 const debateCounterCommentRoute = require("./routes/debate-counter-commnet-route");
 
+const cron = require("node-cron");
+const { insertRssIntoAllContent } = require("./controllers/rssfeed");
+
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const hbs = require("nodemailer-express-handlebars");
@@ -153,6 +156,12 @@ app.get("/sitemap.xml", (req, res) => {
 app.get("*", (req, res) => {
   res.json("invalid");
 });
+
+/**declare scheduler to execute every 2 minute */
+cron.schedule("*/2 * * * *", () => {
+  insertRssIntoAllContent();
+});
+
 //Start Server: Listen on port 8080
 app.listen(port, () => {
   console.log("Listening on port 8080");

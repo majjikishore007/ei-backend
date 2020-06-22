@@ -113,6 +113,50 @@ app.use("/api/debateCounterComment", debateCounterCommentRoute);
 
 // Provide static directory for  frontend
 
+// Provide static directory for  frontend
+
+const Article = require("./models/article");
+
+let sitemap;
+app.get("/sitemap.xml", (req, res) => {
+  res.header("Content-Type", "application/xml");
+  res.header("Content-Encoding", "gzip");
+  if (sitemap) {
+    res.send(sitemap);
+    return;
+  }
+  try {
+    const smStream = new SitemapStream({
+      hostname: "https://extrainsights.in/",
+    });
+    const pipeline = smStream.pipe(createGzip());
+    smStream.write({ url: "/blogs" });
+    smStream.write({ url: "/abouyt-us" });
+    smStream.write({ url: "/home" });
+    Article.find()
+      .sort("-_id")
+      .exec()
+      .then((result) => {
+        for (var i = 0; i < result.length; i++) {
+          smStream.write({ url: "/article/frame/" + result[i].urlStr });
+        }
+
+        smStream.end();
+        // cache the response
+        streamToPromise(pipeline).then((sm) => (sitemap = sm));
+        // stream the response
+        pipeline.pipe(res).on("error", (e) => {
+          throw e;
+        });
+      })
+      .catch((err) => {
+        res.json(err);
+      });
+  } catch (e) {
+    console.error(e);
+    res.status(500).end();
+  }
+});
 
 //Connect server to Angular index.html file
 app.get("*", (req, res) => {

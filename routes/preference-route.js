@@ -1,35 +1,28 @@
-const router = require('express').Router();
-const Preference = require('../models/preference');
-const images = require('../config/cloud-storage-setup');
-const checkAuth = require('../middleware/check-auth');
+const router = require("express").Router();
+const images = require("../config/cloud-storage-setup");
+const checkAuth = require("../middleware/check-auth");
 
-router.get('/', (req, res) => {
-   Preference.find()
-     .sort('-_id')
-     .populate('author' , 'displayName')
-      .exec()
-      .then(result => {
-          res.json({success: true, code: 200, result: result});
-      })
-      .catch(err => {
-          res.json({success: false, code: 500, error: err});
-      })
-});
+/**controller function */
+const {
+  getAllPreferences,
+  addPreferences,
+} = require("../controllers/preference");
 
+/**validation file */
+const { validateOnPreferenceSave } = require("./validation/preference");
 
- router.post('/',(req, res) => {
-   const preference = new Preference({
-       user :  req.body.user,
-       category: req.body.category
-   });
-   preference.save()
-       .then(result => {
-           res.json({success: true, code: 200, message: result});
-       })
-       .catch(err => {
-           res.json({success: false, code: 500, error: err});
-       })
- });
+/**
+ * @description   this route is used to get all preferences
+ * @route   GET      /api/preference
+ * @access  Public
+ */
+router.get("/", getAllPreferences);
 
+/**
+ * @description   this route is used to insert a new preferences
+ * @route   GET      /api/preference
+ * @access  Public
+ */
+router.post("/", validateOnPreferenceSave, addPreferences);
 
 module.exports = router;

@@ -1,60 +1,38 @@
-const router = require('express').Router();
-const Article = require('../models/article');
-const Publisherrating = require('../models/publisherRating');
-const checkAuth =  require('../middleware/check-auth')
-router.get('/', (req, res) => {
-   Publisherrating.find().exec()
-                  .then(result => {
-                      res.json({success: true, result: result});
+const router = require("express").Router();
+const checkAuth = require("../middleware/check-auth");
 
-                  })
-                  .catch(err => {
-                      res.json({success : false, error: err});
-                  })
-});
+/**controller function for publisher rating */
+const {
+  getAllPublisherRatings,
+  savePublisherRating,
+  getRatingForPublisherId,
+} = require("../controllers/publisherrating");
 
-router.post('/', checkAuth, (req, res) => {
-    const publisherrating = new Publisherrating({
-        value : req.body.ratingValue,
-        publisher: req.body.publisherId,
-        user: req.userData.userId,
-        date: Date.now()
+/**validation for publisher rating route */
+const {
+  validateOnSavePublisherRating,
+} = require("./validation/publisherrating");
 
-    });
-    publisherrating.save()
-                   .then(result => {
-                       res.json({success: true, code: 200, message: 'rating successfully'});
-                   })
-                   .catch(err => {
-                       if(err.code ===  11000) {
-                           Publisherrating.updateOne({publisher: req.body.publisherId, user: req.userData.userId}, {$set : {value: req.body.ratingValue}})
-                                          .then(output => {
-                                              res.json({success: true, message: 'update rating'});                                          })
-                       } else {
-                           res.json({success: false, message: err.errmsg});
-                       }
-                   })
+/**
+ * @description   this route is used to get all preferences
+ * @route   GET      /api/publisherrating
+ * @access  Public
+ */
+router.get("/", getAllPublisherRatings);
 
-    
-});
+/**
+ * @description   this route is used to get all preferences
+ * @route   POST      /api/publisherrating
+ * @access  Private
+ */
+router.post("/", checkAuth, validateOnSavePublisherRating, savePublisherRating);
 
-router.get('/user/:publisherId', checkAuth, (req, res) => {
-    const publisherId = req.params.publisherId;
-    const userId = req.userData.userId;
-    Publisherrating.findOne({publisher: publisherId, user: userId})
-                   .exec()
-                   .then(result => {
-                       res.json({success: true, result: result});
-
-                   })
-                   .catch(err => {
-                       res.json({success: false, result: 'No data found'});
-                   })
-
-})
-
-
-
-
+/**
+ * @description   this route is used to get all preferences
+ * @param - publisherId
+ * @route   GET      /api/publisherrating/:user/:publisherId
+ * @access  Private
+ */
+router.get("/user/:publisherId", checkAuth, getRatingForPublisherId);
 
 module.exports = router;

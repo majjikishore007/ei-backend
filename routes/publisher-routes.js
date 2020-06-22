@@ -1,269 +1,103 @@
 const router = require("express").Router();
-const Publisher = require("../models/publisher");
-const mongoose = require("mongoose");
-const Article = require("../models/article");
+
 const images = require("../config/cloud-storage-setup");
 const checkAuth = require("../middleware/check-auth");
 
-router.get("/", (req, res) => {
-  Publisher.find()
-    .sort("name")
-    .exec()
-    .then((docs) => {
-      const response = {
-        count: docs.length,
-        publishers: docs.map((doc) => {
-          return {
-            name: doc.name,
-            email: doc.email,
-            about: doc.about,
-            website: doc.website,
-            address: doc.address,
-            logo: doc.logo,
-            userId: doc.userId,
-            verified: doc.verified,
-            urlStr: doc.urlStr,
-            id: doc.id,
-          };
-        }),
-      };
-      if (docs.length >= 0) {
-        res.json(response);
-      } else {
-        res.json({ success: false, code: 404, message: "No entries found" });
-      }
-    })
-    .catch((err) => {
-      res.json({ error: err });
-    });
-});
+/**controller function for publisher route */
+const {
+  getPublishers,
+  createNewPublisher,
+  getPublisherById,
+  getPublisherByUrlStr,
+  getPublisherByUserId,
+  updatePublisherById,
+  deletePublisherById,
+  updatePublisherLogo,
+  getPublisherByAggregate,
+} = require("../controllers/publisher");
 
-//@desc     Get all publishers
-//@route    Get /api/publisher/new
-//@access   Public
-router.get("/new", async (req, res) => {
-  try {
-    let response = await Publisher.aggregate([
-      { $sort: { name: 1 } },
-      {
-        $project: {
-          _id: 0,
-          name: 1,
-          email: 1,
-          about: 1,
-          website: 1,
-          address: 1,
-          logo: 1,
-          userId: 1,
-          verified: 1,
-          urlStr: 1,
-          id: "$_id",
-        },
-      },
-    ]);
-    if (response.length >= 0) {
-      res.json({ count: response.length, publishers: response });
-    } else {
-      res.json({ success: false, code: 404, message: "No entries found" });
-    }
-  } catch (err) {
-    res.json({ error: err });
-  }
-});
+/**
+ * @description   this route is used to get all publishers
+ * @route   GET      /api/publisher
+ * @access  Public
+ */
+router.get("/", getPublishers);
 
+/**
+ * @description   this route is used to add a new publisher
+ * @route   POST      /api/publisher
+ * @access  Private
+ */
 router.post(
   "/",
   checkAuth,
   images.multer.single("logo"),
   images.sendUploadToGCS,
-  (req, res) => {
-    let obj = {
-      name: req.body.name,
-      email: req.body.email,
-      about: req.body.about,
-      website: req.body.website,
-      address: req.body.address,
-      city: req.body.city,
-      zip: req.body.zip,
-      logo: req.file.cloudStoragePublicUrl,
-      userId: req.userData.userId,
-    };
-    if (req.body.feedurl) {
-      obj.feedurl = req.body.feedurl;
-    }
-    const publisher = new Publisher(obj);
-    publisher
-      .save()
-      .then((result) => {
-        res.json({
-          success: true,
-          code: 201,
-          message: "publisher page created",
-        });
-      })
-      .catch((err) => {
-        res.json({ success: false, code: 500, message: err });
-      });
-  }
+  createNewPublisher
 );
 
-router.get("/:id", (req, res) => {
-  const id = req.params.id;
-  Publisher.findById(id)
-    .exec()
-    .then((doc) => {
-      if (doc) {
-        res.json({ success: true, code: 200, publisher: doc });
-      } else {
-        res.json({ success: false, code: 404, message: "No valid entery" });
-      }
-    })
-    .catch((err) => {
-      res.json({ success: false, code: 500, message: err });
-    });
-});
+/**
+ * @description   this route is used to get publisher by its Id
+ * @param id - publisherId
+ * @route   GET      /api/publisher/:id
+ * @access  Public
+ */
+router.get("/:id", getPublisherById);
 
-router.get("/title/:urlStr", (req, res) => {
-  const urlStr = req.params.urlStr;
-  Publisher.find({ urlStr: urlStr })
-    .exec()
-    .then((doc) => {
-      if (doc) {
-        res.json({ success: true, code: 200, publisher: doc });
-      } else {
-        res.json({ success: false, code: 404, message: "No valid entery" });
-      }
-    })
-    .catch((err) => {
-      res.json({ success: false, code: 500, message: err });
-    });
-  publisher
-    .save()
-    .then((result) => {
-      res.json({ success: true, code: 201, message: "publisher page created" });
-    })
-    .catch((err) => {
-      res.json({ success: false, code: 500, message: err });
-    });
-});
+/**
+ * @description   this route is used to get publisher by urlstr
+ * @param urlStr
+ * @route   GET      /api/publisher/title/:urlStr
+ * @access  Public
+ */
+router.get("/title/:urlStr", getPublisherByUrlStr);
 
-router.get("/:id", (req, res) => {
-  const id = req.params.id;
-  Publisher.findById(id)
-    .exec()
-    .then((doc) => {
-      if (doc) {
-        res.json({ success: true, code: 200, publisher: doc });
-      } else {
-        res.json({ success: false, code: 404, message: "No valid entery" });
-      }
-    })
-    .catch((err) => {
-      res.json({ success: false, code: 500, message: err });
-    });
-});
+/**
+ * @description   this route is used to get publishers by loggedin user
+ * @route   GET      /api/publisher/user/publisher
+ * @access  Private
+ */
+router.get("/user/publisher", checkAuth, getPublisherByUserId);
 
-router.get("/title/:urlStr", (req, res) => {
-  const urlStr = req.params.urlStr;
-  Publisher.find({ urlStr: urlStr })
-    .exec()
-    .then((doc) => {
-      if (doc) {
-        res.json({ success: true, code: 200, publisher: doc });
-      } else {
-        res.json({ success: false, code: 404, message: "No valid entery" });
-      }
-    })
-    .catch((err) => {
-      res.json({ success: false, code: 500, message: err });
-    });
-});
+/**
+ * @description   this route is used to update publisher by its Id
+ * @param id
+ * @route   PATCH      /api/publisher/:id
+ * @access  Private
+ */
+router.patch("/:id", checkAuth, updatePublisherById);
 
-router.get("/user/publisher", checkAuth, (req, res) => {
-  const id = req.userData.userId;
-  Publisher.find({ userId: id })
-    .exec()
-    .then((doc) => {
-      if (doc) {
-        res.json({ success: true, code: 201, publisher: doc });
-      } else {
-        res.json({ success: false, code: 500, message: "No publisher" });
-      }
-    })
-    .catch((err) => {
-      res.json({ success: false, code: 500, message: err.name });
-    });
-});
-router.patch("/:id", (req, res) => {
-  const id = req.params.id;
+/**
+ * @description   this route is used to delete publisher by its Id
+ * @param id
+ * @route   DELETE      /api/publisher/:id
+ * @access  Private
+ */
+router.delete("/:id", checkAuth, deletePublisherById);
 
-  Publisher.update({ _id: id }, { $set: req.body })
-    .exec()
-    .then((result) => {
-      res.json({ success: true, code: 200, message: "Publisher page updated" });
-    })
-    .catch((err) => {
-      res.json({ success: false, code: 500, message: err.name });
-    });
-});
-
-router.delete("/:id", (req, res) => {
-  const id = req.params.id;
-  Publisher.remove({ _id: id })
-    .exec()
-    .then((result) => {
-      res.json({ success: true, message: "Publisher page removed" });
-    })
-    .catch((err) => {
-      res.json({ success: false, code: 500, message: err.name });
-    });
-});
-
-//change logo
-
+/**
+ * @description   this route is used to change logo of publisher by its Id
+ * @param id - publisherId
+ * @route   PATCH      /api/publisher/:id
+ * @access  Private
+ */
 router.patch(
   "/changelogo/:id",
+  checkAuth,
   images.multer.single("logo"),
   images.sendUploadToGCS,
-  (req, res) => {
-    const id = req.params.id;
-    data = {
-      logo: req.file.cloudStoragePublicUrl,
-    };
-    Publisher.findByIdAndUpdate(id, { $set: data })
-      .exec()
-      .then((result) => {
-        res.json({
-          success: true,
-          code: 200,
-          message: "Publisher logo has been updated",
-        });
-      })
-      .catch((err) => {
-        res.json({ success: false, code: 500, message: err.name });
-      });
-  }
+  updatePublisherLogo
 );
 
-router.get("/fullDeatils/everythings", (req, res) => {
-  var cursor = Publisher.find();
-  var publishers;
-  cursor.exec().then((result) => {
-    publishers = result;
-    Article.aggregate([
-      {
-        $group: { _id: "$publisher", total: { $sum: 1 } },
-      },
-    ])
-      .exec()
-      .then((result1) => {
-        output = {};
-        for (var i = 0; i < result1.length; i++) {
-          output[result1[i]._id] = result1[i].total;
-        }
-        res.json({ success: true, publishers: publishers, counts: output });
-      });
-  });
-});
+/**
+ * @description   this route is used to get all publishers logo of publisher by its Id
+ * @param id - publisherId
+ * @route   GET      /api/publisher/fullDetails/publishersInfoWithArticleCount
+ * @access  Public
+ */
+router.get(
+  "/fullDetails/publishersInfoWithArticleCount",
+  getPublisherByAggregate
+);
 
 module.exports = router;

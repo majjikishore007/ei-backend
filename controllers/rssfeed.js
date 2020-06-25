@@ -74,7 +74,7 @@ exports.getInitailRssFeeds = async (req, res, next) => {
       .sort({ _id: -1 })
       .populate("publisher", "name")
       .limit(20);
-    res.status(200).json({ success: true, count: rssFeeds.length, rssFeeds });
+    res.status(200).json({ success: true, count: rssFeeds.length,data : rssFeeds });
   } catch (err) {
     res.status(500).json({ error: err });
   }
@@ -119,6 +119,23 @@ exports.getRssFeedsFilteredByPublisherId = async (req, res, next) => {
   }
 };
 
+exports.getNextbatchRssFeedsbypub_id = async (req, res, next) => {
+  try {
+    let lastRssFeedId = mongoose.Types.ObjectId(req.params.lastRssFeedId);
+    let rssFeeds = await AllContent.find({
+      _id: { $lt: lastRssFeedId },
+      publisher: req.params.publisherId
+    })
+      .sort({ _id: -1 })
+      .populate("publisher", "name")
+      .limit(20);
+    res.status(200).json({ success: true, data: rssFeeds });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error });
+  }
+};
+
 exports.getSingleRssFeedById = async (req, res, next) => {
   try {
     let rssFeed = await AllContent.findOne({ _id: req.params.id });
@@ -128,17 +145,6 @@ exports.getSingleRssFeedById = async (req, res, next) => {
   }
 };
 
-exports.updateVisitedStatusOfRssfeed = async (req, res, next) => {
-  try {
-    await AllContent.findOneAndUpdate(
-      { _id: req.params.id },
-      { $set: req.body }
-    );
-    res.status(200).json({ success: true, message: "Rss feed visited marked" });
-  } catch (err) {
-    res.status(500).json({ error: err });
-  }
-};
 
 exports.deleteSingleRssFeedById = async (req, res, next) => {
   try {

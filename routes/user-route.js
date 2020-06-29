@@ -1,171 +1,80 @@
-  
-const router = require('express').Router();
-const transporter  = require('../config/mail-setup'); 
-const User = require('../models/user');
-const bcrypt = require('bcryptjs');
-const maildata = require('../config/mail-data');
-const authCheck = require('../middleware/check-auth');
+const router = require("express").Router();
+const authCheck = require("../middleware/check-auth");
 
+/**controller funtions of user */
+const {
+  getloggedInUserInfo,
+  updateUserInfo,
+  resetPasswordMail,
+  getAllUsers,
+  logoutUser,
+  getUserCount,
+  getUserToken,
+  checkEmailExist,
+  changePassword,
+} = require("../controllers/user");
 
+/**
+ * @description   this route is used to get loggedin user info
+ * @route   GET      /profile/
+ * @access  Private
+ */
+router.get("/", authCheck, getloggedInUserInfo);
 
-router.get('/', authCheck, (req, res) => {
-    User.findById(req.userData.userId)
-        .exec()
-        .then(result => {
-            res.json({status: true, user : result});
-        })
-        .catch(err => {
-            res.json({status: false, error: err});
-        })
-    
-    
-});
+/**
+ * @description   this route is used to update loggedin user info
+ * @route   PATCH      /profile/
+ * @access  Private
+ */
+router.patch("/", authCheck, updateUserInfo);
 
+/**
+ * @description   this route is used to reset password email send
+ * @route   POST      /profile/reset
+ * @access  Public
+ */
+router.post("/reset", resetPasswordMail);
 
-router.patch('/', authCheck,  (req, res) => {
-    console.log(req.body);
-    User.update({_id: req.userData.userId}, {$set: req.body})
-        .exec()
-        .then(result => {
-            console.log(result);
-            res.json({success: true, code: 200, message: 'User details updated'});
-        })
-        .catch(err => {
-            res.json({success: false, code: 500, message: err.message});
-        });
-});
+/**
+ * @description   this route is used to get all users
+ * @route   GET      /profile/alluser
+ * @access  Public
+ */
+router.get("/alluser", getAllUsers);
 
-router.post('/reset', (req, res) => {
-    const token  =  req.body.email.split('@')[0] +  Date.now(); 
-    User.findOneAndUpdate({email: req.body.email}, {$set : {token: token}})
-        .exec()
-        .then(result => {
-             if(!result) {
-               return   res.json({success: false, message: "user not found"});
-             } 
-            const mailOption = {
-                from: maildata.resetMail.form,
-                to : result.email,
-                subject: maildata.resetMail.subject,
-                html : "<p>Hello " + result.displayName + "</p>" + maildata.resetMail.body[0] +
-                 "<p><a href='https://extrainsights.in/recovery/" +req.body.email+  "/"+ token+ "'>Reset Passowrd Link</a></p>" + 
-                 maildata.resetMail.body[1] + 
-                 "<p><a href='https://extrainsights.in/recovery/" +req.body.email+  "/"+ token  +"'>https://extrainsights.in/recovery/"+req.body.email+"/"+token+"</a></p>" 
-                + maildata.resetMail.body[2]
-            };
-            transporter.sendMail(mailOption, (error, info) => {
-                if(error) {
-                   return res.json(error);
-                }
-                return res.json({success: true, message: 'mail sent'});
+/**
+ * @description   this route is used to logout user
+ * @route   GET      /profile/logout
+ * @access  Private
+ */
+router.get("/logout", authCheck, logoutUser);
 
-            })
-        })
-        .catch(err => {
-            res.json(err);
-        })
-       
-});
+/**
+ * @description   this route is used to get count of users
+ * @route   GET      /profile/count/user
+ * @access  Public
+ */
+router.get("/count/user", getUserCount);
 
-router.patch('/reset', (req, res) => {
-    
-    bcrypt.hash(req.body.password, 10, function(err, hash) {
-        if(err) {
-            res.json({success: false, error: 'Password hashing error'});
-        }else {
-            // User.findOneAndUpdate({$and : [{email: req.body.email, token: req.body.token}]}, {$set: {password: hash}})
-            //     .exec()
-            //     .then(result => {
-            //         console.log(result);
-            //         res.json({success: true, message: 'Password reset successfully' });
-            //     })
-            //     .catch(error => {
-            //         res.json({success:  false, error: 'Password has not been reset, Try Again' })
-            //     })
-            res.json(hash);
-        }
-    })
-    
-});
+/**
+ * @description   this route is used to get user Token
+ * @route   GET      /profile/userTokenData
+ * @access  Private
+ */
+router.get("/userTokenData", authCheck, getUserToken);
 
-router.get('/alluser', (req, res) => {
-    User.find()
-        .sort('-_id')
-        .select('displayName email')
-        .exec()
-        .then(result => {
-           res.json({success: true,count: result.length, result: result});
-        })
-        .catch(err => {
-            res.json({success: false, result: result});
-        });
-})
+/**
+ * @description   this route is used to check if given email exist or not
+ * @route   GET      /profile/checkMailExisting/:email
+ * @access  Public
+ */
+router.get("/checkMailExisting/:email", checkEmailExist);
 
-router.get('/logout', (req, res) => {
-    console.log("logout");
-    req.logout();
-    req.session.destroy(err => {
-        console.log("session has been destroyed");
-    });
-
-    res.json({success: true, message: 'logout successfully'});
-});
-
-router.get('/count/user', (req, res) => {
-    User.countDocuments({})
-        .exec()
-        .then(result => {
-            res.json({success : true, count : result})
-        })
-        .catch(err => {
-            res.json({success: false, error: err});
-        })
- })
- 
- router.get('/userTokenData', authCheck, (req, res) => {
- 
-      res.json({success : true, user: req.userData})
- });
-      
- router.get('/checkMailExisting/:email', (req, res) => {
-     const email  = req.params.email;
-     User.countDocuments({email: email})
-         .exec()
-         .then(result => {
-             if (result > 0 ) {
-                 res.json({success : true})
-             }else {
-                 res.json({success : false})
-             }
-         })
-         .catch(err => {
-             res.json({success : false})
-         })
- })
-
-router.patch('/changePassword', authCheck, (req, res) => {
-    bcrypt.hash(req.body.password, 10, function(err, hash) {
-        if(err) {
-            res.json({success : false, error: "Hasing error"})
-        }else {
-            const data = {
-                displayName : req.body.displayName,
-                phone : req.body.phone,
-                password : hash,
-                role:{subscriber: true, author:false, admin:false},
-            }
-            User.updateOne({_id: req.userData.userId}, {$set: data})
-                .exec()
-                .then(result => {
-                    res.json({success : true, message: "Password has been chnaged"})
-                })
-                .catch(err => {
-                    res.json({success : false, error: "mongo error"})
-                })
-               
-        }
-
-    });
-}) 
+/**
+ * @description   this route is used to change password
+ * @route   PATH      /profile/changePassword
+ * @access  Private
+ */
+router.patch("/changePassword", authCheck, changePassword);
 
 module.exports = router;

@@ -1,132 +1,80 @@
-const router = require('express').Router();
-const Debate = require('../models/debate');
-const authCheck = require('../middleware/check-auth');
-const Article = require('../models/article');
-const images = require('../config/cloud-storage-setup');
+const router = require("express").Router();
+const authCheck = require("../middleware/check-auth");
+const images = require("../config/cloud-storage-setup");
 
-router.get('/', (req, res) => {
-    Debate.find()
-          .exec()
-          .then(docs => {
-              const response = {
-                  success: true,
-                  count: docs.length,
-                  debates: docs.map(doc => {
-                      return {
-                          title: doc.title,
-                          description: doc.description,
-                          cover: doc.cover,
-                          keywords:  doc.keywords.split(','),
-                          moderator : doc.moderator,
-                          start_date : doc.start_date,
-                          end_date: doc.end_date,
-                          id : doc._id
-                      }
-                  })
-              };
-              res.json(response);
-          }).catch(err => {
-              res.json({success: false, error: err});
-          })
-});
-router.get('/debate/:id', (req, res) => {
-    const id = req.params.id;
-    Debate.findById(id)
-          .exec()
-          .then(result => {
-              res.json({success : true, result: result})
-          })
-          .catch(err => {
-              res.json({success: false, error: err});
-          })
-})
-router.get('/:id', (req, res) => {
-    const id = req.params.id;
-    Debate.findById(id)
-          .exec()
-          .then(doc => {
-              if(doc) {
-                  const data = doc.keywords.split(',');
-                  keywords = [];
-                  for(i=0;i<data.length;i++) {
-                      keywords.push({category: new RegExp(data[i], "i")})
-                  }
-                  Article.find({$or : keywords})
-                         .exec()
-                         .then(result => {
-                             res.json({success: true, debate: doc, articles : result});
-                         }).catch(err1 => {
-                             res.json({success: false, error: err1})
-                         })
-                
-              }else {
-                  res.json({success: false, error: "No Valid entry found"});
-              }
-          })
-          .catch(err => {
-              res.json({success: false, error: err});
-          })
-});
+/**controller functions */
 
+const {
+  getAllDebates,
+  getDebateById,
+  getDebateWithArticles,
+  addNewDebate,
+  updateDebate,
+  updateDebateImage,
+  deleteDebate,
+} = require("../controllers/debate");
 
+/**
+ * @description   this route is used to get all debates
+ * @route   GET      /api/debate
+ * @access  Public
+ */
+router.get("/", getAllDebates);
 
-router.post('/', authCheck , images.multer.single('cover'), images.sendUploadToGCS, (req, res) => {
-    const debate = new Debate({
-        title: req.body.title,
-        description : req.body.description,
-        cover : req.file.cloudStoragePublicUrl,
-        keywords : req.body.keywords,
-        moderator: req.userData.userId,
-        start_date : req.body.start_date,
-        end_date: req.body.end_date,
-        urlStr: req.body.title.trim().replace(/[&\/\\#=, +()$~%.'":;*?<>{}]+/ig, '-')
-    });
-    debate.save() 
-          .then(result => {
-              res.json({success:  true, result : result});
-          })
-          .catch(err => {
-              res.json({success: false, error: err});
-          })
-});
+/**
+ * @description   this route is used to get a debate by Id
+ * @param id
+ * @route   GET      /api/debate/debate/:id
+ * @access  Public
+ */
+router.get("/debate/:id", getDebateById);
 
-router.patch('/:id', authCheck, (req, res) => {
-    const id = req.params.id;
-    Debate.updateOne({_id: id}, {$set: req.body})
-          .exec()
-          .then(result => {
-              res.json({success: true, message: "Debate updated"});
-          })
-          .catch(err => {
-              res.json({success: false, error: err});
-          })
-});
+/**
+ * @description   this route is used to get a debate with articles list
+ * @param id
+ * @route   GET      /api/debate/:id
+ * @access  Public
+ */
+router.get("/:id", getDebateWithArticles);
 
-router.patch('/updateImage/:id', authCheck , images.multer.single('cover'), images.sendUploadToGCS, (req, res) => {
-    const id  = req.params.id;
-    const data = {
-        cover : req.file.cloudStoragePublicUrl
-    };
-    Debate.updateOne({_id: id}, {$set:  data})
-          .exec()
-          .then(result => {
-              res.json({success: true, message: "Image has been updated"})
-          })
-          .catch(err => {
-              res.json({success: false, error: err})
-          })
-});
+/**
+ * @description   this route is used to post a debate
+ * @route   POST      /api/debate/
+ * @access  Private
+ */
+router.post(
+  "/",
+  authCheck,
+  images.multer.single("cover"),
+  images.sendUploadToGCS,
+  addNewDebate
+);
 
-router.delete('/:id', (req, res) => {
-    const id = req.params.id;
-    Debate.deleteOne({_id: id})
-          .exec()
-          .then(result => {
-              res.json({success: true, message: 'Debate delated'});
-          })
-          .catch(err => {
-              res.json({success: false, error: err});
-          })
-})
+/**
+ * @description   this route is used to update a debate
+ * @route   PATCH      /api/debate/:id
+ * @access  Private
+ */
+router.patch("/:id", authCheck, updateDebate);
+
+/**
+ * @description   this route is used to update a debate cover image
+ * @route   PATCH      /api/debate/updateImage/:id
+ * @access  Private
+ */
+router.patch(
+  "/updateImage/:id",
+  authCheck,
+  images.multer.single("cover"),
+  images.sendUploadToGCS,
+  updateDebateImage
+);
+
+/**
+ * @description   this route is used to delete a debate
+ * @route   DELETE      /api/debate/:id
+ * @access  Private
+ */
+router.delete("/:id", authCheck, deleteDebate);
 
 module.exports = router;

@@ -37,11 +37,11 @@ const topicRoute = require("./routes/topic-routes");
 const debateArticleRoute = require("./routes/debate-article-route");
 const debateCommentRoute = require("./routes/debate-comment-route");
 const debateCommentVoteRoute = require("./routes/debate-comment-vote-route");
-const debateCounterCommentRoute = require("./routes/debate-counter-commnet-route");
 
 const cron = require("node-cron");
 const { insertRssIntoAllContent } = require("./controllers/rssfeed");
 
+const debateCounterCommentRoute = require("./routes/debate-counter-comment-route");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const hbs = require("nodemailer-express-handlebars");

@@ -1,0 +1,72 @@
+const View = require("../models/view");
+const mongoose = require("mongoose");
+
+exports.saveView = async (req, res, next) => {
+  try {
+    const view = new View({
+      value: 1,
+      user: req.userData.userId,
+      article: req.body.article,
+      date: Date.now(),
+    });
+    await view.save();
+    res.status(200).json({ success: true, message: "Page view" });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+};
+
+exports.getViewByArticleId = async (req, res, next) => {
+  try {
+    const articleId = req.params.id;
+    const d = new Date();
+    d.setDate(d.getDate() - 14);
+    let result = await View.aggregate([
+      {
+        $match: {
+          $and: [
+            { article: mongoose.Types.ObjectId(articleId) },
+            { date: { $gt: d } },
+          ],
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$date" },
+            month: { $month: "$date" },
+            day: { $dayOfMonth: "$date" },
+          },
+          total: { $sum: "$value" },
+        },
+      },
+      { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
+      { $limit: 14 },
+    ]);
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+};
+
+exports.aggregateByArticleId = async (req, res, next) => {
+  try {
+    const articleId = req.params.id;
+    let result = await View.aggregate([
+      { $match: { article: mongoose.Types.ObjectId(articleId) } },
+      {
+        $group: {
+          _id: "$article",
+          total: { $sum: "$value" },
+        },
+      },
+    ]);
+    if (result.length > 0) {
+      res.status(200).json({ success: true, data: result[0].total });
+    } else {
+      res.status(200).json({ success: false, data: 0 });
+    }
+  } catch (error) {
+    res.status(500).json({ error });
+  }
+};

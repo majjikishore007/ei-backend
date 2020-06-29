@@ -3,7 +3,9 @@ const mongoose = require("mongoose");
 
 exports.getInitialcartoons = async (req, res, next) => {
   try {
-    let cartoons = await Cartoon.find().sort({ _id: -1 }).limit(20);
+    let cartoons = await Cartoon.find()
+      .sort({ _id: -1 })
+      .limit(+req.params.limitCount);
     res.status(200).json({ success: true, data: cartoons });
   } catch (error) {
     res.status(500).json({ error });
@@ -17,7 +19,7 @@ exports.getNextbatchCartoons = async (req, res, next) => {
       _id: { $lt: mongoose.Types.ObjectId(lastCartoonId) },
     })
       .sort({ _id: -1 })
-      .limit(20);
+      .limit(+req.params.limitCount);
     res.status(200).json({ success: true, data: cartoons });
   } catch (error) {
     res.status(500).json({ error });

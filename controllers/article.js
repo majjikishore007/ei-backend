@@ -382,7 +382,6 @@ exports.getArticleByTitle = async (req, res, next) => {
     };
     res.status(200).json({ success: true, data: article, owner });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error });
   }
 };

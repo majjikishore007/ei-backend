@@ -5,7 +5,7 @@ exports.getAllBlogPosts = async (req, res, next) => {
   try {
     let blogs = await Blog.find()
       .sort({ _id: -1 })
-      .limit(10)
+      .limit(+req.params.limitCount)
       .populate("author", "displayName");
     res.status(200).json({ success: true, count: blogs.length, data: blogs });
   } catch (error) {
@@ -19,9 +19,9 @@ exports.getNextBatchBlogs = async (req, res, next) => {
       _id: { $lt: mongoose.Types.ObjectId(lastBlogId) },
     })
       .sort({ _id: -1 })
-      .limit(10)
+      .limit(+req.params.limitCount)
       .populate("author", "displayName");
-    res.status(200).json({ success: true, data: blogs });
+    res.status(200).json({ success: true, count: blogs.length, data: blogs });
   } catch (error) {}
 };
 

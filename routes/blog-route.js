@@ -18,13 +18,6 @@ const {
 const { validateOnBlogSave } = require("./validation/blog");
 
 /**
- * @description   this route is used to get limited blog posts
- * @route   GET      /api/blog/
- * @access  Public
- */
-router.get("/", getAllBlogPosts);
-
-/**
  * @description   this route is used to get blog posts filtered with category
  * @param paramp - category of blog post
  * @route   GET      /api/blog/category/:paramp
@@ -79,11 +72,18 @@ router.patch("/:id", checkAuthAdmin, updateBlogById);
 router.delete("/:id", checkAuthAdmin, deleteBlogById);
 
 /**
- * @description   this route is used to get next batch limited blog posts
- * @param lastBlogId - last fetched blogId after next blogs need to fetch
- * @route   GET      /api/blog/nextbatch/:lastBlogId
+ * @description   this route is used to get limited blog posts
+ * @route   GET      /api/blog/:limitCount
  * @access  Public
  */
-router.get("/nextbatch/:lastBlogId", getNextBatchBlogs);
+router.get("/getInitials/:limitCount", getAllBlogPosts);
+
+/**
+ * @description   this route is used to get next batch limited blog posts
+ * @param lastBlogId - last fetched blogId after next blogs need to fetch
+ * @route   GET      /api/blog/nextbatch/:limitCount/:lastBlogId
+ * @access  Public
+ */
+router.get("/nextbatch/:limitCount/:lastBlogId", getNextBatchBlogs);
 
 module.exports = router;

@@ -18,13 +18,6 @@ const {
 const { validateOnSavecartoon } = require("./validation/cartoon");
 
 /**
- * @description   this route is used to get all cartoons
- * @route   POST      /api/cartoon/
- * @access  Public
- */
-router.get("/", getInitialcartoons);
-
-/**
  * @description   this route is used to add new cartoon by admin or author/publisher
  * @route   POST      /api/cartoon/
  * @access  Private
@@ -77,11 +70,18 @@ router.patch(
 router.delete("/:cartoonId", checkAuthAuthorOrAdmin, deleteCartoonById);
 
 /**
+ * @description   this route is used to get all cartoons
+ * @route   POST      /api/cartoon/
+ * @access  Public
+ */
+router.get("/getInital/:limitCount", getInitialcartoons);
+
+/**
  * @description   this route is used to get next batch limited cartoons with last fetched cartoonId
  * @param lastCartoonId
  * @route   GET      /api/cartoon/nextbatch/:lastCartoonId
  * @access  Public
  */
-router.get("/nextbatch/:lastCartoonId", getNextbatchCartoons);
+router.get("/nextbatch/:limitCount/:lastCartoonId", getNextbatchCartoons);
 
 module.exports = router;

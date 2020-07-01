@@ -1,8 +1,9 @@
 const router = require("express").Router();
+const checkAuth = require("../middleware/check-auth");
 
 /**controller functions for rss feeds */
 const {
-  getInitailRssFeeds,
+  getInitialRssFeeds,
   getNextbatchRssFeeds,
   getTotalCountRssFeeds,
   getRssFeedsFilteredByPublisherId,
@@ -12,26 +13,31 @@ const {
   deleteAllRssFeeds,
 } = require("../controllers/rssfeed");
 
+
+
+
+
+
 /**
  * @desc  GET all rss feeds
  * @route GET /api/rss/
  * @access  Public
  */
-router.get("/", getInitailRssFeeds);
+router.get("/", checkAuth, getInitialRssFeeds);
 
 /**
  * @desc  GET all rss feeds next batch
  * @route GET /api/rss/nextbatch/:lastRssFeedId
  * @access  Public
  */
-router.get("/nextbatch/:lastRssFeedId", getNextbatchRssFeeds);
+router.get("/nextbatch/:lastRssFeedId", checkAuth, getNextbatchRssFeeds);
 
 /**
  * @desc  GET all rss feeds count
  * @route GET /api/rss/getCount
  * @access  Public
  */
-router.get("/getCount", getTotalCountRssFeeds);
+router.get("/getCount", checkAuth, getTotalCountRssFeeds);
 
 /**
  * @desc  GET rss feeds with publisherId
@@ -55,14 +61,14 @@ router.get("/:id", getSingleRssFeedById);
  * @route PATCH /api/rss/:id
  * @access  Public
  */
-router.patch("/:id", updateVisitedStatusOfRssfeed);
+router.patch("/:id", checkAuth, updateVisitedStatusOfRssfeed);
 
 /**
  * @desc  delete single rss feed
  * @route DELETE /api/rss/:id
  * @access  Public
  */
-router.delete("/:id", deleteSingleRssFeedById);
+router.delete("/:id", checkAuth, deleteSingleRssFeedById);
 
 /**
  * @desc  delete all rss feeds

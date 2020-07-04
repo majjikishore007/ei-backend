@@ -51,19 +51,7 @@ router.get('/:id', (req, res) => {
 });
 
 // Data according to userId
-router.get('/user/publisher/:userId', (req, res) => {
-    const id = req.params.userId;
-    Follow.find({user: id})
-          .populate('publisher name')
-          
-          .exec()
-          .then(result => {
-              res.json({success: true, code:200, result:result});
-          })
-          .catch(err => {
-              res.json({success: false, code: 500, error: err});
-          })
-});
+
 
 router.get('/listofpub/:userId', async (req, res) => {
     const id = req.params.userId;

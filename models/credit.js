@@ -5,13 +5,18 @@ mongoose.Promise = global.Promise;
 const Schema = mongoose.Schema;
 
 const creditSchema = new Schema({
-    _id : {type: Schema.Types.ObjectId, required: true},
     credit: {type: Number, required: true},
-    user: {type: Schema.Types.ObjectId, required: true, ref: 'User'},
-    publisher: {type: Schema.Types.ObjectId, required: true, ref: 'Publisher'},
+    amount: {type: Number},
+    user: {type: Schema.Types.ObjectId,  ref: 'User'},
+    publisher: {type: Schema.Types.ObjectId,  ref: 'Publisher'},
     article: {type: Schema.Types.ObjectId,  ref:'Article'},
-    created_at : {type: Date, required: true}
+    raz_payment_id: String,
+    raz_order_id: String,
+    raz_status: String,
+    pub_amount: {type: Number},
+    capture:{type: Boolean, default: false},
+    created_at : {type: Date, required: true},
+    bank: {type: Boolean, default: false}
 });
 
-creditSchema.index({userId: 1, articleId:1}, {unique: true});
 module.exports = mongoose.model('Credit', creditSchema);

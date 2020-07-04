@@ -161,6 +161,47 @@ router.post('/guest', (req, res) => {
 });
 
 
+router.post('/mobileGoogleLogin', (req, res) => {
+    if (!req.body.email) {
+        res.json({ success: false, message: 'You must provide an e-mail' });
+    }else {
+        User.findOne({email: req.body.email})
+            .exec()
+            .then(result => {
+                if(result) {
+                    const token = jwt.sign({userId: result._id},
+                        config.secret,
+                        {
+                            expiresIn : "30d"
+                        }
+                       );
+                   res.json({success: true, token: token, user: result._id})
+                }else {
+                    let user = new User({
+                        email: req.body.email.toLowerCase(),
+                        displayName: req.body.displayName,
+                        password: 'AminSecret97Az#',
+                        thumbnail:req.body.thumbnail,
+                        role:{subscriber: true, author:false, admin:false},
+                        date: Date.now()
+                        });
+                    user.save()
+                        .then(data => {
+                            const token = jwt.sign({userId: data._id},
+                                config.secret,
+                                {
+                                    expiresIn : "30d"
+                                }
+                               );
+                           res.json({success: true, token: token, user: data._id})
+                        })
+                        
+                    
+                }
+            })
+    }
+})
+
 
 module.exports = router;
 

@@ -17,6 +17,46 @@ router.get('/', (req, res) => {
        })
  });
 
+ router.get('/mobile', (req, res) => {
+    ArticleTop.find()
+       .sort('-_id')
+       .populate('article')
+       .exec((err, publisher) => {
+           Publisher.populate(publisher, {
+               path: 'article.publisher'
+           })
+           .then(docs => {
+               const response = {
+                   count: docs.length,
+                   articles : docs.map(
+                       doc => {
+                           return {
+                            title: doc.article.title,
+                            description:  doc.article.description,
+                            price: doc.article.price,
+                            author: doc.article.author,
+                            cover: doc.article.cover,
+                            publisher: doc.article.publisher,
+                            website: doc.article.website,
+                            category: doc.article.category,
+                            time: doc.article.time,
+                            date:doc.article.publishingDate,
+                            id: doc.article.id,
+                            lan : doc.article.lan,
+                            urlStr: doc.article.urlStr
+                           }
+                       }
+                   )
+               }
+               res.json({success: true, articles: response.articles })
+           })
+           .catch(err => {
+               res.json({success: false, error: err})
+           })
+       })
+       
+  });
+
  router.post('', (req, res, next) => {
    const articleTop = new ArticleTop({
       article:req.body.article, 

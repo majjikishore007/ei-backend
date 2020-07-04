@@ -49,6 +49,7 @@ router.get('/', (req,res) => {
 });
 router.get('/topten', (req,res) => {
   Article.find().sort('-_id')
+         .populate("publisher")
          .limit(10)
          .exec()
          .then(docs => {
@@ -75,7 +76,7 @@ router.get('/topten', (req,res) => {
                  )
              };
              if(docs.length >= 0) {
-                 res.json(response);
+                 res.json( {success: true, articles: response.artciles });
              } else {
                  res.json({success: false, code: 404, message: "No entries found"});
              }

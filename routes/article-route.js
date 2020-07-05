@@ -87,6 +87,48 @@ router.get('/topten', (req,res) => {
          });
 
 });
+router.get('/page/:num/limit/:limit', (req, res) => {
+  const limit = parseInt(req.params.limit);
+  const page = parseInt(req.params.num)
+  Article.find()
+        .populate('publisher')
+         .sort('-_id')
+         .skip(limit*page)
+         .limit(limit)
+         .exec()
+         .then(docs => {
+          const response = {
+            count:docs.length,
+            artciles : docs.map(
+                doc => {
+                    return {
+                        title: doc.title,
+                        description:  doc.description,
+                        price: doc.price,
+                        author: doc.author,
+                        cover: doc.cover,
+                        publisher: doc.publisher,
+                        website: doc.website,
+                        category: doc.category,
+                        time: doc.time,
+                        date:doc.publishingDate,
+                        id: doc.id,
+                        lan : doc.lan,
+                        urlStr: doc.urlStr,
+                        seo : doc.seo
+                    };
+                  }
+                )
+              };
+              if(docs.length >= 0) {
+                res.json( {success: true, articles: response.artciles });
+            } else {
+                res.json({success: false, code: 404, message: "No entries found"});
+            }
+         }).catch(err => {
+           res.json({success: false, error: err})
+         })
+});
 
 router.post('/admin', (req, res, next) => {
   const article = new Article({

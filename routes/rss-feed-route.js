@@ -1,6 +1,9 @@
 const router = require("express").Router();
 const checkAuth = require("../middleware/check-auth");
 
+const Parser = require("rss-parser");
+const parser = new Parser();
+
 /**controller functions for rss feeds */
 const {
   getInitialRssFeeds,
@@ -13,48 +16,47 @@ const {
   deleteAllRssFeeds,
 } = require("../controllers/rssfeed");
 
-
-
-
-
-
 /**
  * @desc  GET all rss feeds
- * @route GET /api/rss/
+ * @route GET /api/rss/:rssFeedLimit
  * @access  Public
  */
-router.get("/", checkAuth, getInitialRssFeeds);
+router.get("/:rssFeedLimit", checkAuth, getInitialRssFeeds);
+
+/**
+ * @desc  GET single rss feed
+ * @route GET /api/rss/getRssbyId/:id
+ * @access  Public
+ */
+router.get("/getRssbyId/:id", getSingleRssFeedById);
 
 /**
  * @desc  GET all rss feeds next batch
- * @route GET /api/rss/nextbatch/:lastRssFeedId
+ * @route GET /api/rss/nextbatch/:rssFeedLimit/:lastRssFeedId
  * @access  Public
  */
-router.get("/nextbatch/:lastRssFeedId", checkAuth, getNextbatchRssFeeds);
+router.get(
+  "/nextbatch/:rssFeedLimit/:lastRssFeedId",
+  checkAuth,
+  getNextbatchRssFeeds
+);
 
 /**
  * @desc  GET all rss feeds count
  * @route GET /api/rss/getCount
  * @access  Public
  */
-router.get("/getCount", checkAuth, getTotalCountRssFeeds);
+// router.get("/getCount", checkAuth, getTotalCountRssFeeds);
 
 /**
  * @desc  GET rss feeds with publisherId
- * @route GET /api/rss/publisher/:publisherId
+ * @route GET /api/rss/getbyPublisherId/publisher/:publisherId
  * @access  Public
  */
 router.get(
-  "/publisher/:publisherId/:limitcount",
+  "/getbyPublisherId/publisher/:publisherId/:limitcount",
   getRssFeedsFilteredByPublisherId
 );
-
-/**
- * @desc  GET single rss feed
- * @route GET /api/rss/:id
- * @access  Public
- */
-router.get("/:id", getSingleRssFeedById);
 
 /**
  * @desc  PATCH single rss feed viewed as true

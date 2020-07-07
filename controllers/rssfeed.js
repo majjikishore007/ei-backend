@@ -14,13 +14,14 @@ exports.insertRssIntoAllContent = async (req, res, next) => {
     let structure = await RssFeedstructure.findOne({
       publisherId: publisher._id,
     });
+
     if (structure) {
       /**structure present */
       /**loop through feedUrl array   */
       if (publisher.feedurl) {
         for (
           let urlIndex = 0;
-          urlIndex < publisher.feedurl.length ;
+          urlIndex < publisher.feedurl.length;
           urlIndex++
         ) {
           try {
@@ -29,11 +30,50 @@ exports.insertRssIntoAllContent = async (req, res, next) => {
             let insertPromiseArr = [];
             for (let i = 0; i < feedList.length; i++) {
               let data = {};
-              data.title = feedList[i][structure.titleField];
-              data.content = feedList[i][structure.contentField];
-              data.website = feedList[i][structure.linkField];
-              data.publishingDate = feedList[i][structure.pubDateField];
+              if (
+                structure.titleField &&
+                feedList[i][structure.titleField] != undefined
+              ) {
+                data.title = feedList[i][structure.titleField];
+              }
+
+              if (
+                structure.contentField &&
+                feedList[i][structure.contentField] != undefined
+              ) {
+                data.content = feedList[i][structure.contentField];
+              }
+
+              if (
+                structure.descriptionField &&
+                feedList[i][structure.descriptionField] != undefined
+              ) {
+                data.description = feedList[i][structure.descriptionField];
+              }
+
+              if (
+                structure.linkField &&
+                feedList[i][structure.linkField] != undefined
+              ) {
+                data.website = feedList[i][structure.linkField];
+              }
+
+              if (
+                structure.pubDateField &&
+                feedList[i][structure.pubDateField] != undefined
+              ) {
+                data.publishingDate = feedList[i][structure.pubDateField];
+              }
+
               data.publisher = structure.publisherId;
+
+              if (
+                structure.categoryField &&
+                feedList[i][structure.categoryField] != undefined
+              ) {
+                data.category = feedList[i][structure.categoryField].join(",");
+              }
+
               if (
                 structure.authorField &&
                 feedList[i][structure.authorField] != undefined
@@ -46,14 +86,8 @@ exports.insertRssIntoAllContent = async (req, res, next) => {
               ) {
                 data.cover = feedList[i][structure.imageField];
               }
-              if (
-                structure.categoryField &&
-                feedList[i][structure.categoryField] != undefined
-              ) {
-                data.category = feedList[i][structure.categoryField].join(",");
-              }
-              let exist = await AllContent.findOne({ website: data.website });
 
+              let exist = await AllContent.findOne({ website: data.website });
               if (!exist) {
                 let insertedFeedPromise = AllContent.create(data);
                 insertPromiseArr.push(insertedFeedPromise);
@@ -69,9 +103,6 @@ exports.insertRssIntoAllContent = async (req, res, next) => {
   });
 };
 
-
-
-
 exports.getInitialRssFeeds = async (req, res, next) => {
   try {
     /**get last visited rss feed id */
@@ -86,20 +117,19 @@ exports.getInitialRssFeeds = async (req, res, next) => {
       })
         .sort({ _id: -1 })
         .populate("publisher", "name")
-        .limit(20);
+        .limit(+req.params.rssFeedLimit);
     } else {
       rssFeeds = await AllContent.find({
         viewed: false,
       })
         .sort({ _id: -1 })
         .populate("publisher", "name")
-        .limit(20);
+        .limit(+req.params.rssFeedLimit);
     }
     res
       .status(200)
       .json({ success: true, count: rssFeeds.length, data: rssFeeds });
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: err });
   }
 };
@@ -113,10 +143,11 @@ exports.getNextbatchRssFeeds = async (req, res, next) => {
     })
       .sort({ _id: -1 })
       .populate("publisher", "name")
-      .limit(20);
-    res.status(200).json({ success: true, data: rssFeeds });
+      .limit(+req.params.rssFeedLimit);
+    res
+      .status(200)
+      .json({ success: true, count: rssFeeds.length, data: rssFeeds });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ error });
   }
 };

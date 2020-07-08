@@ -47,30 +47,36 @@ exports.getSingleRssFeedStructureWithPublisherId = async (req, res, next) => {
 
 exports.AddRssFeedStructure = async (req, res, next) => {
   try {
-    const {
-      titleField,
-      contentField,
-      linkField,
-      pubDateField,
-      publisherId,
-    } = req.body;
+    let structure = {};
+    if (req.body.titleField) {
+      structure.titleField = req.body.titleField;
+    }
+    if (req.body.contentField) {
+      structure.contentField = req.body.contentField;
+    }
+    if (req.body.descriptionField) {
+      structure.descriptionField = req.body.descriptionField;
+    }
+    if (req.body.linkField) {
+      structure.linkField = req.body.linkField;
+    }
+    if (req.body.pubDateField) {
+      structure.pubDateField = req.body.pubDateField;
+    }
 
-    let structure = {
-      titleField,
-      contentField,
-      linkField,
-      pubDateField,
-      publisherId,
-    };
+    structure.publisherId = req.body.publisherId;
+
+    if (req.body.categoryField) {
+      structure.categoryField = req.body.categoryField;
+    }
+
     if (req.body.authorField) {
       structure.authorField = req.body.authorField;
     }
     if (req.body.imageField) {
       structure.imageField = req.body.imageField;
     }
-    if (req.body.categoryField) {
-      structure.categoryField = req.body.categoryField;
-    }
+
     let insertedStructure = await new RssFeedStructure(structure).save();
     res.status(201).json({
       success: true,
@@ -78,6 +84,7 @@ exports.AddRssFeedStructure = async (req, res, next) => {
       data: insertedStructure,
     });
   } catch (err) {
+    console.log(err);
     res.status(500).json({ error: err });
   }
 };

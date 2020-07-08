@@ -5,10 +5,11 @@ mongoose.Promise = global.Promise;
 const Schema = mongoose.Schema;
 
 const rssFeedStructureSchema = new Schema({
-  titleField: { type: String, required: true },
-  contentField: { type: String, required: true },
+  titleField: { type: String },
+  contentField: { type: String },
+  descriptionField: { type: String },
   linkField: { type: String, required: true },
-  pubDateField: { type: String, required: true },
+  pubDateField: { type: String },
   publisherId: {
     type: Schema.Types.ObjectId,
     required: true,

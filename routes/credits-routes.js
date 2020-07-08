@@ -132,7 +132,10 @@ router.get('/user', checkAuth, (req, res) => {
          .populate('article', 'title urlStr')
          .exec()
          .then(result => {
-             res.json(result)
+             res.json({success : true, credits: result})
+         })
+         .catch(err => {
+             res.json({success: false, error: err})
          })
 })
 

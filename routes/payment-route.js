@@ -35,7 +35,6 @@ router.post('/', checkAuth, (req, res) => {
         console.log("error : " + err);
         res.json({sucess: false, err : err})
     } else {
-        console.log( order);
         const payment = new Payment({
             order: order.id,
             amount: order.amount/100,

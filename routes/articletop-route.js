@@ -3,7 +3,7 @@ const ArticleTop = require('../models/article-top');
 const Rating = require('../models/rating');
 const images = require('../config/cloud-storage-setup');
 const Usernotification = require("../models/usernotification");
-
+const Publisher = require('../models/publisher');
 router.get('/', (req, res) => {
    ArticleTop.find()
       .sort('-_id')

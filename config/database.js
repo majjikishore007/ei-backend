@@ -2,7 +2,8 @@ const crypto = require("crypto").randomBytes(256).toString("hex"); // Provides c
 
 // Export config object
 module.exports = {
-  uri: 'mongodb+srv://extratechology:A33VkCNhdSKNFOtr@extraweb-fxo9s.gcp.mongodb.net/amin-data', // Databse URI and database name
+  uri:
+    "mongodb+srv://extratechology:A33VkCNhdSKNFOtr@extraweb-fxo9s.gcp.mongodb.net/amin-data", // Databse URI and database name
   //uri : 'mongodb://localhost:27017/extra-data',
   secret: "amide#14",
   db: "amin-data",
@@ -31,6 +32,7 @@ module.exports = {
     },
     storage: {
       CLOUD_BUCKET: "extra-insights-images",
+      VIDEO_BUCKET: "extra-insights-video",
     },
   },
 };

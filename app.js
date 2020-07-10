@@ -38,6 +38,8 @@ const debateArticleRoute = require("./routes/debate-article-route");
 const debateCommentRoute = require("./routes/debate-comment-route");
 const debateCommentVoteRoute = require("./routes/debate-comment-vote-route");
 
+const busboy = require("connect-busboy");
+
 const cron = require("node-cron");
 const { insertRssIntoAllContent } = require("./controllers/rssfeed");
 
@@ -53,6 +55,12 @@ const newsFeed = require("./routes/newsfeed");
 const nominatePublisher = require("./routes/nominatepublisher-route");
 const newsletterSubscriber = require("./routes/newslettersubscriber-route");
 const likeRoute = require("./routes/like-route");
+const videoRoute = require("./routes/video");
+const videoViewRoute = require("./routes/videoview-route");
+const videoBookmarkRoute = require("./routes/videobookmark");
+const videoTopRoute = require("./routes/videotop");
+const audioRoute = require("./routes/audio");
+const pdfRoute = require("./routes/pdf");
 
 /**save keyword on new article upload */
 const { saveKeywordOnNewArticleUpload } = require("./controllers/keyword");
@@ -81,6 +89,12 @@ app.use(cors());
 app.use(compression());
 app.use(bodyParser.urlencoded({ extended: false })); // parse application/x-www-form-urlencoded
 app.use(bodyParser.json()); // parse application/json
+
+app.use(
+  busboy({
+    highWaterMark: 2 * 1024 * 1024, // Set 2MiB buffer
+  })
+);
 
 // Middleware
 // express-session must be used before passport
@@ -121,6 +135,13 @@ app.use("/api/newsfeed", newsFeed);
 app.use("/api/nominatepublisher", nominatePublisher);
 app.use("/api/newslettersubscribe", newsletterSubscriber);
 app.use("/api/like", likeRoute);
+app.use("/api/video", videoRoute);
+app.use("/api/videoview", videoViewRoute);
+app.use("/api/videobookmark", videoBookmarkRoute);
+app.use("/api/videotop", videoTopRoute);
+app.use("/api/audio", audioRoute);
+app.use("/api/pdf", pdfRoute);
+// Provide static directory for  frontend
 
 //Connect server to Angular index.html file
 app.get("*", (req, res) => {

@@ -6,9 +6,9 @@ const maildata = require("../config/mail-data");
 exports.getloggedInUserInfo = async (req, res, next) => {
   try {
     let result = await User.findById(req.userData.userId);
-    res.status(200).json({ success: true, data: result });
+    res.status(200).json({ success: true, user: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error:error });
   }
 };
 
@@ -17,7 +17,7 @@ exports.updateUserInfo = async (req, res, next) => {
     await User.update({ _id: req.userData.userId }, { $set: req.body });
     res.status(200).json({ success: true, message: "User details updated" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({  success: false, error:error });
   }
 };
 exports.resetPasswordMail = async (req, res, next) => {
@@ -65,7 +65,7 @@ exports.resetPasswordMail = async (req, res, next) => {
       return res.status(200).json({ success: true, message: "mail sent" });
     });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error:error });
   }
 };
 
@@ -74,7 +74,7 @@ exports.getAllUsers = async (req, res, next) => {
     let users = await User.find().sort("-_id").select("displayName email");
     res.status(200).json({ success: true, count: users.length, data: users });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({  success: false, error:error });
   }
 };
 
@@ -84,7 +84,7 @@ exports.logoutUser = async (req, res, next) => {
     res.status(200).json({ success: true, message: "logout successfully" });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error:error });
   }
 };
 
@@ -93,7 +93,7 @@ exports.getUserCount = async (req, res, next) => {
     let countUser = await User.countDocuments({});
     res.status(200).json({ success: true, data: countUser });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({  success: false, error:error});
   }
 };
 
@@ -101,7 +101,7 @@ exports.getUserToken = async (req, res, next) => {
   try {
     res.status(200).json({ success: true, user: req.userData });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error:error });
   }
 };
 
@@ -115,7 +115,7 @@ exports.checkEmailExist = async (req, res, next) => {
       res.status(200).json({ success: false });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({  success: false, error:error });
   }
 };
 
@@ -139,6 +139,6 @@ exports.changePassword = async (req, res, next) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({  success: false, error:error });
   }
 };

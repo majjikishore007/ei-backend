@@ -464,6 +464,7 @@ exports.getArticlesByCategoryFilter = async (req, res, next) => {
       public: true,
     })
       .sort({ _id: -1 })
+      .limit(5)
       .populate("publisher");
 
     let restructuredResult = articles.map((doc) => {

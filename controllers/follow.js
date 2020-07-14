@@ -7,7 +7,7 @@ exports.getFollowForLoggedinUser = async (req, res, next) => {
     let follows = await Follow.find({ user: req.userData.userId });
     res.status(200).json({ success: true, data: follows });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: true, error: error});
   }
 };
 
@@ -40,7 +40,7 @@ exports.saveFollow = async (req, res, next) => {
     if (error.code === 11000) {
       res.status(500).json({ success: false, message: "alreday follow" });
     } else {
-      res.status(500).json({ error });
+      res.status(500).json({ success: true, error: error});
     }
   }
 };
@@ -54,7 +54,7 @@ exports.getFollowersForPublisher = async (req, res, next) => {
     );
     res.status(200).json({ success: true, data: followers });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: true, error: error });
   }
 };
 
@@ -72,7 +72,7 @@ exports.getFollowingPublishersForUserId = async (req, res, next) => {
     }
     res.status(200).json({ success: true, data: pubdata });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({success: true, error: error });
   }
 };
 
@@ -83,7 +83,7 @@ exports.getFollowWithPublisherForLoggedInUser = async (req, res, next) => {
     let follow = await Follow.findOne({ user: userId, publisher: publisherId });
     res.status(200).json({ success: true, data: follow });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({success: true, error: error });
   }
 };
 
@@ -94,7 +94,7 @@ exports.unFollowPublisherWithPublisherId = async (req, res, next) => {
     await Follow.remove({ user: userId, publisher: publisherId });
     res.status(200).json({ success: true, message: "unfollow" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({success: true, error: error });
   }
 };
 
@@ -120,6 +120,6 @@ exports.aggregateFollowingForLoggedinUser = async (req, res, next) => {
     }
     res.status(200).json({ success: true, data: followers });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({success: true, error: error});
   }
 };

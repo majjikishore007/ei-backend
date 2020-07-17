@@ -19,7 +19,18 @@ exports.getDebateForById = async (req, res, next) => {
     const debate_id = req.params.id;
     let result = await DebateArticle.find({
       $and: [{ debate: debate_id }, { type: true }],
-    }).populate("article");
+    }).populate([{
+      path: 'article',
+      model :'Article',
+      select : 'title urlStr cover description website',
+      populate : {
+        path: 'publisher',
+        model : 'Publisher',
+        select: 'logo name urlStr'
+        
+      }
+    }
+    ])
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ error });
@@ -31,7 +42,18 @@ exports.getDebateAgainstById = async (req, res, next) => {
     const debate_id = req.params.id;
     let result = await DebateArticle.find({
       $and: [{ debate: debate_id }, { type: false }],
-    }).populate("article");
+    }).populate([{
+      path: 'article',
+      model :'Article',
+      select : 'title urlStr cover description website',
+      populate : {
+        path: 'publisher',
+        model : 'Publisher',
+        select: 'logo name urlStr'
+        
+      }
+    }
+    ])
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ error });

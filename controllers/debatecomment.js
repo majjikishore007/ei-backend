@@ -48,7 +48,7 @@ exports.deleteDebateComment = async (req, res, next) => {
       .status(200)
       .json({ success: true, message: "Comment remove from debate" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error: error });
   }
 };
 
@@ -61,13 +61,13 @@ exports.getDebateCommentsForDebateId = async (req, res, next) => {
 
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error: error });
   }
 };
 
 exports.fun = async (req, res, next) => {
   try {
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error: error });
   }
 };

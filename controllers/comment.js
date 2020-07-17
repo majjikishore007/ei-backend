@@ -71,7 +71,7 @@ exports.getCommentsByUrlStr = async (req, res, next) => {
           });
       });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({success : false, error: error});
   }
 };
 
@@ -81,7 +81,7 @@ exports.getCommentsByUserId = async (req, res, next) => {
     let comments = await Comment.find({ user: userId }).populate("Article");
     res.status(200).json({ success: true, data: comments });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, data: comments });
   }
 };
 

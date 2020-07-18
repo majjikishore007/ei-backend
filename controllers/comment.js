@@ -24,7 +24,7 @@ exports.getAllComments = async (req, res, next) => {
       res.status(404).json({ success: false, message: "No entries found" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -52,7 +52,7 @@ exports.saveComment = async (req, res, next) => {
     await Promise.all([comment.save(), publishernotification.save()]);
     res.status(201).json({ success: true, message: "Comment added" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -71,7 +71,7 @@ exports.getCommentsByUrlStr = async (req, res, next) => {
           });
       });
   } catch (error) {
-    res.status(500).json({success : false, error: error});
+    res.status(500).json({ success: false, error: error });
   }
 };
 
@@ -91,7 +91,7 @@ exports.deleteCommentById = async (req, res, next) => {
     await Comment.deleteOne({ _id: id });
     res.json({ success: true, message: "message has been deleted" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -111,7 +111,7 @@ exports.getCommentsInAggregateByArticles = async (req, res, next) => {
     }
     res.status(200).json({ success: true, data: comments });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -122,6 +122,6 @@ exports.getCommentsByArticleId = async (req, res, next) => {
     });
     res.json({ success: true, data: comments });
   } catch (error) {
-    res.status().json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

@@ -42,7 +42,7 @@ router.get("/publisher/:publisherId", getSingleRssFeedStructureWithPublisherId);
  */
 /**access should be private */
 
-router.post("/", validateRssStructure, AddRssFeedStructure);
+router.post("/", AddRssFeedStructure);
 
 /**
  * @desc    PATCH updating rss structure for a specific id

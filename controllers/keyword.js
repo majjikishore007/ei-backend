@@ -1,64 +1,144 @@
 const Keyword = require("../models/keyword");
 const Article = require("../models/article");
+const Preference = require("../models/preference");
+const mongoose = require("mongoose");
 
-exports.saveKeywords = async (req, res, next) => {
-  try {
-    Article.find()
-      .select("category")
-      .exec()
-      .then((result) => {
-        category = result.map((doc) => {
-          if (doc.category) {
-            return {
-              cat: addToDatabase(doc.category),
-            };
-          } else {
-            return {
-              cat: "undefined",
-            };
-          }
-        });
-        res.json(category);
-      });
-  } catch (error) {
-    res.status(500).json({ error });
-  }
-};
-
-const addToDatabase = (str) => {
-  const val = (str + "").split(",");
-  for (i = 0; i < val.length; i++) {
-    let kw = val[i] !== undefined ? val[i].trim() : "";
-    if (kw) {
-      const keyword = new Keyword({
-        keyword: val[i].trim(),
-      });
-      keyword
-        .save()
-        .then((result) => {
-          // console.log(result);
-        })
-
-        .catch((err) => {
-          if (err.code === 11000) {
-            if (val[i]) {
-              Keyword.update(
-                { keyword: val[i].trim() },
-                { $inc: { count: 1 } }
-              ).exec();
-            }
-          }
-        });
-    }
-  }
-  return "done";
-};
+exports.getTrendingKeywordFromSocialMedia = async () => {};
 
 exports.getAllKeywords = async (req, res, next) => {
   try {
-    let keywords = await Keyword.find().sort({ _id: -1 });
+    let keywords = await Keyword.find().sort({ count: -1 });
     res.status(200).json({ success: true, data: keywords });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getInitalKeywords = async (req, res, next) => {
+  try {
+    let keywords = await Keyword.find()
+      .sort({ count: -1 })
+      .limit(+req.params.limitCount);
+    res.status(200).json({ success: true, data: keywords });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getNextbatchKeywords = async (req, res, next) => {
+  try {
+    let lastHighestCount = req.params.lastKeywordCount;
+    let keywords = await Keyword.find({
+      count: { $lt: lastHighestCount },
+    })
+      .sort({ count: -1 })
+      .limit(+req.params.limitCount);
+    res.status(200).json({ success: true, data: keywords });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getkeywordswithSkippingKeywords = async (req, res, next) => {
+  try {
+    const userId = req.userData.userId;
+    const limit = parseInt(req.params.limit);
+    const page = parseInt(req.params.page);
+
+    let keywords = await Keyword.aggregate([
+      { $match: {} },
+      { $sort: { count: -1 } },
+      { $skip: limit * page },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: Preference.collection.name,
+          let: { keywordId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$keyword", "$$keywordId"] },
+                    {
+                      $eq: ["$user", mongoose.Types.ObjectId(userId)],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "keywordData",
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          id: "$_id",
+          count: 1,
+          for: 1,
+          against: 1,
+          created_at: 1,
+          updated_at: 1,
+          keyword: 1,
+          selected: {
+            $cond: {
+              if: {
+                $eq: [{ $size: "$keywordData" }, 0],
+              },
+              then: false,
+              else: true,
+            },
+          },
+        },
+      },
+    ]);
+    res.status(200).json({ success: true, data: keywords });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
+/**
+ * descrption - this function is using to watch the upload of new article in collection so that
+ * when new article get uploaded in collection that time using category we can collect all keywords and
+ * put those into keyword collection
+ */
+exports.saveKeywordOnNewArticleUpload = async () => {
+  try {
+    let pipeline = [
+      {
+        $match: { operationType: "insert" },
+      },
+    ];
+    let changeStreamForArticle = Article.watch(pipeline);
+
+    changeStreamForArticle.on("change", (event) => {
+      if (event.fullDocument.category) {
+        addToDatabase(event.fullDocument.category);
+      }
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const addToDatabase = async (str) => {
+  const val = (str + "").split(",");
+  for (let i = 0; i < val.length; i++) {
+    if (val[i] !== undefined) {
+      let kw = val[i].trim().toLowerCase();
+      try {
+        const keyword = new Keyword({
+          keyword: kw,
+        });
+        await keyword.save();
+      } catch (error) {
+        if (error.code === 11000 && kw) {
+          await Keyword.update({ keyword: kw }, { $inc: { count: 1 } });
+        }
+      }
+    }
   }
 };

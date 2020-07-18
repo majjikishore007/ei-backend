@@ -15,7 +15,7 @@ exports.getAllPayments = async (req, res, next) => {
     let payments = await Payment.find();
     res.status(200).json({ success: true, data: payments });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -53,7 +53,7 @@ exports.createPayment = async (req, res, next) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -134,6 +134,6 @@ exports.paymentCallbackWithOrderId = async (req, res, next) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

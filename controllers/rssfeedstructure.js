@@ -12,8 +12,8 @@ exports.getAllRssFeedStructures = async (req, res, next) => {
     } else {
       res.status(404).json({ success: false, message: "No entries found" });
     }
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -25,14 +25,14 @@ exports.getSingleRssFeedStructure = async (req, res, next) => {
     } else {
       res.status(404).json({ success: false, message: "No Entry Found" });
     }
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };
 
 exports.getSingleRssFeedStructureWithPublisherId = async (req, res, next) => {
   try {
-    let doc = await RssFeedStructure.findOne({
+    let doc = await RssFeedStructure.find({
       publisherId: req.params.publisherId,
     });
     if (doc) {
@@ -40,8 +40,8 @@ exports.getSingleRssFeedStructureWithPublisherId = async (req, res, next) => {
     } else {
       res.status(404).json({ success: false, message: "No Entry Found" });
     }
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -66,6 +66,10 @@ exports.AddRssFeedStructure = async (req, res, next) => {
 
     structure.publisherId = req.body.publisherId;
 
+    if (req.body.rssLink) {
+      structure.rssLink = req.body.rssLink;
+    }
+
     if (req.body.categoryField) {
       structure.categoryField = req.body.categoryField;
     }
@@ -85,7 +89,7 @@ exports.AddRssFeedStructure = async (req, res, next) => {
     });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: err });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -104,8 +108,8 @@ exports.updateRssFeedStructureWithId = async (req, res, next) => {
       message: "Rss feed structure updated!",
       data: updatedStructure,
     });
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -116,7 +120,7 @@ exports.deleteRssFeedStructureWithId = async (req, res, next) => {
     res
       .status(200)
       .json({ success: true, message: "Rss feed structure deleted!" });
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };

@@ -33,7 +33,7 @@ exports.getInitialArticles = async (req, res, next) => {
           lan: doc.lan,
           urlStr: doc.urlStr,
           public: doc.public,
-          artImage: doc.artImage,
+          altImage: doc.altImage,
           seo: doc.seo,
           publisherId: doc.publisher._id,
         };
@@ -47,7 +47,7 @@ exports.getInitialArticles = async (req, res, next) => {
       res.status(404).json({ success: false, message: "No entries found" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -77,7 +77,7 @@ exports.getNextArticles = async (req, res, next) => {
           lan: doc.lan,
           urlStr: doc.urlStr,
           public: doc.public,
-          artImage: doc.artImage,
+          altImage: doc.altImage,
           seo: doc.seo,
           publisherId: doc.publisher._id,
         };
@@ -91,7 +91,7 @@ exports.getNextArticles = async (req, res, next) => {
       res.status(404).json({ success: false, message: "No entries found" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -119,7 +119,7 @@ exports.getToptenArticles = async (req, res, next) => {
           lan: doc.lan,
           urlStr: doc.urlStr,
           public: doc.public,
-          artImage: doc.artImage,
+          altImage: doc.altImage,
           seo: doc.seo,
           publisherId: doc.publisher._id,
         };
@@ -133,7 +133,7 @@ exports.getToptenArticles = async (req, res, next) => {
       res.status(404).json({ success: false, message: "No entries found" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -165,6 +165,7 @@ exports.getArticlesForMobile = async (req, res, next) => {
               id: doc.id,
               lan: doc.lan,
               urlStr: doc.urlStr,
+              altImage: doc.altImage,
               seo: doc.seo,
             };
           }),
@@ -195,7 +196,7 @@ exports.uploadArticleAdmin = async (req, res, next) => {
       content: req.body.content,
       publishingDate: req.body.publishingDate,
       created_at: Date.now(),
-      artImage: req.body.artImage ? req.body.artImage : req.body.title,
+      altImage: req.body.altImage ? req.body.altImage : req.body.title,
       seo: {
         metaTitle: req.body.metaTitle,
         metaDescription: req.body.metaDescription,
@@ -212,7 +213,7 @@ exports.uploadArticleAdmin = async (req, res, next) => {
       message: "article has been submitted",
     });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -228,7 +229,7 @@ exports.editArticleCoverAdmin = async (req, res, next) => {
       message: "Image updated",
     });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -246,7 +247,7 @@ exports.uploadArticlePublisher = async (req, res, next) => {
         metaDescription: req.body.metaDescription,
         metaKeywords: req.body.metaKeywords,
       },
-      artImage: req.body.artImage ? req.body.artImage : req.body.title,
+      altImage: req.body.altImage ? req.body.altImage : req.body.title,
       publishingDate: req.body.publishingDate,
       created_at: Date.now(),
       lan: req.body.lan,
@@ -259,7 +260,7 @@ exports.uploadArticlePublisher = async (req, res, next) => {
       .status(201)
       .json({ success: true, message: "article has been submitted" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -275,7 +276,7 @@ exports.editArticleCover = async (req, res, next) => {
       message: "Image updated",
     });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -299,7 +300,7 @@ exports.getArticleById = async (req, res, next) => {
         lan: doc.lan,
         urlStr: doc.urlStr,
         public: doc.public,
-        artImage: doc.artImage,
+        altImage: doc.altImage,
         seo: doc.seo,
         publisherId: doc.publisher._id,
       };
@@ -308,7 +309,7 @@ exports.getArticleById = async (req, res, next) => {
       res.status(404).json({ success: false, message: "No valid entry" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -333,7 +334,7 @@ exports.getArticleByIdForMobile = async (req, res, next) => {
         lan: doc.lan,
         urlStr: doc.urlStr,
         public: doc.public,
-        artImage: doc.artImage,
+        altImage: doc.altImage,
         seo: doc.seo,
         publisherId: doc.publisher._id,
       };
@@ -342,7 +343,7 @@ exports.getArticleByIdForMobile = async (req, res, next) => {
       res.status(404).json({ success: false, message: "No valid entry" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -376,13 +377,13 @@ exports.getArticleByTitle = async (req, res, next) => {
       lan: doc.lan,
       urlStr: doc.urlStr,
       public: doc.public,
-      artImage: doc.artImage,
+      altImage: doc.altImage,
       seo: doc.seo,
       publisherId: doc.publisher._id,
     };
     res.status(200).json({ success: true, data: article, owner });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -392,7 +393,7 @@ exports.editArticleById = async (req, res, next) => {
     await Article.update({ _id: id }, { $set: req.body }, { $new: true });
     res.status(200).json({ success: true, message: "Article Updated" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -402,7 +403,7 @@ exports.deleteArticleById = async (req, res, next) => {
     await Article.remove({ _id: id });
     res.json({ success: true, message: "Article deleted" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -427,7 +428,7 @@ exports.getArticlesByPublisherId = async (req, res, next) => {
           lan: doc.lan,
           urlStr: doc.urlStr,
           public: doc.public,
-          artImage: doc.artImage,
+          altImage: doc.altImage,
           seo: doc.seo,
           publisherId: doc.publisher._id,
         };
@@ -442,7 +443,7 @@ exports.getArticlesByPublisherId = async (req, res, next) => {
       res.status(400).json({ success: false, message: "Articles not found" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -452,7 +453,7 @@ exports.getNoOfArticleForPublisherId = async (req, res, next) => {
     let articles = await Article.find({ publisher: id });
     res.json({ success: true, count: articles.length });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -483,7 +484,7 @@ exports.getArticlesByCategoryFilter = async (req, res, next) => {
         lan: doc.lan,
         urlStr: doc.urlStr,
         public: doc.public,
-        artImage: doc.artImage,
+        altImage: doc.altImage,
         seo: doc.seo,
         publisherId: doc.publisher._id,
       };
@@ -491,7 +492,7 @@ exports.getArticlesByCategoryFilter = async (req, res, next) => {
 
     res.status(200).json({ success: true, data: restructuredResult });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -517,14 +518,14 @@ exports.getArticlesByCategoryTotal = async (req, res, next) => {
         lan: doc.lan,
         urlStr: doc.urlStr,
         public: doc.public,
-        artImage: doc.artImage,
+        altImage: doc.altImage,
         seo: doc.seo,
         publisherId: doc.publisher._id,
       };
     });
     res.status(200).json({ success: true, data: restructuredResult });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -551,7 +552,7 @@ exports.getArticlesByPublisherIdAndCategory = async (req, res, next) => {
         lan: doc.lan,
         urlStr: doc.urlStr,
         public: doc.public,
-        artImage: doc.artImage,
+        altImage: doc.altImage,
         seo: doc.seo,
         publisherId: doc.publisher._id,
       };
@@ -562,7 +563,7 @@ exports.getArticlesByPublisherIdAndCategory = async (req, res, next) => {
       data: restructuredResult,
     });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -593,7 +594,7 @@ exports.getArticlesByPublisherIdAndCategoryForMobile = async (
         lan: doc.lan,
         urlStr: doc.urlStr,
         public: doc.public,
-        artImage: doc.artImage,
+        altImage: doc.altImage,
         seo: doc.seo,
         publisherId: doc.publisher._id,
       };
@@ -604,7 +605,7 @@ exports.getArticlesByPublisherIdAndCategoryForMobile = async (
       data: restructuredResult,
     });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -673,7 +674,7 @@ exports.getArticlesWithCommentsAndRatings = async (req, res, next) => {
 
     res.status(200).json({ success: true, data: articefullDetails });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -682,6 +683,6 @@ exports.getCountOfTotalArticles = async (req, res, next) => {
     let articleCount = await Article.countDocuments({});
     res.status(200).json({ success: true, count: articleCount });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

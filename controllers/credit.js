@@ -9,7 +9,7 @@ exports.getAllCredits = async (req, res, next) => {
     let credits = await Credit.find();
     res.status(200).json({ success: true, data: credits });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -49,7 +49,7 @@ exports.saveCredit = async (req, res, next) => {
         message: "Thankyou, But you alreday paid for this article.",
       });
     }
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -83,7 +83,7 @@ exports.getCreditByArticleId = async (req, res, next) => {
     ]);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -116,7 +116,7 @@ exports.getEarningForArticles = async (req, res, next) => {
       res.json({ success: false, data: 0 });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -147,7 +147,7 @@ exports.getCreditsForLoggedinuser = async (req, res, next) => {
       .populate("article", "title urlStr");
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 

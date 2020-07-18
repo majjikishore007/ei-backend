@@ -17,23 +17,19 @@ exports.insertRssLastVisit = async (req, res, next) => {
         { userId: req.userData.userId },
         { $set: { rssFeedId: req.body.rssFeedId } }
       );
-      
+
       res.status(200).json({ success: true, message: "last Rss Id Updated" });
-      
     } else {
-      res.status(500).json({ error });
+      res.status(500).json({ success: false, error });
     }
   }
 };
 
-
-
-
 exports.getLastvisitedRssFeedId = async (req, res, next) => {
   try {
-    let rssFeed = await RssFeedLastVisit.find({userId:req.params.id});
+    let rssFeed = await RssFeedLastVisit.find({ userId: req.params.id });
     res.status(200).json({ success: true, data: rssFeed });
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };

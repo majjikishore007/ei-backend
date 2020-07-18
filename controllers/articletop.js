@@ -8,7 +8,7 @@ exports.getAllArticleTop = async (req, res, next) => {
       .populate("article");
     res.status(200).json({ success: true, data: articleTops });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -61,7 +61,7 @@ exports.saveArticleTop = async (req, res, next) => {
       data: insertedArticleTop,
     });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -71,6 +71,6 @@ exports.deleteArticleTopWithId = async (req, res, next) => {
     await ArticleTop.remove({ _id: id });
     res.status(200).json({ success: true, message: "ArticleTop Deleted!" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

@@ -23,6 +23,7 @@ const allContentSchema = new Schema({
     metaKeywords: { type: String },
     metaDescription: { type: String },
   },
+  baseUrl: { type: String },
   viewed: { type: Boolean, default: false },
   urlStr: { type: String },
   public: { type: Boolean, default: false },

@@ -20,7 +20,7 @@ exports.getAllTopics = async (req, res, next) => {
     };
     res.status(200).json(response);
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -40,7 +40,7 @@ exports.getTopicDetailsById = async (req, res, next) => {
       res.status(200).json({ success: false, error: "No Valid entry found" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -59,7 +59,7 @@ exports.addNewTopic = async (req, res, next) => {
     let addedTopic = await topic.save();
     res.status(200).json({ success: true, data: addedTopic });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -69,7 +69,7 @@ exports.updateTopicById = async (req, res, next) => {
     await Topic.updateOne({ _id: id }, { $set: req.body });
     res.status(200).json({ success: true, message: "Topic updated" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -79,6 +79,6 @@ exports.deleteTopicById = async (req, res, next) => {
     await Topic.deleteOne({ _id: id });
     res.status(200).json({ success: true, message: "Topic delated" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

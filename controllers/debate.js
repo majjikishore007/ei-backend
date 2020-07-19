@@ -23,7 +23,7 @@ exports.getAllDebates = async (req, res, next) => {
     };
     res.status(200).json(response);
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -33,7 +33,7 @@ exports.getDebateById = async (req, res, next) => {
     let result = await Debate.findById(id);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -55,7 +55,7 @@ exports.getDebateWithArticles = async (req, res, next) => {
       res.status(200).json({ success: false, error: "No Valid entry found" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -76,7 +76,7 @@ exports.addNewDebate = async (req, res, next) => {
     let result = await debate.save();
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -86,7 +86,7 @@ exports.updateDebate = async (req, res, next) => {
     await Debate.updateOne({ _id: id }, { $set: req.body });
     res.status(200).json({ success: true, message: "Debate updated" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -100,7 +100,7 @@ exports.updateDebateImage = async (req, res, next) => {
 
     res.status(200).json({ success: true, message: "Image has been updated" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -110,6 +110,6 @@ exports.deleteDebate = async (req, res, next) => {
     await Debate.deleteOne({ _id: id });
     res.status(200).json({ success: true, message: "Debate delated" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

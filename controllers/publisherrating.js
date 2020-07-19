@@ -5,7 +5,7 @@ exports.getAllPublisherRatings = async (req, res, next) => {
     let publisherratings = await Publisherrating.find().sort({ _id: -1 });
     res.status(200).json({ success: true, data: publisherratings });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -27,7 +27,7 @@ exports.savePublisherRating = async (req, res, next) => {
       );
       res.status(200).json({ success: true, message: "update rating" });
     } else {
-      res.status(500).json({ error });
+      res.status(500).json({ success: false, error });
     }
   }
 };
@@ -42,6 +42,6 @@ exports.getRatingForPublisherId = async (req, res, next) => {
     });
     res.status(200).json({ success: true, data: rating });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

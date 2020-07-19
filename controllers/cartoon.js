@@ -8,7 +8,7 @@ exports.getInitialcartoons = async (req, res, next) => {
       .limit(+req.params.limitCount);
     res.status(200).json({ success: true, data: cartoons });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -22,7 +22,7 @@ exports.getNextbatchCartoons = async (req, res, next) => {
       .limit(+req.params.limitCount);
     res.status(200).json({ success: true, data: cartoons });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -47,7 +47,7 @@ exports.saveCartoon = async (req, res, next) => {
       message: "cartoon has been uploaded",
     });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -57,7 +57,7 @@ exports.getCartoonById = async (req, res, next) => {
     let cartoon = await Cartoon.findById(id);
     res.status(200).json({ success: true, data: cartoon });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -67,7 +67,7 @@ exports.editCartoonById = async (req, res, next) => {
     await Cartoon.update({ _id: id }, { $set: req.body });
     res.status(200).json({ success: true, message: "data has been updated" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -80,7 +80,7 @@ exports.editCartoonCoverById = async (req, res, next) => {
     );
     res.status(200).json({ success: true, message: "Updated Image" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -90,6 +90,6 @@ exports.deleteCartoonById = async (req, res, next) => {
     await Cartoon.remove({ _id: id });
     res.status(200).json({ success: true, message: "data has been deleted" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

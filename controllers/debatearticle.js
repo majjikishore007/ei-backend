@@ -10,7 +10,7 @@ exports.getDebateArticleById = async (req, res, next) => {
       res.status(200).json({ success: false, error: "No Valid entry found" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -19,21 +19,21 @@ exports.getDebateForById = async (req, res, next) => {
     const debate_id = req.params.id;
     let result = await DebateArticle.find({
       $and: [{ debate: debate_id }, { type: true }],
-    }).populate([{
-      path: 'article',
-      model :'Article',
-      select : 'title urlStr cover description website',
-      populate : {
-        path: 'publisher',
-        model : 'Publisher',
-        select: 'logo name urlStr'
-        
-      }
-    }
-    ])
+    }).populate([
+      {
+        path: "article",
+        model: "Article",
+        select: "title urlStr cover description website",
+        populate: {
+          path: "publisher",
+          model: "Publisher",
+          select: "logo name urlStr",
+        },
+      },
+    ]);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -42,21 +42,21 @@ exports.getDebateAgainstById = async (req, res, next) => {
     const debate_id = req.params.id;
     let result = await DebateArticle.find({
       $and: [{ debate: debate_id }, { type: false }],
-    }).populate([{
-      path: 'article',
-      model :'Article',
-      select : 'title urlStr cover description website',
-      populate : {
-        path: 'publisher',
-        model : 'Publisher',
-        select: 'logo name urlStr'
-        
-      }
-    }
-    ])
+    }).populate([
+      {
+        path: "article",
+        model: "Article",
+        select: "title urlStr cover description website",
+        populate: {
+          path: "publisher",
+          model: "Publisher",
+          select: "logo name urlStr",
+        },
+      },
+    ]);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -71,7 +71,7 @@ exports.addDebateArticle = async (req, res, next) => {
     let result = await debateArticle.save();
     res.status(201).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -84,7 +84,7 @@ exports.deleteDebateArticle = async (req, res, next) => {
       .status(200)
       .json({ success: true, message: "Article remove from debate" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -101,6 +101,6 @@ exports.getDebateWitharticleIdDebateId = async (req, res, next) => {
       res.status(200).json({ success: false, error: "No data found" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

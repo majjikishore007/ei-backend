@@ -29,7 +29,7 @@ exports.addRssToArchive = async (req, res, next) => {
 
     res.status(200).json({ success: true, data: savedDoc });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -43,7 +43,7 @@ exports.getlatestRssArchive = async (req, res, next) => {
       .limit(20);
     res.status(200).json({ success: true, data: rssArchives });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -59,6 +59,6 @@ exports.getNextbatchRssArchive = async (req, res, next) => {
       .limit(20);
     res.status(200).json({ success: true, data: rssArchives });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

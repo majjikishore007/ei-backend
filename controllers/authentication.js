@@ -92,7 +92,7 @@ exports.registerUser = async (req, res, next) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -216,6 +216,6 @@ exports.mobileGoogleLogin = async (req, res, next) => {
         });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

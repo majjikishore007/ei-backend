@@ -9,7 +9,7 @@ exports.getAllArticleViews = async (req, res, next) => {
       .populate("user");
     res.status(200).json({ success: true, data: viewArticles });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -24,7 +24,7 @@ exports.getArticleViewByArticleId = async (req, res, next) => {
 
     res.status(200).json({ success: true, data: viewArticles });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -42,7 +42,7 @@ exports.getArticleViewByUserId = async (req, res, next) => {
 
     res.status(200).json({ success: true, data: viewArticles });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -64,6 +64,6 @@ exports.saveArticleView = async (req, res, next) => {
       console.log("the article you clicked exists!!");
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

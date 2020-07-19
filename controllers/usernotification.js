@@ -8,7 +8,7 @@ exports.getUserNotifications = async (req, res, next) => {
       .populate("article");
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status().json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -27,7 +27,7 @@ exports.getNotificationFollowedPublisher = async (req, res, next) => {
     );
     res.status(200).json({ success: true, data: filteredData });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -50,7 +50,7 @@ exports.getUnseenNotificationFollowed = async (req, res, next) => {
     );
     res.status(200).json({ success: true, data: filteredData });
   } catch (error) {
-    res.status().json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -67,7 +67,7 @@ exports.getUnseenNotifications = async (req, res, next) => {
     let result = data.filter(getData);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status().json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -83,7 +83,7 @@ exports.getAllNotificationForUserId = async (req, res, next) => {
     let result = data.filter(getData);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status().json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -94,6 +94,6 @@ exports.updateNotificationById = async (req, res, next) => {
     let result = await notification.save();
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

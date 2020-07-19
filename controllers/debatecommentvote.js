@@ -14,6 +14,6 @@ exports.voteForComment = async (req, res, next) => {
       .status(201)
       .json({ success: true, message: "vote has been adeed", data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

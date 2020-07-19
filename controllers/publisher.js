@@ -27,7 +27,7 @@ exports.getPublishers = async (req, res, next) => {
       res.status(404).json({ success: false, message: "No entries found" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -51,7 +51,7 @@ exports.createNewPublisher = async (req, res, next) => {
     await publisher.save();
     res.status(201).json({ success: true, message: "publisher page created" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -65,7 +65,7 @@ exports.getPublisherById = async (req, res, next) => {
       res.status(404).json({ success: false, message: "No valid entery" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -79,7 +79,7 @@ exports.getPublisherByUrlStr = async (req, res, next) => {
       res.status(404).json({ success: false, message: "No valid entery" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -103,7 +103,7 @@ exports.updatePublisherById = async (req, res, next) => {
     await Publisher.update({ _id: id }, { $set: req.body });
     res.status(200).json({ success: true, message: "Publisher page updated" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -113,7 +113,7 @@ exports.deletePublisherById = async (req, res, next) => {
     await Publisher.remove({ _id: id });
     res.status(200).json({ success: true, message: "Publisher page removed" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -128,7 +128,7 @@ exports.updatePublisherLogo = async (req, res, next) => {
       .status(200)
       .json({ success: true, message: "Publisher logo has been updated" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -152,7 +152,7 @@ exports.getPublisherByAggregate = async (req, res, next) => {
       output[result[i]._id] = result[i].total;
     }
     res.status(200).json({ success: true, data: publishers, counts: output });
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };

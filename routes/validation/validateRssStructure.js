@@ -10,20 +10,21 @@ exports.validateRssStructure = async (req, res, next) => {
       .json({ success: false, message: "Please fill publisherId" });
   }
   /**check for valid publisherId */
-  let publisherExist = await Publisher.findOne({ _id: req.body.publisherId });
-  if (!publisherExist) {
+  //let publisherExist = await Publisher.findOne({ _id: req.body.publisherId });
+  /*if (!publisherExist) {
     return res
       .status(400)
       .json({ success: false, message: "Invalid publisher Id given" });
   }
   let structureExist = await RssFeedStructure.findOne({
     publisherId: req.body.publisherId,
+    rssLink: req.body.rssLink,
   });
   if (structureExist) {
     return res.status(400).json({
       success: false,
-      message: "Rss Structure for publisher Id already exist",
+      message: "Rss Structure for publisher Id and feed url already exist",
     });
-  }
+  }*/
   next();
 };

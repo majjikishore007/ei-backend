@@ -8,7 +8,7 @@ exports.getAllPublisherNotifications = async (req, res, next) => {
       .populate("article");
     res.status(200).json({ success: true, data: notifications });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -27,7 +27,7 @@ exports.getUnseenPublisherNotificationsForUserId = async (req, res, next) => {
     let result = data.filter(getData);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -46,7 +46,7 @@ exports.getAllPublisherNotificationsForUserId = async (req, res, next) => {
     let result = data.filter(getData);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -57,6 +57,6 @@ exports.updatePublisherNotificationById = async (req, res, next) => {
     var result = await notification.save();
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).send(error);
+    res.status(500).json({ success: false, error });
   }
 };

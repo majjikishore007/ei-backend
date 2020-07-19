@@ -10,7 +10,7 @@ exports.getDebateCommentWithId = async (req, res, next) => {
       res.status(200).json({ success: false, message: "No Valid entry found" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -25,7 +25,7 @@ exports.addDebateComment = async (req, res, next) => {
     let result = await debateComment.save();
     res.status(201).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -35,7 +35,7 @@ exports.updateDebateCommentById = async (req, res, next) => {
     await DebateComment.updateOne({ _id: id }, { $set: req.body });
     res.status(200).json({ success: true, message: "Debate updated" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 

@@ -12,7 +12,7 @@ exports.saveView = async (req, res, next) => {
     await view.save();
     res.status(200).json({ success: true, message: "Page view" });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -45,7 +45,7 @@ exports.getViewByArticleId = async (req, res, next) => {
     ]);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -67,6 +67,6 @@ exports.aggregateByArticleId = async (req, res, next) => {
       res.status(200).json({ success: false, data: 0 });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

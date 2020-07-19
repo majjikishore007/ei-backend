@@ -14,6 +14,7 @@ const {
   updateVisitedStatusOfRssfeed,
   deleteSingleRssFeedById,
   deleteAllRssFeeds,
+  getRssfeedsWithPageAndLimit,
 } = require("../controllers/rssfeed");
 
 /**
@@ -56,6 +57,17 @@ router.get(
 router.get(
   "/getbyPublisherId/publisher/:publisherId/:limitcount",
   getRssFeedsFilteredByPublisherId
+);
+
+/**
+ * @desc  POST passing baseUrl in reg.body and getting rss feeds with pagination limit
+ * @route POST /api/rss/page/:page/limit/:limit/:publisherId
+ * @access  Public
+ */
+
+router.post(
+  "/page/:page/limit/:limit/:publisherId",
+  getRssfeedsWithPageAndLimit
 );
 
 /**

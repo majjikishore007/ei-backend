@@ -10,20 +10,18 @@ exports.insertRssIntoAllContent = async (req, res, next) => {
   let publishers = await Publisher.find({});
 
   publishers.map(async (publisher) => {
-    /**check whether structure exist or not for publisherId */
-    let structure = await RssFeedstructure.findOne({
-      publisherId: publisher._id,
-    });
-
-    if (structure) {
-      /**structure present */
-      /**loop through feedUrl array   */
-      if (publisher.feedurl) {
-        for (
-          let urlIndex = 0;
-          urlIndex < publisher.feedurl.length;
-          urlIndex++
-        ) {
+    /**loop through feedUrl array   */
+    if (publisher.feedurl) {
+      for (let urlIndex = 0; urlIndex < publisher.feedurl.length; urlIndex++) {
+        /**check whether structure exist or not for publisherId */
+        let structure = await RssFeedstructure.findOne({
+          $and: [
+            { publisherId: publisher._id },
+            { rssLink: publisher.feedurl[urlIndex] },
+          ],
+        });
+        /**structure present */
+        if (structure != null) {
           try {
             let feed = await parser.parseURL(publisher.feedurl[urlIndex]);
             let feedList = feed.items;
@@ -66,6 +64,7 @@ exports.insertRssIntoAllContent = async (req, res, next) => {
               }
 
               data.publisher = structure.publisherId;
+              data.baseUrl = publisher.feedurl[urlIndex];
 
               if (
                 structure.categoryField &&
@@ -129,14 +128,15 @@ exports.getInitialRssFeeds = async (req, res, next) => {
     res
       .status(200)
       .json({ success: true, count: rssFeeds.length, data: rssFeeds });
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };
 
 exports.getNextbatchRssFeeds = async (req, res, next) => {
   try {
     let lastRssFeedId = mongoose.Types.ObjectId(req.params.lastRssFeedId);
+
     let rssFeeds = await AllContent.find({
       _id: { $lt: lastRssFeedId },
       viewed: false,
@@ -148,7 +148,27 @@ exports.getNextbatchRssFeeds = async (req, res, next) => {
       .status(200)
       .json({ success: true, count: rssFeeds.length, data: rssFeeds });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getRssfeedsWithPageAndLimit = async (req, res, next) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+    let baseUrl = req.body.baseUrl;
+
+    let rssFeeds = await AllContent.find({
+      baseUrl: baseUrl,
+      publisher: req.params.publisherId,
+    })
+      .populate("publisher", "name")
+      .sort({ publishingDate: -1 })
+      .skip(page * limit)
+      .limit(limit);
+    res.status(200).json({ success: true, data: rssFeeds });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -156,8 +176,8 @@ exports.getTotalCountRssFeeds = async (req, res, next) => {
   try {
     let rssFeedsCount = await AllContent.countDocuments();
     res.status(200).json({ success: true, data: rssFeedsCount });
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -170,8 +190,8 @@ exports.getRssFeedsFilteredByPublisherId = async (req, res, next) => {
     res
       .status(200)
       .json({ success: true, count: rssFeeds.length, data: rssFeeds });
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -179,8 +199,8 @@ exports.getSingleRssFeedById = async (req, res, next) => {
   try {
     let rssFeed = await AllContent.findOne({ _id: req.params.id });
     res.status(200).json({ success: true, data: rssFeed });
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -191,8 +211,8 @@ exports.updateVisitedStatusOfRssfeed = async (req, res, next) => {
       { $set: req.body }
     );
     res.status(200).json({ success: true, message: "Rss feed visited marked" });
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -200,8 +220,8 @@ exports.deleteSingleRssFeedById = async (req, res, next) => {
   try {
     await AllContent.remove({ _id: req.params.id });
     res.status(200).json({ success: true, message: "deleted" });
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -209,7 +229,7 @@ exports.deleteAllRssFeeds = async (req, res, next) => {
   try {
     await AllContent.remove();
     res.status(200).json({ success: true, message: "deleted" });
-  } catch (err) {
-    res.status(500).json({ error: err });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
   }
 };

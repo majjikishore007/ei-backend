@@ -8,7 +8,7 @@ exports.getCounterCommentWithparentComment = async (req, res, next) => {
     }).sort("-_id");
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -23,6 +23,6 @@ exports.addCounterComment = async (req, res, next) => {
     let result = await debateCounterComment.save();
     res.status(201).json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

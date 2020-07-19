@@ -18,7 +18,7 @@ const articleSchema = new Schema({
   publishingDate: { type: Date, required: true },
   created_at: { type: Date },
   lan: { type: String },
-  artImage: { type: String },
+  altImage: { type: String },
   seo: {
     metaTitle: { type: String },
     metaKeywords: { type: String },

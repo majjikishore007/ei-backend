@@ -9,7 +9,7 @@ exports.getAllBlogPosts = async (req, res, next) => {
       .populate("author", "displayName");
     res.status(200).json({ success: true, count: blogs.length, data: blogs });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 exports.getNextBatchBlogs = async (req, res, next) => {
@@ -33,7 +33,7 @@ exports.getBlogsFilteredByCategory = async (req, res, next) => {
       .populate("author");
     res.status(200).json({ success: true, data: blogs });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -43,7 +43,7 @@ exports.getBlogById = async (req, res, next) => {
     let blog = await Blog.findById(id).populate("author");
     res.status(200).json({ success: true, data: blog });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -53,7 +53,7 @@ exports.getBlogByTitle = async (req, res, next) => {
     let blog = await Blog.findOne({ urlStr: urlStr }).populate("author");
     res.status(200).json({ success: true, data: blog });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -80,7 +80,7 @@ exports.saveBlog = async (req, res, next) => {
     let savedBlog = await blog.save();
     res.status(200).json({ success: true, data: savedBlog });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -93,7 +93,7 @@ exports.updateBlogById = async (req, res, next) => {
       message: "update blog successfully",
     });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };
 
@@ -107,6 +107,6 @@ exports.deleteBlogById = async (req, res, next) => {
       data: deletedBlog,
     });
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error });
   }
 };

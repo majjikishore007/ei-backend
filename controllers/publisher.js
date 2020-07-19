@@ -93,7 +93,7 @@ exports.getPublisherByUserId = async (req, res, next) => {
       res.status(200).json({ success: false, message: "No publisher" });
     }
   } catch (error) {
-    res.status(500).json({ error });
+    res.status(500).json({ success: false, error: error });
   }
 };
 

@@ -41,7 +41,7 @@ exports.getAllArticleTopForMobile = async (req, res, next) => {
               };
             }),
           };
-          res.json({ success: true, articles: response.articles });
+          res.json({ success: true, data: response.articles });
         });
       });
   } catch (error) {

@@ -3,66 +3,48 @@ const checkAuth = require("../middleware/check-auth");
 
 const {
   getArticlesWithLimitedPreferencesAndLimitedKeywords,
-  getNextbatchArticlesWithLimitedPreferencesAndLimitedKeywords,
-  getNextArticlesForkeyword,
-  getNextArticlesForKeywords,
+  getKeywordsWithArticles,
+  getNextArticles,
 } = require("../controllers/newsfeed");
 
 /**
- * @description   this route is used to get articles according to trending keywords 
-                  and preferences of loggedin user
- * @param preferenceLimit
- * @param keywordLimit
- * @param articleLimit
- * @route   GET      /api/newsfeed/:preferenceLimit/:keywordLimit/:articleLimit
- * @access  Private
- */
-router.get(
-  "/:preferenceLimit/:keywordLimit/:articleLimit",
-  checkAuth,
-  getArticlesWithLimitedPreferencesAndLimitedKeywords
-);
-
-/**
- * @description   this route is used to get next batch articles according to preferences and keywords
- * @param lastPreferenceId
- * @param preferenceLimit
- * @param lastKeywordFrequencyCount
- * @param keywordLimit
- * @param articleLimit
- * @route   GET      /api/newsfeed/:lastPreferenceId/:preferenceLimit/:lastKeywordFrequencyCount/:keywordLimit/:articleLimit
- * @access  Private
- */
-router.get(
-  "/:lastPreferenceId/:preferenceLimit/:lastKeywordFrequencyCount/:keywordLimit/:articleLimit",
-  checkAuth,
-  getNextbatchArticlesWithLimitedPreferencesAndLimitedKeywords
-);
-
-/**
- * @description   this route is used to get next batch of articles for a specific keyword
+ * @description   this route is used to get articles for a specific keyword
  * @param keyword
- * @param lastArticleId
+ * @param articlePage
  * @param articleLimit
  * @route   GET      /api/newsfeed/getArticles/:keyword/:lastArticleId/:articleLimit
  * @access  Private
  */
-router.get(
-  "/getArticles/:keyword/:lastArticleId/:articleLimit",
-  getNextArticlesForkeyword
-);
+router.get("/getArticles/:keyword/:articlePage/:articleLimit", getNextArticles);
 
 /**
- * @description   this route is used to get articles for limited keywords only
- * @param lastKeywordFrequencyCount
+ * @description this route is used to get articles for limited keywords only after when prefernce count 0
+ * @param keywordPage
  * @param keywordLimit
  * @param articleLimit
  * @route   GET      /api/newsfeed/getArticlesForOnlyKeywords/:lastKeywordFrequencyCount/:keywordLimit/:articleLimit
  * @access  Private
  */
 router.get(
-  "/getArticlesForOnlyKeywords/:lastKeywordFrequencyCount/:keywordLimit/:articleLimit",
-  getNextArticlesForKeywords
+  "/getArticlesForOnlyKeywords/:keywordPage/:keywordLimit/:articleLimit",
+  getKeywordsWithArticles
+);
+
+/**
+ * @description   this route is used to get articles according to trending keywords 
+                  and preferences of loggedin user
+ * @param preferencePage
+ * @param preferenceLimit
+ * @param keywordPage
+ * @param keywordLimit
+ * @param articleLimit
+ * @route   GET      /api/newsfeed/:preferencePage/:preferenceLimit/:keywordPage/:keywordLimit/:articleLimit
+ * @access  Private
+ */
+router.get(
+  "/:preferencePage/:preferenceLimit/:keywordPage/:keywordLimit/:articleLimit",
+  checkAuth,
+  getArticlesWithLimitedPreferencesAndLimitedKeywords
 );
 
 module.exports = router;

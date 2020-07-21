@@ -10,6 +10,8 @@ const paymentSchema = new Schema({
   raz_payment_id: { type: String },
   raz_status: { type: String },
   data: { type: JSON },
+  mode: { type: Boolean, default: false },
+  expireDate: { type: Date },
   created_at: { type: Date, required: true },
 });
 module.exports = mongoose.model("Payment", paymentSchema);

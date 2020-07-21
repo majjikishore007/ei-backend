@@ -137,3 +137,98 @@ exports.paymentCallbackWithOrderId = async (req, res, next) => {
     res.status(500).json({ success: false, error });
   }
 };
+
+/**for subscription buy controllers */
+
+const calculateExpireDate = (date, days) => {
+  const expDate = new Date(Number(date));
+  expDate.setDate(date.getDate() + days);
+  return expDate;
+};
+
+exports.createPaymentToSubscribe = async (req, res, next) => {
+  try {
+    let expireDate = calculateExpireDate(new Date(), req.body.dayCount);
+    var options = {
+      amount: req.body.amount, // amount in the smallest currency unit
+      currency: "INR",
+      receipt: "EI" + new Date().getTime(),
+      payment_capture: "0",
+    };
+    instance.orders.create(options, async (err, order) => {
+      if (err) {
+        res.json({ sucess: false, error: err });
+      } else {
+        const payment = new Payment({
+          order: order.id,
+          amount: order.amount,
+          capture: false,
+          receipt: order.receipt,
+          userId: req.userData.userId,
+          expireDate: expireDate,
+          created_at: order.created_at,
+        });
+        let result = await payment.save();
+        res.status(201).json({ success: true, data: result });
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.paymentCallbackWithOrderIdToSubscribe = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    instance.payments.fetch(id, async (err, info) => {
+      if (err) {
+        return res.json({ success: false, error: "Inavlid callback url" });
+      } else if (!info.order_id) {
+        return res.json({ success: false, error: "Invalid orderId" });
+      } else if (info.captured) {
+        let data = {
+          capture: true,
+          amount: info.amount,
+          raz_payment_id: info.id,
+          raz_status: info.status,
+          data: info,
+        };
+        /**find payment record */
+        let result = await Payment.findOne({
+          $and: [{ order: info.order_id }, { capture: false }],
+        });
+        if (!result) {
+          return res.json({ success: false, error: "Document not found" });
+        }
+        /**update payment status */
+        let ret = await Payment.updateOne(
+          { order: info.order_id },
+          { $set: data },
+          { new: true, useFindAndModify: false }
+        );
+        if (!ret) {
+          return res.json({ success: false, error: "Document not found" });
+        }
+        /**update expire date for loggedin user */
+        const update_user = {
+          expireDate: result.expireDate,
+        };
+        await User.findOneAndUpdate(
+          { _id: result.userId },
+          { $set: update_user }
+        );
+        res.json({
+          success: true,
+          message: `Subscription is valid upto ${result.expireDate}`,
+        });
+      } else {
+        res.json({
+          success: false,
+          error: "your order has not been captured ",
+        });
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};

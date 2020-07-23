@@ -1,99 +1,144 @@
 const Usernotification = require("../models/usernotification");
-const Follow = require("../models/follow");
 
-exports.getUserNotifications = async (req, res, next) => {
+const mongoose = require("mongoose");
+
+exports.getAllUserNotifications = async (req, res, next) => {
   try {
     let result = await Usernotification.find()
+      .sort({ _id: -1 })
       .populate("sender")
-      .populate("article");
+      .populate("reciever")
+      .populate("article")
+      .populate("debate")
+      .populate("blog")
+      .populate("debateParentComment")
+      .populate("debateComment")
+      .populate("articleParentComment")
+      .populate("articleComment")
+      .populate("blogParentComment")
+      .populate("blogComment");
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }
 };
 
-exports.getNotificationFollowedPublisher = async (req, res, next) => {
+/**new functions */
+exports.getAllUserNotificationsForUserIdPagination = async (req, res, next) => {
   try {
-    const notification = await Usernotification.find();
-    const id = req.params.userId;
-    const publisher = await Follow.find({ user: id }).populate("sender");
-    let filteredData = [];
-    notification.forEach((e1) =>
-      publisher.forEach((e2) => {
-        if (e1.sender._id == e2.publisher) {
-          filteredData.push(e1);
-        }
-      })
-    );
-    res.status(200).json({ success: true, data: filteredData });
-  } catch (error) {
-    res.status(500).json({ success: false, error });
-  }
-};
-
-exports.getUnseenNotificationFollowed = async (req, res, next) => {
-  try {
-    const notification = await Usernotification.find({
-      viewed: false,
-      read: false,
-    }).populate("article");
-    const id = req.params.userId;
-    const publisher = await Follow.find({ user: id }).populate("sender");
-
-    const filteredData = [];
-    notification.forEach((e1) =>
-      publisher.forEach((e2) => {
-        if (e1.sender._id == e2.publisher) {
-          filteredData.push(e1);
-        }
-      })
-    );
-    res.status(200).json({ success: true, data: filteredData });
-  } catch (error) {
-    res.status(500).json({ success: false, error });
-  }
-};
-
-exports.getUnseenNotifications = async (req, res, next) => {
-  try {
-    let data = await Usernotification.find({
-      viewed: false,
-      read: false,
-    }).populate("sender");
-
-    function getData(n) {
-      if (n.reciever.userId == req.params.userId) return true;
-    }
-    let result = data.filter(getData);
-    res.status(200).json({ success: true, data: result });
-  } catch (error) {
-    res.status(500).json({ success: false, error });
-  }
-};
-
-exports.getAllNotificationForUserId = async (req, res, next) => {
-  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
     var data = await Usernotification.find({
-      read: false,
-    }).populate("sender");
-
-    function getData(n) {
-      if (n.reciever.userId == req.params.userId) return true;
-    }
-    let result = data.filter(getData);
-    res.status(200).json({ success: true, data: result });
+      reciever: mongoose.Types.ObjectId(req.userData.userId),
+    })
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("sender")
+      .populate("reciever")
+      .populate("article")
+      .populate("debate")
+      .populate("blog")
+      .populate("debateParentComment")
+      .populate("debateComment")
+      .populate("articleParentComment")
+      .populate("articleComment")
+      .populate("blogParentComment")
+      .populate("blogComment");
+    res.status(200).json({ success: true, data });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };
+
+exports.getUnseenUserNotificationsForUserIdPagination = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+    var data = await Usernotification.find({
+      reciever: mongoose.Types.ObjectId(req.userData.userId),
+      viewed: false,
+      read: false,
+    })
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("sender")
+      .populate("reciever")
+      .populate("article")
+      .populate("debate")
+      .populate("blog")
+      .populate("debateParentComment")
+      .populate("debateComment")
+      .populate("articleParentComment")
+      .populate("articleComment")
+      .populate("blogParentComment")
+      .populate("blogComment");
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getUnreadUserNotificationsForUserIdPagination = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+    var data = await Usernotification.find({
+      reciever: mongoose.Types.ObjectId(req.userData.userId),
+      read: false,
+    })
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("sender")
+      .populate("reciever")
+      .populate("article")
+      .populate("debate")
+      .populate("blog")
+      .populate("debateParentComment")
+      .populate("debateComment")
+      .populate("articleParentComment")
+      .populate("articleComment")
+      .populate("blogParentComment")
+      .populate("blogComment");
+
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
+/**new functions */
 
 exports.updateNotificationById = async (req, res, next) => {
   try {
-    let notification = await Usernotification.findById(req.params.id).exec();
-    notification.set(req.body);
-    let result = await notification.save();
-    res.status(200).json({ success: true, data: result });
+    let data = await Usernotification.findOneAndUpdate(
+      {
+        _id: mongoose.Types.ObjectId(req.params.id),
+        reciever: mongoose.Types.ObjectId(req.userData.userId),
+      },
+      {
+        $set: req.body,
+      },
+      { new: true }
+    );
+    res
+      .status(200)
+      .json({ success: true, message: "Notification Updated", data });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };

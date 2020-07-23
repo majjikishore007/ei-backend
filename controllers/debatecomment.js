@@ -1,4 +1,8 @@
 const DebateComment = require("../models/debate_comment");
+const DebateArticle = require("../models/debate_article");
+const User = require("../models/user");
+const PublisherNotification = require("../models/publishernotification");
+const mongoose = require("mongoose");
 
 exports.getDebateCommentWithId = async (req, res, next) => {
   try {
@@ -23,8 +27,48 @@ exports.addDebateComment = async (req, res, next) => {
       message: req.body.message,
     });
     let result = await debateComment.save();
+
+    /**aggregate the debatearticles and get articles-> publisher.userId -> create Notification For each */
+
+    let debateArticles = await DebateArticle.find({
+      debate: mongoose.Types.ObjectId(req.body.debate),
+    }).populate([
+      {
+        path: "article",
+        model: "Article",
+        populate: {
+          path: "publisher",
+          model: "Publisher",
+          select: "userId",
+        },
+      },
+    ]);
+
+    let userResult = await User.findOne({ _id: req.userData.userId });
+
+    let prm = [];
+    debateArticles.forEach((debateArticle) => {
+      let publishernotification = {
+        notificationType: "comment-on-debate",
+        message: `${userResult.displayName} commented on a Debate featuring your Article`,
+        sender: req.userData.userId,
+        reciever:
+          debateArticle.article &&
+          debateArticle.article.publisher &&
+          debateArticle.article.publisher.userId
+            ? debateArticle.article.publisher.userId
+            : null,
+        debate: req.body.debate,
+        debateComment: result ? result._id : null,
+        date: Date.now(),
+      };
+      prm.push(publishernotification);
+    });
+    await PublisherNotification.insertMany(prm);
+
     res.status(201).json({ success: true, data: result });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };

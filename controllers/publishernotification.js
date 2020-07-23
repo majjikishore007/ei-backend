@@ -1,61 +1,125 @@
 const Publishernotification = require("../models/publishernotification");
+const mongoose = require("mongoose");
 
 exports.getAllPublisherNotifications = async (req, res, next) => {
   try {
     let notifications = await Publishernotification.find()
+      .sort({ _id: -1 })
       .populate("sender")
       .populate("reciever")
-      .populate("article");
+      .populate("article")
+      .populate("publisher")
+      .populate("articleComment")
+      .populate("debate")
+      .populate("debateComment");
     res.status(200).json({ success: true, data: notifications });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }
 };
 
-exports.getUnseenPublisherNotificationsForUserId = async (req, res, next) => {
+exports.getAllPublisherNotificationsForUserIdPagination = async (
+  req,
+  res,
+  next
+) => {
   try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
     var data = await Publishernotification.find({
+      reciever: mongoose.Types.ObjectId(req.userData.userId),
+    })
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("sender")
+      .populate("reciever")
+      .populate("article")
+      .populate("publisher")
+      .populate("articleComment")
+      .populate("debate")
+      .populate("debateComment");
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getUnseenPublisherNotificationsForUserIdPagination = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+    var data = await Publishernotification.find({
+      reciever: mongoose.Types.ObjectId(req.userData.userId),
       viewed: false,
       read: false,
     })
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
       .populate("sender")
       .populate("reciever")
-      .populate("article");
-    function getData(n) {
-      if (n.reciever.userId == req.params.userId) return true;
-    }
-    let result = data.filter(getData);
-    res.status(200).json({ success: true, data: result });
+      .populate("article")
+      .populate("publisher")
+      .populate("articleComment")
+      .populate("debate")
+      .populate("debateComment");
+    res.status(200).json({ success: true, data });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }
 };
 
-exports.getAllPublisherNotificationsForUserId = async (req, res, next) => {
+exports.getUnreadPublisherNotificationsForUserIdPagination = async (
+  req,
+  res,
+  next
+) => {
   try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
     var data = await Publishernotification.find({
+      reciever: mongoose.Types.ObjectId(req.userData.userId),
       read: false,
     })
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
       .populate("sender")
       .populate("reciever")
       .populate("article")
-      .exec();
-    function getData(n) {
-      if (n.reciever.userId == req.params.userId) return true;
-    }
-    let result = data.filter(getData);
-    res.status(200).json({ success: true, data: result });
+      .populate("publisher")
+      .populate("articleComment")
+      .populate("debate")
+      .populate("debateComment");
+
+    res.status(200).json({ success: true, data });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };
 
 exports.updatePublisherNotificationById = async (req, res, next) => {
   try {
-    var notification = await Publishernotification.findById(req.params.id);
-    notification.set(req.body);
-    var result = await notification.save();
-    res.status(200).json({ success: true, data: result });
+    var data = await Publishernotification.findOneAndUpdate(
+      {
+        _id: mongoose.Types.ObjectId(req.params.id),
+        reciever: mongoose.Types.ObjectId(req.userData.userId),
+      },
+      {
+        $set: req.body,
+      },
+      { new: true }
+    );
+    res
+      .status(200)
+      .json({ success: true, message: "Notification updated", data });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

@@ -1,5 +1,6 @@
 const Article = require("../models/article");
 const Comment = require("../models/comment");
+const User = require("../models/user");
 const Publishernotification = require("../models/publishernotification");
 
 exports.getAllComments = async (req, res, next) => {
@@ -30,7 +31,9 @@ exports.getAllComments = async (req, res, next) => {
 
 exports.saveComment = async (req, res, next) => {
   try {
-    let result = await Article.findOne({ urlStr: req.body.urlStr });
+    let result = await Article.findOne({ urlStr: req.body.urlStr }).populate(
+      "publisher"
+    );
     if (!result) {
       return res
         .status(400)
@@ -42,16 +45,23 @@ exports.saveComment = async (req, res, next) => {
       article: result._id,
       date: Date.now(),
     });
+    let savedComment = await comment.save();
+
+    let userResult = await User.findOne({ _id: req.userData.userId });
+
     const publishernotification = new Publishernotification({
-      message: req.body.message,
+      notificationType: "comment-on-article",
+      message: `${userResult.displayName} commented on Your Article`,
       sender: req.userData.userId,
-      reciever: result.publisher,
-      article: result._id,
+      reciever: result.publisher.userId,
+      article: result ? result._id : null,
+      articleComment: savedComment ? savedComment._id : null,
       date: Date.now(),
     });
-    await Promise.all([comment.save(), publishernotification.save()]);
+    await publishernotification.save();
     res.status(201).json({ success: true, message: "Comment added" });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };

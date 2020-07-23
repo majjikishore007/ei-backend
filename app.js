@@ -39,6 +39,12 @@ const debateCommentRoute = require("./routes/debate-comment-route");
 const debateCommentVoteRoute = require("./routes/debate-comment-vote-route");
 
 const busboy = require("connect-busboy");
+const articleCommentVoteRoute = require("./routes/article-comment-vote-route");
+const articleCounterCommentRoute = require("./routes/article-counter-comment-route");
+
+const blogCommentRoute = require("./routes/blog-comment-route");
+const blogCommentVoteRoute = require("./routes/blog-comment-vote-route");
+const blogCounterCommentRoute = require("./routes/blog-counter-comment-route");
 
 const cron = require("node-cron");
 const { insertRssIntoAllContent } = require("./controllers/rssfeed");
@@ -61,6 +67,7 @@ const videoBookmarkRoute = require("./routes/videobookmark");
 const videoTopRoute = require("./routes/videotop");
 const audioRoute = require("./routes/audio");
 const pdfRoute = require("./routes/pdf");
+const subscribeNotification = require("./routes/subscribe-notification-route");
 
 /**save keyword on new article upload */
 const { saveKeywordOnNewArticleUpload } = require("./controllers/keyword");
@@ -109,7 +116,7 @@ app.use("/api/publisher", publisherRoute);
 app.use("/api/payment", paymentRoute);
 app.use("/api/credit", creditRoutes);
 app.use("/api/comment", commentRoute);
-app.use("/api/notification", PublishernotificationRoute);
+app.use("/api/publishernotification", PublishernotificationRoute);
 app.use("/api/usernotification", UsernotificationRoute);
 app.use("/api/bookmark", bookmarkRoute);
 app.use("/api/rating", ratingRoute);
@@ -131,6 +138,12 @@ app.use("/api/topic", topicRoute);
 app.use("/api/debateComment", debateCommentRoute);
 app.use("/api/debateCommentVote", debateCommentVoteRoute);
 app.use("/api/debateCounterComment", debateCounterCommentRoute);
+
+app.use("/api/articleCommentVote", articleCommentVoteRoute);
+app.use("/api/articleCounterComment", articleCounterCommentRoute);
+app.use("/api/blogComment", blogCommentRoute);
+app.use("/api/blogCommentVote", blogCommentVoteRoute);
+app.use("/api/blogCounterComment", blogCounterCommentRoute);
 app.use("/api/newsfeed", newsFeed);
 app.use("/api/nominatepublisher", nominatePublisher);
 app.use("/api/newslettersubscribe", newsletterSubscriber);
@@ -142,6 +155,7 @@ app.use("/api/videotop", videoTopRoute);
 app.use("/api/audio", audioRoute);
 app.use("/api/pdf", pdfRoute);
 // Provide static directory for  frontend
+app.use("/api/subscribeNotification", subscribeNotification);
 
 //Connect server to Angular index.html file
 app.get("*", (req, res) => {
@@ -156,7 +170,16 @@ cron.schedule("*/2 * * * *", () => {
 /**run funcion to watching new article upload */
 saveKeywordOnNewArticleUpload();
 
+/**comment on article */
+require("./notification/collection-watch").watchChangeInPublisherNotification();
+require("./notification/collection-watch").watchChangeInUserNotification();
+require("./notification/collection-watch").watchNewResourceUploadNotification();
+
 //Start Server: Listen on port 8080
-app.listen(port, () => {
+let server = app.listen(port, () => {
   console.log("Listening on port 8080");
 });
+
+const socket = require("./notification/socket")(server);
+
+module.exports = socket;

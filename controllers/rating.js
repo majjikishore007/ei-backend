@@ -1,4 +1,7 @@
 const Rating = require("../models/rating");
+const PublisherNotification = require("../models/publishernotification");
+const User = require("../models/user");
+const Article = require("../models/article");
 const mongoose = require("mongoose");
 
 exports.getAllRatings = async (req, res, next) => {
@@ -18,13 +21,42 @@ exports.addRating = async (req, res, next) => {
       user: req.userData.userId,
       date: Date.now(),
     }).save();
+    /**save notification for publisher */
+    let userResult = await User.findOne({ _id: req.userData.userId });
+
+    let publisherExist = await Article.findOne({
+      _id: mongoose.Types.ObjectId(req.body.articleId),
+    }).populate("publisher");
+
+    const publishernotification = new PublisherNotification({
+      notificationType: "rate-article",
+      message: `${userResult.displayName} gives ${req.body.ratingValue} Stars rating to your article`,
+      sender: req.userData.userId,
+      reciever: publisherExist.publisher.userId,
+      article: req.body.articleId,
+      date: Date.now(),
+    });
+    await publishernotification.save();
     res.status(201).json({ success: true, message: "rate successfully" });
   } catch (error) {
-    if (err.code === 11000) {
+    if (error.code == 11000) {
+      let prevData = await Rating.findOne({
+        article: req.body.articleId,
+        user: req.userData.userId,
+      });
       await Rating.updateOne(
         { article: req.body.articleId, user: req.userData.userId },
         { $set: { value: req.body.ratingValue } }
       );
+      const publishernotification = new PublisherNotification({
+        notificationType: "rate-article",
+        message: `${userResult.displayName} Updated their rating on your article from ${prevData.value} Stars to ${req.body.ratingValue} Stars`,
+        sender: req.userData.userId,
+        reciever: publisherExist.publisher.userId,
+        article: req.body.articleId,
+        date: Date.now(),
+      });
+      await publishernotification.save();
       res.status(200).json({ success: true, message: "update rating" });
     } else {
       res.status(500).json({ success: false, error });

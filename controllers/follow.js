@@ -1,4 +1,7 @@
 const Follow = require("../models/follow");
+const User = require("../models/user");
+const Subscriber = require("../models/notification_subscriber");
+const PublisherNotification = require("../models/publishernotification");
 const mongoose = require("mongoose");
 const Publisher = require("../models/publisher");
 
@@ -7,7 +10,7 @@ exports.getFollowForLoggedinUser = async (req, res, next) => {
     let follows = await Follow.find({ user: req.userData.userId });
     res.status(200).json({ success: true, data: follows });
   } catch (error) {
-    res.status(500).json({ success: true, error: error});
+    res.status(500).json({ success: true, error: error });
   }
 };
 
@@ -19,10 +22,10 @@ exports.saveFollow = async (req, res, next) => {
         message: "Please enter Publisher to whom You Following",
       });
     }
-    let isExist = await Publisher.findOne({
+    let isExistPublisher = await Publisher.findOne({
       _id: mongoose.Types.ObjectId(req.body.publisherId),
     });
-    if (!isExist) {
+    if (!isExistPublisher) {
       return res.status(400).json({
         success: false,
         message: "Please enter correct Publisher to whom You Following",
@@ -34,13 +37,26 @@ exports.saveFollow = async (req, res, next) => {
       user: req.userData.userId,
       date: Date.now(),
     });
+    /**save notification for publisher */
+    let userResult = await User.findOne({ _id: req.userData.userId });
+
+    const publishernotification = new PublisherNotification({
+      notificationType: "follow-publisher",
+      message: `${userResult.displayName} Started Following You`,
+      sender: req.userData.userId,
+      reciever: isExistPublisher.userId,
+      publisher: req.body.publisherId,
+      date: Date.now(),
+    });
+
     await follow.save();
+    await publishernotification.save();
     res.status(201).json({ success: true, message: "following successfully" });
   } catch (error) {
     if (error.code === 11000) {
-      res.status(500).json({ success: false, message: "alreday follow" });
+      res.status(500).json({ success: false, message: "already following" });
     } else {
-      res.status(500).json({ success: true, error: error});
+      res.status(500).json({ success: true, error: error });
     }
   }
 };
@@ -54,6 +70,7 @@ exports.getFollowersForPublisher = async (req, res, next) => {
     );
     res.status(200).json({ success: true, data: followers });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: true, error: error });
   }
 };
@@ -72,7 +89,7 @@ exports.getFollowingPublishersForUserId = async (req, res, next) => {
     }
     res.status(200).json({ success: true, data: pubdata });
   } catch (error) {
-    res.status(500).json({success: true, error: error });
+    res.status(500).json({ success: true, error: error });
   }
 };
 
@@ -83,7 +100,7 @@ exports.getFollowWithPublisherForLoggedInUser = async (req, res, next) => {
     let follow = await Follow.findOne({ user: userId, publisher: publisherId });
     res.status(200).json({ success: true, data: follow });
   } catch (error) {
-    res.status(500).json({success: true, error: error });
+    res.status(500).json({ success: true, error: error });
   }
 };
 
@@ -94,7 +111,7 @@ exports.unFollowPublisherWithPublisherId = async (req, res, next) => {
     await Follow.remove({ user: userId, publisher: publisherId });
     res.status(200).json({ success: true, message: "unfollow" });
   } catch (error) {
-    res.status(500).json({success: true, error: error });
+    res.status(500).json({ success: true, error: error });
   }
 };
 
@@ -120,6 +137,6 @@ exports.aggregateFollowingForLoggedinUser = async (req, res, next) => {
     }
     res.status(200).json({ success: true, data: followers });
   } catch (error) {
-    res.status(500).json({success: true, error: error});
+    res.status(500).json({ success: true, error: error });
   }
 };

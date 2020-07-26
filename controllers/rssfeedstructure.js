@@ -69,6 +69,15 @@ exports.AddRssFeedStructure = async (req, res, next) => {
     if (req.body.rssLink) {
       structure.rssLink = req.body.rssLink;
     }
+    if (req.body.public != undefined) {
+      structure.public = req.body.public;
+    }
+    if (req.body.username) {
+      structure.username = req.body.username;
+    }
+    if (req.body.password) {
+      structure.password = req.body.password;
+    }
 
     if (req.body.categoryField) {
       structure.categoryField = req.body.categoryField;

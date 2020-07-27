@@ -81,7 +81,7 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
         category: new RegExp(finalKeywordList[i].keyword, "i"),
       })
         .sort({ _id: -1 })
-        .limit(articleLimit)
+        .limit(articleLimit + 1)
         .populate("publisher");
 
       prm.push(articlePrm);
@@ -115,15 +115,15 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
 exports.getNextArticles = async (req, res, next) => {
   try {
     let keyword = req.params.keyword;
-    let articlePage = req.params.articlePage;
-    let articleLimit = +req.params.articleLimit;
+    let articlePage = parseInt(req.params.articlePage);
+    let articleLimit = parseInt(req.params.articleLimit);
 
     let articles = await Article.find({
       category: new RegExp(keyword, "i"),
     })
       .sort({ _id: -1 })
       .skip(articlePage * articleLimit)
-      .limit(articleLimit)
+      .limit(articleLimit + 1)
       .populate("publisher");
 
     articles = await shuffleArray(articles);
@@ -166,7 +166,7 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
         category: new RegExp(keywords[i].keyword, "i"),
       })
         .sort({ _id: -1 })
-        .limit(articleLimit)
+        .limit(articleLimit + 1)
         .populate("publisher");
       prm.push(articlePrm);
     }

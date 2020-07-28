@@ -18,6 +18,7 @@ const rssFeedLastVisitSchema = new Schema({
   },
 });
 
-rssFeedLastVisitSchema.index({ userId: 1, rssFeedId: 1 }, { unique: true });
+rssFeedLastVisitSchema.index({ userId: 1 }, { unique: true });
+rssFeedLastVisitSchema.index({ userId: 1, rssFeedId: 1 });
 
 module.exports = mongoose.model("RssFeedLastVisit", rssFeedLastVisitSchema);

@@ -35,7 +35,7 @@ exports.getInitialArticles = async (req, res, next) => {
           public: doc.public,
           altImage: doc.altImage,
           seo: doc.seo,
-          publisherId: doc.publisher._id,
+          publisherId: doc.publisher ? doc.publisher._id : null,
         };
       });
       res.status(200).json({
@@ -79,7 +79,7 @@ exports.getNextArticles = async (req, res, next) => {
           public: doc.public,
           altImage: doc.altImage,
           seo: doc.seo,
-          publisherId: doc.publisher._id,
+          publisherId: doc.publisher ? doc.publisher._id : null,
         };
       });
       res.status(200).json({
@@ -121,7 +121,7 @@ exports.getToptenArticles = async (req, res, next) => {
           public: doc.public,
           altImage: doc.altImage,
           seo: doc.seo,
-          publisherId: doc.publisher._id,
+          publisherId: doc.publisher ? doc.publisher._id : null,
         };
       });
       res.status(200).json({
@@ -302,7 +302,7 @@ exports.getArticleById = async (req, res, next) => {
         public: doc.public,
         altImage: doc.altImage,
         seo: doc.seo,
-        publisherId: doc.publisher._id,
+        publisherId: doc.publisher ? doc.publisher._id : null,
       };
       res.status(200).json({ success: true, data: article });
     } else {
@@ -336,7 +336,7 @@ exports.getArticleByIdForMobile = async (req, res, next) => {
         public: doc.public,
         altImage: doc.altImage,
         seo: doc.seo,
-        publisherId: doc.publisher._id,
+        publisherId: doc.publisher ? doc.publisher._id : null,
       };
       res.status(200).json({ success: true, data: article });
     } else {
@@ -379,7 +379,7 @@ exports.getArticleByTitle = async (req, res, next) => {
       public: doc.public,
       altImage: doc.altImage,
       seo: doc.seo,
-      publisherId: doc.publisher._id,
+      publisherId: doc.publisher ? doc.publisher._id : null,
     };
     res.status(200).json({ success: true, data: article, owner });
   } catch (error) {
@@ -430,7 +430,7 @@ exports.getArticlesByPublisherId = async (req, res, next) => {
           public: doc.public,
           altImage: doc.altImage,
           seo: doc.seo,
-          publisherId: doc.publisher._id,
+          publisherId: doc.publisher ? doc.publisher._id : null,
         };
       });
 
@@ -486,7 +486,7 @@ exports.getArticlesByCategoryFilter = async (req, res, next) => {
         public: doc.public,
         altImage: doc.altImage,
         seo: doc.seo,
-        publisherId: doc.publisher._id,
+        publisherId: doc.publisher ? doc.publisher._id : null,
       };
     });
 
@@ -520,7 +520,7 @@ exports.getArticlesByCategoryTotal = async (req, res, next) => {
         public: doc.public,
         altImage: doc.altImage,
         seo: doc.seo,
-        publisherId: doc.publisher._id,
+        publisherId: doc.publisher ? doc.publisher._id : null,
       };
     });
     res.status(200).json({ success: true, data: restructuredResult });
@@ -554,7 +554,7 @@ exports.getArticlesByPublisherIdAndCategory = async (req, res, next) => {
         public: doc.public,
         altImage: doc.altImage,
         seo: doc.seo,
-        publisherId: doc.publisher._id,
+        publisherId: doc.publisher ? doc.publisher._id : null,
       };
     });
     res.status(200).json({
@@ -596,7 +596,7 @@ exports.getArticlesByPublisherIdAndCategoryForMobile = async (
         public: doc.public,
         altImage: doc.altImage,
         seo: doc.seo,
-        publisherId: doc.publisher._id,
+        publisherId: doc.publisher ? doc.publisher._id : null,
       };
     });
     res.status(200).json({

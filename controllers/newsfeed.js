@@ -91,7 +91,13 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
     let finalListWithArticles = [];
     let articlesPromisesResponse = await Promise.all(prm);
     for (let i = 0; i < finalKeywordListLen; i++) {
-      let articles = await shuffleArray(articlesPromisesResponse[i]);
+      let articles = [];
+      if (articlesPromisesResponse[i].length == articleLimit + 1) {
+        articles = await cutLastItem(articlesPromisesResponse[i]);
+      } else {
+        articles = await shuffleArray(articlesPromisesResponse[i]);
+      }
+
       articles = await getRestructuredArticles(articles);
 
       finalListWithArticles.push({
@@ -108,6 +114,7 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
     /**response back to frontend with response object */
     res.status(200).json({ success: true, data });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };
@@ -126,7 +133,13 @@ exports.getNextArticles = async (req, res, next) => {
       .limit(articleLimit + 1)
       .populate("publisher");
 
-    articles = await shuffleArray(articles);
+    if (articles.length == articleLimit + 1) {
+      //to not suffle last item
+      articles = await cutLastItem(articles);
+    } else {
+      articles = await shuffleArray(articles);
+    }
+
     articles = await getRestructuredArticles(articles);
     let data = {
       keyword,
@@ -175,7 +188,12 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
     let articlePromiseResponse = await Promise.all(prm);
     for (let i = 0; i < lenKeywords; i++) {
       if (articlePromiseResponse[i].length > 0) {
-        let articles = await shuffleArray(articlePromiseResponse[i]);
+        let articles = [];
+        if (articlesPromisesResponse[i].length == articleLimit + 1) {
+          articles = await cutLastItem(articlePromiseResponse[i]);
+        } else {
+          articles = await shuffleArray(articlePromiseResponse[i]);
+        }
         articles = await getRestructuredArticles(articles);
         finalListWithArticles.push({
           keywordData: keywords[i],
@@ -191,6 +209,14 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
   } catch (error) {
     res.status(500).json({ success: false, error });
   }
+};
+
+const cutLastItem = async (articles) => {
+  let last = articles.slice(articles.length - 1);
+  articles.pop();
+  articles = await shuffleArray(articles);
+  articles = articles.concat(last);
+  return articles;
 };
 
 const shuffleArray = async (array) => {

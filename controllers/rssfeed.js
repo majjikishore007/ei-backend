@@ -197,26 +197,45 @@ exports.getInitialRssFeeds = async (req, res, next) => {
     let lastVisited = await RssFeedLastVisit.findOne({
       userId: mongoose.Types.ObjectId(req.userData.userId),
     });
-    let rssFeeds;
     if (lastVisited) {
-      rssFeeds = await AllContent.find({
-        _id: { $lt: mongoose.Types.ObjectId(lastVisited.rssFeedId) },
+      /**get latest rss feeds */
+      let latestRssFeeds = await AllContent.find({
+        _id: { $gt: mongoose.Types.ObjectId(lastVisited.rssFeedId) },
+        viewed: false,
+      })
+        .sort({ _id: -1 })
+        .populate("publisher", "name");
+
+      /**get older rss feeds */
+      let olderRssFeeds = await AllContent.find({
+        _id: { $lte: mongoose.Types.ObjectId(lastVisited.rssFeedId) },
         viewed: false,
       })
         .sort({ _id: -1 })
         .populate("publisher", "name")
         .limit(+req.params.rssFeedLimit);
+
+      res.json({
+        success: true,
+        firstTime: false,
+        latestRssFeeds,
+        olderRssFeeds,
+      });
     } else {
-      rssFeeds = await AllContent.find({
+      let latestRssFeeds = await AllContent.find({
         viewed: false,
       })
         .sort({ _id: -1 })
         .populate("publisher", "name")
         .limit(+req.params.rssFeedLimit);
+
+      res.status(200).json({
+        success: true,
+        firstTime: true,
+        latestRssFeeds,
+        olderRssFeeds: [],
+      });
     }
-    res
-      .status(200)
-      .json({ success: true, count: rssFeeds.length, data: rssFeeds });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }
@@ -276,28 +295,48 @@ exports.getInitialRssFeedsFilteredByPublisherId = async (req, res, next) => {
     let lastVisited = await RssFeedLastVisit.findOne({
       userId: mongoose.Types.ObjectId(req.userData.userId),
     });
-    let rssFeeds;
     if (lastVisited) {
-      rssFeeds = await AllContent.find({
-        _id: { $lt: mongoose.Types.ObjectId(lastVisited.rssFeedId) },
+      /**get latest rss feeds */
+      let latestRssFeeds = await AllContent.find({
+        _id: { $gt: mongoose.Types.ObjectId(lastVisited.rssFeedId) },
+        publisher: req.params.publisherId,
+        viewed: false,
+      })
+        .sort({ _id: -1 })
+        .populate("publisher", "name");
+
+      /**get older rss feeds */
+      let olderRssFeeds = await AllContent.find({
+        _id: { $lte: mongoose.Types.ObjectId(lastVisited.rssFeedId) },
         publisher: req.params.publisherId,
         viewed: false,
       })
         .sort({ _id: -1 })
         .populate("publisher", "name")
         .limit(+req.params.rssFeedLimit);
+
+      res.json({
+        success: true,
+        firstTime: false,
+        latestRssFeeds,
+        olderRssFeeds,
+      });
     } else {
-      rssFeeds = await AllContent.find({
+      let latestRssFeeds = await AllContent.find({
         publisher: req.params.publisherId,
         viewed: false,
       })
         .sort({ _id: -1 })
         .populate("publisher", "name")
         .limit(+req.params.rssFeedLimit);
+
+      res.status(200).json({
+        success: true,
+        firstTime: true,
+        latestRssFeeds,
+        olderRssFeeds: [],
+      });
     }
-    res
-      .status(200)
-      .json({ success: true, count: rssFeeds.length, data: rssFeeds });
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, error });

@@ -15,6 +15,9 @@ const {
   deleteSingleRssFeedById,
   deleteAllRssFeeds,
   getRssfeedsWithPageAndLimit,
+
+  getInitialRssFeedsFilteredByPublisherId,
+  getNextbatchRssFeedsFilteredByPublisherId,
 } = require("../controllers/rssfeed");
 
 /**
@@ -49,14 +52,36 @@ router.get(
  */
 // router.get("/getCount", checkAuth, getTotalCountRssFeeds);
 
+// /**
+//  * @desc  GET rss feeds with publisherId
+//  * @route GET /api/rss/getbyPublisherId/publisher/:publisherId
+//  * @access  Public
+//  */
+// router.get(
+//   "/getbyPublisherId/publisher/:publisherId/:limitcount",
+//   getRssFeedsFilteredByPublisherId
+// );
+
 /**
  * @desc  GET rss feeds with publisherId
- * @route GET /api/rss/getbyPublisherId/publisher/:publisherId
+ * @route GET /api/rss/getbyPublisherIdpublisher/:publisherId/:rssFeedLimit
  * @access  Public
  */
 router.get(
-  "/getbyPublisherId/publisher/:publisherId/:limitcount",
-  getRssFeedsFilteredByPublisherId
+  "/getbyPublisherId/publisher/:publisherId/:rssFeedLimit",
+  checkAuth,
+  getInitialRssFeedsFilteredByPublisherId
+);
+
+/**
+ * @desc  GET rss feeds with publisherId
+ * @route GET /api/rss/getbyPublisherId/publisher/nextbatch/:publisherId/:rssFeedLimit
+ * @access  Public
+ */
+router.get(
+  "/getbyPublisherId/publisher/nextbatch/:publisherId/:rssFeedLimit/:lastRssFeedId",
+  checkAuth,
+  getNextbatchRssFeedsFilteredByPublisherId
 );
 
 /**

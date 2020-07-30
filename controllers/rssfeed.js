@@ -270,6 +270,61 @@ exports.getTotalCountRssFeeds = async (req, res, next) => {
   }
 };
 
+exports.getInitialRssFeedsFilteredByPublisherId = async (req, res, next) => {
+  try {
+    /**get last visited rss feed id */
+    let lastVisited = await RssFeedLastVisit.findOne({
+      userId: mongoose.Types.ObjectId(req.userData.userId),
+    });
+    let rssFeeds;
+    if (lastVisited) {
+      rssFeeds = await AllContent.find({
+        _id: { $lt: mongoose.Types.ObjectId(lastVisited.rssFeedId) },
+        publisher: req.params.publisherId,
+        viewed: false,
+      })
+        .sort({ _id: -1 })
+        .populate("publisher", "name")
+        .limit(+req.params.rssFeedLimit);
+    } else {
+      rssFeeds = await AllContent.find({
+        publisher: req.params.publisherId,
+        viewed: false,
+      })
+        .sort({ _id: -1 })
+        .populate("publisher", "name")
+        .limit(+req.params.rssFeedLimit);
+    }
+    res
+      .status(200)
+      .json({ success: true, count: rssFeeds.length, data: rssFeeds });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getNextbatchRssFeedsFilteredByPublisherId = async (req, res, next) => {
+  try {
+    let lastRssFeedId = mongoose.Types.ObjectId(req.params.lastRssFeedId);
+    let publisherId = mongoose.Types.ObjectId(req.params.publisherId);
+
+    let rssFeeds = await AllContent.find({
+      _id: { $lt: lastRssFeedId },
+      publisher: publisherId,
+      viewed: false,
+    })
+      .sort({ _id: -1 })
+      .populate("publisher", "name")
+      .limit(+req.params.rssFeedLimit);
+    res
+      .status(200)
+      .json({ success: true, count: rssFeeds.length, data: rssFeeds });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
 exports.getRssFeedsFilteredByPublisherId = async (req, res, next) => {
   try {
     let rssFeeds = await AllContent.find({ publisher: req.params.publisherId })

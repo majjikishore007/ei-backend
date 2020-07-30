@@ -1,9 +1,9 @@
 const router = require("express").Router();
-const chekAuth = require("../middleware/check-auth");
 
 /**controller functions for keyword */
 const {
   getAllKeywords,
+  getSingleKeywordStatus,
   getInitalKeywords,
   getNextbatchKeywords,
   getkeywordswithSkippingKeywords,
@@ -30,6 +30,17 @@ router.get("/:limitCount", getInitalKeywords);
  * @access  Public
  */
 router.get("/:limitCount/:lastKeywordCount", getNextbatchKeywords);
+
+/**
+ * @description   this route is used to get keyword if it added to preference or not
+ * @route   GET      /api/keyword/:keyword
+ * @access  Private
+ */
+router.get(
+  "/existInPrefernce/keyword/:keywordGiven",
+  checkAuth,
+  getSingleKeywordStatus
+);
 
 /**
  * @description   this route is used to get keywords with skipping certain number of documents with information

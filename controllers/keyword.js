@@ -14,6 +14,25 @@ exports.getAllKeywords = async (req, res, next) => {
   }
 };
 
+exports.getSingleKeywordStatus = async (req, res, next) => {
+  try {
+    let keyword = req.params.keywordGiven;
+    let preferenceExist = await Preference.findOne({
+      user: req.userData.userId,
+      keyword: mongoose.Types.ObjectId(keyword),
+    });
+    if (!preferenceExist) {
+      res
+        .status(404)
+        .json({ success: false, message: "Not listed in preference" });
+    } else {
+      res.status(200).json({ success: true, data: preferenceExist });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
 exports.getInitalKeywords = async (req, res, next) => {
   try {
     let keywords = await Keyword.find()

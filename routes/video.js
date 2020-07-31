@@ -10,6 +10,7 @@ const checkAuthAuthorOrAdmin = require("../middleware/check-auth-authorOrAdmin")
 const {
   getToptenVideos,
   uploadVideo,
+  uploadVideoThumbnail,
   saveVideoPublisher,
   getVideosPageWiseLimitWise,
   getVideoById,
@@ -30,13 +31,7 @@ const {
  * @route   POST      /api/video/
  * @access  Private
  */
-router.post(
-  "/",
-  checkAuthAuthorOrAdmin,
-  images.multer.single("thumbnail"),
-  images.sendUploadToGCS,
-  saveVideoPublisher
-);
+router.post("/", checkAuthAuthorOrAdmin, saveVideoPublisher);
 
 /**
  * @description   this route is used to upload an video to google cloud by publisher
@@ -48,6 +43,19 @@ router.post(
   checkAuthAuthorOrAdmin,
   videos.sendUploadToGCS,
   uploadVideo
+);
+
+/**
+ * @description   this route is used to upload an video to google cloud by publisher
+ * @route   POST      /api/video/video/thumbnail
+ * @access  Private
+ */
+router.post(
+  "/video/thumbnail",
+  checkAuthAuthorOrAdmin,
+  images.multer.single("thumbnail"),
+  images.sendUploadToGCS,
+  uploadVideoThumbnail
 );
 
 /**

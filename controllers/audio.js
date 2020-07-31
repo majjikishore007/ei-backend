@@ -34,10 +34,11 @@ exports.saveAudioPublisher = async (req, res, next) => {
     const audio = new Audio({
       title: req.body.title,
       description: req.body.description,
-      thumbnail: req.file.cloudStoragePublicUrl,
+      thumbnail: req.body.thumbnail,
       audioUrl: req.body.audioUrl,
       category: req.body.category,
       price: req.body.price,
+      externalLink: req.body.externalLink,
       publisher: req.body.publisher,
       publishingDate: req.body.publishingDate,
       altImage: req.body.altImage ? req.body.altImage : req.body.title,
@@ -76,6 +77,25 @@ exports.uploadAudio = async (req, res, next) => {
       res.status(500).json({
         success: false,
         messge: "Audio can't upload due to server error",
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.uploadAudioThumbnail = async (req, res, next) => {
+  try {
+    if (req.file.cloudStoragePublicUrl) {
+      res.status(200).json({
+        success: true,
+        messge: "Audio Thumbnail Uploaded",
+        thumbnail: req.file.cloudStoragePublicUrl,
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        messge: "Audio Thumbnail can't upload due to server error",
       });
     }
   } catch (error) {

@@ -10,6 +10,7 @@ const checkAuthAuthorOrAdmin = require("../middleware/check-auth-authorOrAdmin")
 const {
   getToptenAudios,
   uploadAudio,
+  uploadAudioThumbnail,
   saveAudioPublisher,
   getAudiosPageWiseLimitWise,
   getAudioById,
@@ -30,13 +31,7 @@ const {
  * @route   POST      /api/audio/
  * @access  Private
  */
-router.post(
-  "/",
-  checkAuthAuthorOrAdmin,
-  images.multer.single("thumbnail"),
-  images.sendUploadToGCS,
-  saveAudioPublisher
-);
+router.post("/", checkAuthAuthorOrAdmin, saveAudioPublisher);
 
 /**
  * @description   this route is used to upload an audio to google cloud by publisher
@@ -48,6 +43,19 @@ router.post(
   checkAuthAuthorOrAdmin,
   audios.sendUploadToGCS,
   uploadAudio
+);
+
+/**
+ * @description   this route is used to upload an audio thumbnail to google cloud by publisher or admin
+ * @route   POST      /api/audio/audio/thumbnail
+ * @access  Private
+ */
+router.post(
+  "/audio/thumbnail",
+  checkAuthAuthorOrAdmin,
+  images.multer.single("thumbnail"),
+  images.sendUploadToGCS,
+  uploadAudioThumbnail
 );
 
 /**

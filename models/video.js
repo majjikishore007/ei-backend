@@ -20,6 +20,7 @@ const videoSchema = new Schema({
     metaDescription: { type: String },
   },
   urlStr: { type: String },
+  externalLink: { type: Boolean },
   public: { type: Boolean, default: false },
 });
 

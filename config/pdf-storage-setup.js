@@ -4,7 +4,7 @@ const config = require("./database");
 const path = require("path"); // Used for manipulation with path
 const fs = require("fs-extra");
 
-const PDF_BUCKET = config.keys.storage.VIDEO_BUCKET;
+const PDF_BUCKET = config.keys.storage.PDF_BUCKET;
 
 const storage = new Storage({
   keyFilename: path.join(__dirname, "../extrainsights-43d045c8bed4.json"),
@@ -37,6 +37,7 @@ function sendUploadToGCS(req, res, next) {
       let filepath = path.join(uploadPath, updatedFilename);
       try {
         await bucket.upload(filepath, {
+          public: true,
           gzip: true,
           metadata: {
             cacheControl: "public, max-age=31536000",

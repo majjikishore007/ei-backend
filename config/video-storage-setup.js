@@ -38,15 +38,13 @@ function sendUploadToGCS(req, res, next) {
       try {
         // console.log("g cloud saving started");
         await bucket.upload(filepath, {
+          public: true,
           gzip: true,
           metadata: {
             cacheControl: "public, max-age=31536000",
           },
         });
         fs.unlinkSync(filepath);
-        // console.log("gcloud file", getPublicUrl(updatedFilename));
-
-        // req.file.videoStorageObject = updatedFilename;
 
         req.videoStoragePublicUrl = getPublicUrl(updatedFilename);
         next();
@@ -62,8 +60,6 @@ function sendUploadToGCS(req, res, next) {
           success: false,
           messge: "Video can't upload due to server error",
         });
-        // req.file.videoStorageError = error;
-        // next();
       }
     });
   });

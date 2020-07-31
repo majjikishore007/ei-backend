@@ -1,5 +1,7 @@
 const Keyword = require("../models/keyword");
 const Article = require("../models/article");
+const Audio = require("../models/audio");
+const Video = require("../models/video");
 const Preference = require("../models/preference");
 const mongoose = require("mongoose");
 
@@ -131,9 +133,24 @@ exports.saveKeywordOnNewArticleUpload = async () => {
         $match: { operationType: "insert" },
       },
     ];
+
     let changeStreamForArticle = Article.watch(pipeline);
+    let changeStreamForAudio = Audio.watch(pipeline);
+    let changeStreamForVideo = Video.watch(pipeline);
 
     changeStreamForArticle.on("change", (event) => {
+      if (event.fullDocument.category) {
+        addToDatabase(event.fullDocument.category);
+      }
+    });
+
+    changeStreamForAudio.on("change", (event) => {
+      if (event.fullDocument.category) {
+        addToDatabase(event.fullDocument.category);
+      }
+    });
+
+    changeStreamForVideo.on("change", (event) => {
       if (event.fullDocument.category) {
         addToDatabase(event.fullDocument.category);
       }

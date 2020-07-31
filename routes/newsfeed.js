@@ -8,17 +8,17 @@ const {
 } = require("../controllers/newsfeed");
 
 /**
- * @description   this route is used to get articles for a specific keyword
+ * @description   this route is used to get articles, audios, videos for a specific keyword
  * @param keyword
  * @param articlePage
  * @param articleLimit
- * @route   GET      /api/newsfeed/getArticles/:keyword/:lastArticleId/:articleLimit
+ * @route   GET      /api/newsfeed/getArticles/:keyword/:articlePage/:articleLimit
  * @access  Private
  */
 router.get("/getArticles/:keyword/:articlePage/:articleLimit", getNextArticles);
 
 /**
- * @description this route is used to get articles for limited keywords only after when prefernce count 0
+ * @description this route is used to get articles, audios, videos for limited keywords only after when prefernce count 0
  * @param keywordPage
  * @param keywordLimit
  * @param articleLimit
@@ -31,7 +31,7 @@ router.get(
 );
 
 /**
- * @description   this route is used to get articles according to trending keywords 
+ * @description   this route is used to get  articles, audios, videos according to trending keywords 
                   and preferences of loggedin user
  * @param preferencePage
  * @param preferenceLimit

@@ -1,5 +1,8 @@
 const Preference = require("../models/preference");
 const Article = require("../models/article");
+const Audio = require("../models/audio");
+const Video = require("../models/video");
+const Publisher = require("../models/publisher");
 const Keyword = require("../models/keyword");
 const mongoose = require("mongoose");
 
@@ -73,41 +76,179 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
     finalKeywordList = await shuffleArray(finalKeywordList);
 
     /**get articles with promise */
-    let prm = [];
+    let prmForArticle = [];
+    let prmForAudio = [];
+    let prmForVideo = [];
+
     let finalKeywordListLen = finalKeywordList.length;
     for (let i = 0; i < finalKeywordListLen; i++) {
-      let articlePrm = Article.find({
-        category: new RegExp(finalKeywordList[i].keyword, "i"),
-      })
-        .sort({ _id: -1 })
-        .limit(articleLimit + 1)
-        .populate("publisher");
+      /**article */
+      let articlePrm = Article.aggregate([
+        {
+          $match: {
+            category: new RegExp(finalKeywordList[i].keyword, "i"),
+          },
+        },
+        { $sort: { _id: -1 } },
+        { $limit: articleLimit + 1 },
+        {
+          $lookup: {
+            from: Publisher.collection.name,
+            localField: "publisher",
+            foreignField: "_id",
+            as: "publisherData",
+          },
+        },
+        { $unwind: "$publisherData" },
+        {
+          $project: {
+            _id: 0,
+            title: 1,
+            description: 1,
+            price: 1,
+            author: 1,
+            cover: 1,
+            publisher: "$publisherData",
+            website: 1,
+            category: 1,
+            time: 1,
+            date: "$publishingDate",
+            id: "$_id",
+            lan: 1,
+            urlStr: 1,
+            public: 1,
+            created_at: 1,
+            type: "article",
+          },
+        },
+      ]);
 
-      prm.push(articlePrm);
+      prmForArticle.push(articlePrm);
+      /**audio */
+      let audioPrm = Audio.aggregate([
+        {
+          $match: {
+            category: new RegExp(finalKeywordList[i].keyword, "i"),
+          },
+        },
+        { $sort: { _id: -1 } },
+        { $limit: articleLimit + 1 },
+        {
+          $lookup: {
+            from: Publisher.collection.name,
+            localField: "publisher",
+            foreignField: "_id",
+            as: "publisherData",
+          },
+        },
+        { $unwind: "$publisherData" },
+        {
+          $project: {
+            _id: 0,
+            title: 1,
+            description: 1,
+            price: 1,
+            thumbnail: 1,
+            audioUrl: 1,
+            publisher: "$publisherData",
+            category: 1,
+            date: "$publishingDate",
+            id: "$_id",
+            altImage: 1,
+            externalLink: 1,
+            urlStr: 1,
+            public: 1,
+            type: "audio",
+          },
+        },
+      ]);
+
+      prmForAudio.push(audioPrm);
+
+      /**video */
+      let videoPrm = Video.aggregate([
+        {
+          $match: {
+            category: new RegExp(finalKeywordList[i].keyword, "i"),
+          },
+        },
+        { $sort: { _id: -1 } },
+        { $limit: articleLimit + 1 },
+        {
+          $lookup: {
+            from: Publisher.collection.name,
+            localField: "publisher",
+            foreignField: "_id",
+            as: "publisherData",
+          },
+        },
+        { $unwind: "$publisherData" },
+        {
+          $project: {
+            _id: 0,
+            title: 1,
+            description: 1,
+            price: 1,
+            thumbnail: 1,
+            videoUrl: 1,
+            publisher: "$publisherData",
+            category: 1,
+            date: "$publishingDate",
+            id: "$_id",
+            altImage: 1,
+            urlStr: 1,
+            externalLink: 1,
+            public: 1,
+            type: "video",
+          },
+        },
+      ]);
+
+      prmForVideo.push(videoPrm);
     }
 
     /**create final list with lastArticleId after promise resolution with shuffled articles */
-    let finalListWithArticles = [];
-    let articlesPromisesResponse = await Promise.all(prm);
+    let finalList = [];
+    let articlesPromisesResponse = await Promise.all(prmForArticle);
+    let audioPromisesResponse = await Promise.all(prmForAudio);
+    let videoPromisesResponse = await Promise.all(prmForVideo);
+
     for (let i = 0; i < finalKeywordListLen; i++) {
-      let articles = [];
-      if (articlesPromisesResponse[i].length == articleLimit + 1) {
-        articles = await cutLastItem(articlesPromisesResponse[i]);
-      } else {
-        articles = await shuffleArray(articlesPromisesResponse[i]);
+      let nextbatchArticles = false,
+        nextbatchAudios = false,
+        nextbatchVideos = false;
+
+      if (articleLimit + 1 == articlesPromisesResponse[i].length) {
+        nextbatchArticles = true;
+        articlesPromisesResponse[i].pop();
+      }
+      if (articleLimit + 1 == audioPromisesResponse[i].length) {
+        nextbatchAudios = true;
+        audioPromisesResponse[i].pop();
+      }
+      if (articleLimit + 1 == videoPromisesResponse[i].length) {
+        nextbatchVideos = true;
+        videoPromisesResponse[i].pop();
       }
 
-      articles = await getRestructuredArticles(articles);
+      let articles = articlesPromisesResponse[i];
+      let audios = audioPromisesResponse[i];
+      let videos = videoPromisesResponse[i];
 
-      finalListWithArticles.push({
+      let allItems = await shuffleArray(articles.concat(audios).concat(videos));
+
+      finalList.push({
         keywordData: finalKeywordList[i],
-        articles,
+        nextbatchArticles,
+        nextbatchAudios,
+        nextbatchVideos,
+        data: allItems,
       });
     }
 
     /**create response object with list, lastPreferenceId and lastKeywordId */
     let data = {
-      finalListWithArticles,
+      finalList,
       lastPreferenceId,
     };
     /**response back to frontend with response object */
@@ -124,28 +265,169 @@ exports.getNextArticles = async (req, res, next) => {
     let articlePage = parseInt(req.params.articlePage);
     let articleLimit = parseInt(req.params.articleLimit);
 
-    let articles = await Article.find({
-      category: new RegExp(keyword, "i"),
-    })
-      .sort({ _id: -1 })
-      .skip(articlePage * articleLimit)
-      .limit(articleLimit + 1)
-      .populate("publisher");
+    let prm = [];
 
-    if (articles.length == articleLimit + 1) {
-      //to not suffle last item
-      articles = await cutLastItem(articles);
-    } else {
-      articles = await shuffleArray(articles);
+    /**article */
+    let articlePrm = Article.aggregate([
+      {
+        $match: {
+          category: new RegExp(keyword, "i"),
+        },
+      },
+      { $sort: { _id: -1 } },
+      { $skip: articlePage * articleLimit },
+      { $limit: articleLimit + 1 },
+      {
+        $lookup: {
+          from: Publisher.collection.name,
+          localField: "publisher",
+          foreignField: "_id",
+          as: "publisherData",
+        },
+      },
+      { $unwind: "$publisherData" },
+      {
+        $project: {
+          _id: 0,
+          title: 1,
+          description: 1,
+          price: 1,
+          author: 1,
+          cover: 1,
+          publisher: "$publisherData",
+          website: 1,
+          category: 1,
+          time: 1,
+          date: "$publishingDate",
+          id: "$_id",
+          lan: 1,
+          urlStr: 1,
+          public: 1,
+          created_at: 1,
+          type: "article",
+        },
+      },
+    ]);
+
+    prm.push(articlePrm);
+
+    /**audio */
+    let audioPrm = Audio.aggregate([
+      {
+        $match: {
+          category: new RegExp(keyword, "i"),
+        },
+      },
+      { $sort: { _id: -1 } },
+      { $skip: articlePage * articleLimit },
+      { $limit: articleLimit + 1 },
+      {
+        $lookup: {
+          from: Publisher.collection.name,
+          localField: "publisher",
+          foreignField: "_id",
+          as: "publisherData",
+        },
+      },
+      { $unwind: "$publisherData" },
+      {
+        $project: {
+          _id: 0,
+          title: 1,
+          description: 1,
+          price: 1,
+          thumbnail: 1,
+          audioUrl: 1,
+          publisher: "$publisherData",
+          category: 1,
+          date: "$publishingDate",
+          id: "$_id",
+          altImage: 1,
+          externalLink: 1,
+          urlStr: 1,
+          public: 1,
+          type: "audio",
+        },
+      },
+    ]);
+    prm.push(audioPrm);
+
+    /**video */
+    let videoPrm = Video.aggregate([
+      {
+        $match: {
+          category: new RegExp(keyword, "i"),
+        },
+      },
+      { $sort: { _id: -1 } },
+      { $skip: articlePage * articleLimit },
+      { $limit: articleLimit + 1 },
+      {
+        $lookup: {
+          from: Publisher.collection.name,
+          localField: "publisher",
+          foreignField: "_id",
+          as: "publisherData",
+        },
+      },
+      { $unwind: "$publisherData" },
+      {
+        $project: {
+          _id: 0,
+          title: 1,
+          description: 1,
+          price: 1,
+          thumbnail: 1,
+          videoUrl: 1,
+          publisher: "$publisherData",
+          category: 1,
+          date: "$publishingDate",
+          id: "$_id",
+          altImage: 1,
+          urlStr: 1,
+          externalLink: 1,
+          public: 1,
+          type: "video",
+        },
+      },
+    ]);
+    prm.push(videoPrm);
+
+    let resp = await Promise.all(prm);
+
+    let nextbatchArticles = false,
+      nextbatchAudios = false,
+      nextbatchVideos = false;
+
+    if (articleLimit + 1 == resp[0].length) {
+      nextbatchArticles = true;
+      resp[0].pop();
+    }
+    if (articleLimit + 1 == resp[1].length) {
+      nextbatchAudios = true;
+      resp[1].pop();
+    }
+    if (articleLimit + 1 == resp[2].length) {
+      nextbatchVideos = true;
+      resp[2].pop();
     }
 
-    articles = await getRestructuredArticles(articles);
+    let articles = resp[0];
+    let audios = resp[1];
+    let videos = resp[2];
+
+    let allItems = await shuffleArray(articles.concat(audios).concat(videos));
+
     let data = {
       keyword,
-      articles,
+      nextbatchArticles,
+      nextbatchAudios,
+      nextbatchVideos,
+      data: allItems,
     };
     res.status(200).json({ success: true, data });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };
@@ -168,53 +450,189 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
       },
     ]);
 
-    keywords = await shuffleArray(keywords);
+    let finalKeywordList = await shuffleArray(keywords);
 
-    let prm = [];
-    let lenKeywords = keywords.length;
-    for (let i = 0; i < lenKeywords; i++) {
-      let articlePrm = Article.find({
-        category: new RegExp(keywords[i].keyword, "i"),
-      })
-        .sort({ _id: -1 })
-        .limit(articleLimit + 1)
-        .populate("publisher");
-      prm.push(articlePrm);
+    /************************************************ */
+    /**get articles with promise */
+    let prmForArticle = [];
+    let prmForAudio = [];
+    let prmForVideo = [];
+
+    let finalKeywordListLen = finalKeywordList.length;
+    for (let i = 0; i < finalKeywordListLen; i++) {
+      /**article */
+      let articlePrm = Article.aggregate([
+        {
+          $match: {
+            category: new RegExp(finalKeywordList[i].keyword, "i"),
+          },
+        },
+        { $sort: { _id: -1 } },
+        { $limit: articleLimit + 1 },
+        {
+          $lookup: {
+            from: Publisher.collection.name,
+            localField: "publisher",
+            foreignField: "_id",
+            as: "publisherData",
+          },
+        },
+        { $unwind: "$publisherData" },
+        {
+          $project: {
+            _id: 0,
+            title: 1,
+            description: 1,
+            price: 1,
+            author: 1,
+            cover: 1,
+            publisher: "$publisherData",
+            website: 1,
+            category: 1,
+            time: 1,
+            date: "$publishingDate",
+            id: "$_id",
+            lan: 1,
+            urlStr: 1,
+            public: 1,
+            created_at: 1,
+            type: "article",
+          },
+        },
+      ]);
+
+      prmForArticle.push(articlePrm);
+      /**audio */
+      let audioPrm = Audio.aggregate([
+        {
+          $match: {
+            category: new RegExp(finalKeywordList[i].keyword, "i"),
+          },
+        },
+        { $sort: { _id: -1 } },
+        { $limit: articleLimit + 1 },
+        {
+          $lookup: {
+            from: Publisher.collection.name,
+            localField: "publisher",
+            foreignField: "_id",
+            as: "publisherData",
+          },
+        },
+        { $unwind: "$publisherData" },
+        {
+          $project: {
+            _id: 0,
+            title: 1,
+            description: 1,
+            price: 1,
+            thumbnail: 1,
+            audioUrl: 1,
+            publisher: "$publisherData",
+            category: 1,
+            date: "$publishingDate",
+            id: "$_id",
+            altImage: 1,
+            externalLink: 1,
+            urlStr: 1,
+            public: 1,
+            type: "audio",
+          },
+        },
+      ]);
+
+      prmForAudio.push(audioPrm);
+
+      /**video */
+      let videoPrm = Video.aggregate([
+        {
+          $match: {
+            category: new RegExp(finalKeywordList[i].keyword, "i"),
+          },
+        },
+        { $sort: { _id: -1 } },
+        { $limit: articleLimit + 1 },
+        {
+          $lookup: {
+            from: Publisher.collection.name,
+            localField: "publisher",
+            foreignField: "_id",
+            as: "publisherData",
+          },
+        },
+        { $unwind: "$publisherData" },
+        {
+          $project: {
+            _id: 0,
+            title: 1,
+            description: 1,
+            price: 1,
+            thumbnail: 1,
+            videoUrl: 1,
+            publisher: "$publisherData",
+            category: 1,
+            date: "$publishingDate",
+            id: "$_id",
+            altImage: 1,
+            urlStr: 1,
+            externalLink: 1,
+            public: 1,
+            type: "video",
+          },
+        },
+      ]);
+
+      prmForVideo.push(videoPrm);
     }
-    /**after promise resolution */
-    let finalListWithArticles = [];
-    let articlePromiseResponse = await Promise.all(prm);
-    for (let i = 0; i < lenKeywords; i++) {
-      if (articlePromiseResponse[i].length > 0) {
-        let articles = [];
-        if (articlePromiseResponse[i].length == articleLimit + 1) {
-          articles = await cutLastItem(articlePromiseResponse[i]);
-        } else {
-          articles = await shuffleArray(articlePromiseResponse[i]);
-        }
-        articles = await getRestructuredArticles(articles);
-        finalListWithArticles.push({
-          keywordData: keywords[i],
-          articles,
-        });
+
+    /**create final list with lastArticleId after promise resolution with shuffled articles */
+    let finalList = [];
+    let articlesPromisesResponse = await Promise.all(prmForArticle);
+    let audioPromisesResponse = await Promise.all(prmForAudio);
+    let videoPromisesResponse = await Promise.all(prmForVideo);
+
+    for (let i = 0; i < finalKeywordListLen; i++) {
+      let nextbatchArticles = false,
+        nextbatchAudios = false,
+        nextbatchVideos = false;
+
+      if (articleLimit + 1 == articlesPromisesResponse[i].length) {
+        nextbatchArticles = true;
+        articlesPromisesResponse[i].pop();
       }
+      if (articleLimit + 1 == audioPromisesResponse[i].length) {
+        nextbatchAudios = true;
+        audioPromisesResponse[i].pop();
+      }
+      if (articleLimit + 1 == videoPromisesResponse[i].length) {
+        nextbatchVideos = true;
+        videoPromisesResponse[i].pop();
+      }
+
+      let articles = articlesPromisesResponse[i];
+      let audios = audioPromisesResponse[i];
+      let videos = videoPromisesResponse[i];
+
+      let allItems = await shuffleArray(articles.concat(audios).concat(videos));
+
+      finalList.push({
+        keywordData: finalKeywordList[i],
+        nextbatchArticles,
+        nextbatchAudios,
+        nextbatchVideos,
+        data: allItems,
+      });
     }
 
+    /**create response object with list*/
     let data = {
-      finalListWithArticles,
+      finalList,
     };
+
     res.status(200).json({ success: true, data });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }
-};
-
-const cutLastItem = async (articles) => {
-  let last = articles.slice(articles.length - 1);
-  articles.pop();
-  articles = await shuffleArray(articles);
-  articles = articles.concat(last);
-  return articles;
 };
 
 const shuffleArray = async (array) => {
@@ -226,26 +644,4 @@ const shuffleArray = async (array) => {
     array[j] = temp;
   }
   return array;
-};
-
-const getRestructuredArticles = async (articles) => {
-  return articles.map((doc) => {
-    return {
-      title: doc.title,
-      description: doc.description,
-      price: doc.price,
-      author: doc.author,
-      cover: doc.cover,
-      publisher: doc.publisher,
-      website: doc.website,
-      category: doc.category,
-      time: doc.time,
-      date: doc.publishingDate,
-      id: doc.id,
-      lan: doc.lan,
-      urlStr: doc.urlStr,
-      public: doc.public,
-      created_at: doc.created_at,
-    };
-  });
 };

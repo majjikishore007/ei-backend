@@ -33,6 +33,8 @@ module.exports = {
     storage: {
       CLOUD_BUCKET: "extra-insights-images",
       VIDEO_BUCKET: "extra-insights-video",
+      AUDIO_BUCKET: "extra-insights-audio",
+      PDF_BUCKET: "extra-insights-pdf",
     },
   },
 };

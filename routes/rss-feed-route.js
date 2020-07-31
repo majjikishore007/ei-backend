@@ -6,26 +6,66 @@ const parser = new Parser();
 
 /**controller functions for rss feeds */
 const {
-  getInitialRssFeeds,
-  getNextbatchRssFeeds,
-  getTotalCountRssFeeds,
-  getRssFeedsFilteredByPublisherId,
   getSingleRssFeedById,
   updateVisitedStatusOfRssfeed,
   deleteSingleRssFeedById,
   deleteAllRssFeeds,
   getRssfeedsWithPageAndLimit,
 
-  getInitialRssFeedsFilteredByPublisherId,
-  getNextbatchRssFeedsFilteredByPublisherId,
+  getOlderRssFeedsPagination,
+  getLatestRssFeedsPagination,
+
+  getOlderRssFeedsPaginationWithPublisherId,
+  getLatestRssFeedsPaginationWithPublisherId,
 } = require("../controllers/rssfeed");
 
 /**
- * @desc  GET all rss feeds
- * @route GET /api/rss/:rssFeedLimit
- * @access  Public
+ * @desc  GET all older rss feeds pagination wise
+ * @route GET /api/rss/older/:rssFeedPage/:rssFeedLimit
+ * @access  Private
  */
-router.get("/:rssFeedLimit", checkAuth, getInitialRssFeeds);
+router.get(
+  "/older/:rssFeedPage/:rssFeedLimit",
+  checkAuth,
+  getOlderRssFeedsPagination
+);
+
+/**
+ * @desc  GET all latest rss feeds pagination wise
+ * @route GET /api/rss/latest/:rssFeedPage/:rssFeedLimit
+ * @access  Private
+ */
+router.get(
+  "/latest/:rssFeedPage/:rssFeedLimit",
+  checkAuth,
+  getLatestRssFeedsPagination
+);
+
+/**** */
+
+/**
+ * @desc  GET all older rss feeds pagination wise with publisher filter
+ * @route GET /api/rss/older/:rssFeedPage/:rssFeedLimit/:publisherId
+ * @access  Private
+ */
+router.get(
+  "/older/:rssFeedPage/:rssFeedLimit/:publisherId",
+  checkAuth,
+  getOlderRssFeedsPaginationWithPublisherId
+);
+
+/**
+ * @desc  GET all latest rss feeds pagination wise with publisher filter
+ * @route GET /api/rss/latest/:rssFeedPage/:rssFeedLimit/:publisherId
+ * @access  Private
+ */
+router.get(
+  "/latest/:rssFeedPage/:rssFeedLimit/:publisherId",
+  checkAuth,
+  getLatestRssFeedsPaginationWithPublisherId
+);
+
+/***** */
 
 /**
  * @desc  GET single rss feed
@@ -33,56 +73,6 @@ router.get("/:rssFeedLimit", checkAuth, getInitialRssFeeds);
  * @access  Public
  */
 router.get("/getRssbyId/:id", getSingleRssFeedById);
-
-/**
- * @desc  GET all rss feeds next batch
- * @route GET /api/rss/nextbatch/:rssFeedLimit/:lastRssFeedId
- * @access  Public
- */
-router.get(
-  "/nextbatch/:rssFeedLimit/:lastRssFeedId",
-  checkAuth,
-  getNextbatchRssFeeds
-);
-
-/**
- * @desc  GET all rss feeds count
- * @route GET /api/rss/getCount
- * @access  Public
- */
-// router.get("/getCount", checkAuth, getTotalCountRssFeeds);
-
-// /**
-//  * @desc  GET rss feeds with publisherId
-//  * @route GET /api/rss/getbyPublisherId/publisher/:publisherId
-//  * @access  Public
-//  */
-// router.get(
-//   "/getbyPublisherId/publisher/:publisherId/:limitcount",
-//   getRssFeedsFilteredByPublisherId
-// );
-
-/**
- * @desc  GET rss feeds with publisherId
- * @route GET /api/rss/getbyPublisherIdpublisher/:publisherId/:rssFeedLimit
- * @access  Public
- */
-router.get(
-  "/getbyPublisherId/publisher/:publisherId/:rssFeedLimit",
-  checkAuth,
-  getInitialRssFeedsFilteredByPublisherId
-);
-
-/**
- * @desc  GET rss feeds with publisherId
- * @route GET /api/rss/getbyPublisherId/publisher/nextbatch/:publisherId/:rssFeedLimit
- * @access  Public
- */
-router.get(
-  "/getbyPublisherId/publisher/nextbatch/:publisherId/:rssFeedLimit/:lastRssFeedId",
-  checkAuth,
-  getNextbatchRssFeedsFilteredByPublisherId
-);
 
 /**
  * @desc  POST passing baseUrl in reg.body and getting rss feeds with pagination limit

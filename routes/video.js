@@ -9,6 +9,7 @@ const checkAuthAuthorOrAdmin = require("../middleware/check-auth-authorOrAdmin")
  */
 const {
   getToptenVideos,
+  getVideoDuration,
   uploadVideo,
   uploadVideoThumbnail,
   saveVideoPublisher,
@@ -84,6 +85,13 @@ router.patch(
  * @access  Private
  */
 router.delete("/:videoId", checkAuthAuthorOrAdmin, deleteVideoById);
+
+/**
+ * @description   this route is used to get video length for a video url
+ * @route   POST      /api/video/getDuration
+ * @access  Public
+ */
+router.post("/getDuration", getVideoDuration);
 
 /**
  * @description   this route is used to get top 10 videos

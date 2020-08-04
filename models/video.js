@@ -21,6 +21,8 @@ const videoSchema = new Schema({
   },
   urlStr: { type: String },
   externalLink: { type: Boolean },
+  videoLength: { type: Number },
+  embeddUrl: { type: String },
   public: { type: Boolean, default: false },
 });
 

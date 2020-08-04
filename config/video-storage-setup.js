@@ -36,7 +36,6 @@ function sendUploadToGCS(req, res, next) {
     fstream.on("close", async () => {
       let filepath = path.join(uploadPath, updatedFilename);
       try {
-        // console.log("g cloud saving started");
         await bucket.upload(filepath, {
           public: true,
           gzip: true,
@@ -47,6 +46,7 @@ function sendUploadToGCS(req, res, next) {
         fs.unlinkSync(filepath);
 
         req.videoStoragePublicUrl = getPublicUrl(updatedFilename);
+
         next();
 
         /**

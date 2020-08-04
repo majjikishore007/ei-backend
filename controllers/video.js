@@ -1,6 +1,7 @@
 const Video = require("../models/video");
 const Publisher = require("../models/publisher");
 const mongoose = require("mongoose");
+const { getVideoDurationInSeconds } = require("get-video-duration");
 
 exports.getVideosPageWiseLimitWise = async (req, res, next) => {
   try {
@@ -36,6 +37,8 @@ exports.saveVideoPublisher = async (req, res, next) => {
       description: req.body.description,
       thumbnail: req.body.thumbnail,
       videoUrl: req.body.videoUrl,
+      embeddUrl: req.body.embeddUrl,
+      videoLength: req.body.videoLength,
       category: req.body.category,
       price: req.body.price,
       externalLink: req.body.externalLink,
@@ -60,6 +63,15 @@ exports.saveVideoPublisher = async (req, res, next) => {
     res
       .status(201)
       .json({ success: true, message: "Video Saved Successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getVideoDuration = async (req, res, next) => {
+  try {
+    let videoLength = await getVideoDurationInSeconds(req.body.videoUrl);
+    res.status(201).json({ success: true, data: videoLength });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

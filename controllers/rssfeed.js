@@ -199,11 +199,12 @@ exports.getOlderRssFeedsPagination = async (req, res, next) => {
     let lastVisited = await RssFeedLastVisit.findOne({
       userId: mongoose.Types.ObjectId(req.userData.userId),
     });
+
+    let limit = parseInt(req.params.rssFeedLimit);
+    let page = parseInt(req.params.rssFeedPage);
+
     if (lastVisited) {
       /**get older rss feeds */
-
-      let limit = parseInt(req.params.rssFeedLimit);
-      let page = parseInt(req.params.rssFeedPage);
 
       let olderRssFeeds = await AllContent.find({
         _id: { $lte: mongoose.Types.ObjectId(lastVisited.rssFeedId) },
@@ -235,12 +236,13 @@ exports.getOlderRssFeedsPaginationWithPublisherId = async (req, res, next) => {
     let lastVisited = await RssFeedLastVisit.findOne({
       userId: mongoose.Types.ObjectId(req.userData.userId),
     });
+
+    let limit = parseInt(req.params.rssFeedLimit);
+    let page = parseInt(req.params.rssFeedPage);
+    let publisherId = mongoose.Types.ObjectId(req.params.publisherId);
+
     if (lastVisited) {
       /**get older rss feeds */
-
-      let limit = parseInt(req.params.rssFeedLimit);
-      let page = parseInt(req.params.rssFeedPage);
-      let publisherId = mongoose.Types.ObjectId(req.params.publisherId);
 
       let olderRssFeeds = await AllContent.find({
         _id: { $lte: mongoose.Types.ObjectId(lastVisited.rssFeedId) },
@@ -276,10 +278,12 @@ exports.getLatestRssFeedsPagination = async (req, res, next) => {
     let lastVisited = await RssFeedLastVisit.findOne({
       userId: mongoose.Types.ObjectId(req.userData.userId),
     });
+
+    let limit = parseInt(req.params.rssFeedLimit);
+    let page = parseInt(req.params.rssFeedPage);
+
     if (lastVisited) {
       /**get latest rss feeds */
-      let limit = parseInt(req.params.rssFeedLimit);
-      let page = parseInt(req.params.rssFeedPage);
 
       let latestRssFeeds = await AllContent.find({
         _id: { $gt: mongoose.Types.ObjectId(lastVisited.rssFeedId) },
@@ -319,11 +323,12 @@ exports.getLatestRssFeedsPaginationWithPublisherId = async (req, res, next) => {
     let lastVisited = await RssFeedLastVisit.findOne({
       userId: mongoose.Types.ObjectId(req.userData.userId),
     });
+    let limit = parseInt(req.params.rssFeedLimit);
+    let page = parseInt(req.params.rssFeedPage);
+    let publisherId = mongoose.Types.ObjectId(req.params.publisherId);
+
     if (lastVisited) {
       /**get latest rss feeds */
-      let limit = parseInt(req.params.rssFeedLimit);
-      let page = parseInt(req.params.rssFeedPage);
-      let publisherId = mongoose.Types.ObjectId(req.params.publisherId);
 
       let latestRssFeeds = await AllContent.find({
         _id: { $gt: mongoose.Types.ObjectId(lastVisited.rssFeedId) },

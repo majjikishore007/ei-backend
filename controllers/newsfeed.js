@@ -45,8 +45,7 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
 
     /**get top counter keyword list */
     let keywords = await Keyword.aggregate([
-      { $match: {} },
-      { $sort: { count: -1 } },
+      { $sort: { count: -1, _id: -1 } },
       { $skip: keywordPage * keywordLimit },
       { $limit: keywordLimit },
       {
@@ -158,8 +157,7 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
     let articleLimit = parseInt(req.params.articleLimit);
 
     let keywords = await Keyword.aggregate([
-      { $match: {} },
-      { $sort: { count: -1 } },
+      { $sort: { count: -1, _id: -1 } },
       { $skip: keywordPage * keywordLimit },
       { $limit: keywordLimit },
       {
@@ -189,7 +187,7 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
     for (let i = 0; i < lenKeywords; i++) {
       if (articlePromiseResponse[i].length > 0) {
         let articles = [];
-        if (articlesPromisesResponse[i].length == articleLimit + 1) {
+        if (articlePromiseResponse[i].length == articleLimit + 1) {
           articles = await cutLastItem(articlePromiseResponse[i]);
         } else {
           articles = await shuffleArray(articlePromiseResponse[i]);

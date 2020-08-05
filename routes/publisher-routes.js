@@ -16,6 +16,9 @@ const {
   getPublisherByAggregate,
 } = require("../controllers/publisher");
 
+/**validation */
+const { validateCreatePublisher } = require("./validation/publisher");
+
 /**
  * @description   this route is used to get all publishers
  * @route   GET      /api/publisher
@@ -33,6 +36,7 @@ router.post(
   checkAuth,
   images.multer.single("logo"),
   images.sendUploadToGCS,
+  validateCreatePublisher,
   createNewPublisher
 );
 

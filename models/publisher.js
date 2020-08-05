@@ -9,7 +9,7 @@ const publisherSchema = new Schema({
   email: { type: String, required: true, unique: true },
   about: { type: String, required: true },
   website: { type: String, required: true, unique: true },
-  feedurl: { type: [String], required: false, unique: true },
+  feedurl: { type: [String] },
   address: { type: String, required: true },
   city: { type: String },
   zip: { type: Number },

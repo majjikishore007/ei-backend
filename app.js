@@ -50,6 +50,9 @@ const { createGzip } = require("zlib");
 const compression = require("compression");
 const port = process.env.port || 8080;
 const newsFeed = require("./routes/newsfeed");
+const nominatePublisher = require("./routes/nominatepublisher-route");
+const newsletterSubscriber = require("./routes/newslettersubscriber-route");
+const likeRoute = require("./routes/like-route");
 
 /**save keyword on new article upload */
 const { saveKeywordOnNewArticleUpload } = require("./controllers/keyword");
@@ -115,6 +118,9 @@ app.use("/api/debateComment", debateCommentRoute);
 app.use("/api/debateCommentVote", debateCommentVoteRoute);
 app.use("/api/debateCounterComment", debateCounterCommentRoute);
 app.use("/api/newsfeed", newsFeed);
+app.use("/api/nominatepublisher", nominatePublisher);
+app.use("/api/newslettersubscribe", newsletterSubscriber);
+app.use("/api/like", likeRoute);
 
 //Connect server to Angular index.html file
 app.get("*", (req, res) => {

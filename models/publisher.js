@@ -20,4 +20,6 @@ const publisherSchema = new Schema({
   urlStr: { type: String },
 });
 
+publisherSchema.index({ name: "text" });
+
 module.exports = mongoose.model("Publisher", publisherSchema);

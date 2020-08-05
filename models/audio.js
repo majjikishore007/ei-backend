@@ -25,4 +25,6 @@ const audioSchema = new Schema({
 });
 audioSchema.index({ category: 1 });
 
+audioSchema.index({ title: "text", description: "text", category: "text" });
+
 module.exports = mongoose.model("Audio", audioSchema);

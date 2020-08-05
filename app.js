@@ -70,6 +70,7 @@ const pdfRoute = require("./routes/pdf");
 const subscribeNotification = require("./routes/subscribe-notification-route");
 const notificationLastVisit = require("./routes/notificationlastvisit-route");
 const landingRoute = require("./routes/landing");
+const searchRoute = require("./routes/search");
 
 /**save keyword on new article upload */
 const { saveKeywordOnNewArticleUpload } = require("./controllers/keyword");
@@ -77,7 +78,7 @@ const { saveKeywordOnNewArticleUpload } = require("./controllers/keyword");
 mongoose.Promise = global.Promise;
 mongoose.connect(
   config.uri,
-  { 
+  {
     useCreateIndex: true,
     useUnifiedTopology: true,
     useNewUrlParser: true,
@@ -160,6 +161,7 @@ app.use("/api/pdf", pdfRoute);
 app.use("/api/subscribeNotification", subscribeNotification);
 app.use("/api/notificationlastvisit", notificationLastVisit);
 app.use("/api/landing", landingRoute);
+app.use("/api/search", searchRoute);
 
 //Connect server to Angular index.html file
 app.get("*", (req, res) => {

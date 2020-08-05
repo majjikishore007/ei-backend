@@ -27,4 +27,6 @@ const videoSchema = new Schema({
 });
 videoSchema.index({ category: 1 });
 
+videoSchema.index({ title: "text", description: "text", category: "text" });
+
 module.exports = mongoose.model("Video", videoSchema);

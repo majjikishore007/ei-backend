@@ -232,3 +232,40 @@ exports.paymentCallbackWithOrderIdToSubscribe = async (req, res, next) => {
     res.status(500).json({ success: false, error });
   }
 };
+
+exports.freeTrial = async (req, res, next) => {
+  try {
+    let expireDate = calculateExpireDate(new Date(), req.body.dayCount);
+    let data = {
+      capture: true,
+      amount: 0,
+      userId: req.userData.userId,
+      expireDate: expireDate,
+      created_at: new Date(),
+    };
+
+    const payment = new Payment(data);
+    await payment.save();
+
+    /**update expire date for loggedin user */
+    const update_user = {
+      expireDate: expireDate,
+    };
+    await User.findOneAndUpdate(
+      { _id: req.userData.userId },
+      { $set: update_user }
+    );
+    let expDt =
+      expireDate.getDate() +
+      "/" +
+      parseInt(expireDate.getMonth() + 1) +
+      "/" +
+      expireDate.getFullYear();
+    res.json({
+      success: true,
+      message: `Your Free Trial is valid upto ${expDt}`,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};

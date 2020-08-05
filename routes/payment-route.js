@@ -6,6 +6,7 @@ const {
   getAllPayments,
   createPayment,
   createPaymentToSubscribe,
+  freeTrial,
   paymentCallbackWithOrderId,
   paymentCallbackWithOrderIdToSubscribe,
 } = require("../controllers/payment");
@@ -30,6 +31,13 @@ router.post("/", checkAuth, createPayment);
  * @access  Private
  */
 router.post("/subscribe", checkAuth, createPaymentToSubscribe);
+
+/**
+ * @description   this route is used to start free subscription trial plan
+ * @route   GET      /api/payment/freetrial
+ * @access  Private
+ */
+router.post("/freetrial", checkAuth, freeTrial);
 
 /**
  * @description   this route is used redirect payment completion/failure

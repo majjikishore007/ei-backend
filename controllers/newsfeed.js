@@ -80,8 +80,31 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
     let prmForAudio = [];
     let prmForVideo = [];
 
+    let articleCounts = [];
+    let audioCounts = [];
+    let videoCounts = [];
+
     let finalKeywordListLen = finalKeywordList.length;
     for (let i = 0; i < finalKeywordListLen; i++) {
+      //checking if audio and video exist
+      let articleCount = Math.round(articleLimit / 3);
+      let audioCount = Math.round(articleLimit / 3);
+      let videoCount = Math.round(articleLimit / 3);
+
+      let existAudio = await Audio.findOne({
+        category: new RegExp(finalKeywordList[i].keyword, "i"),
+      });
+      if (!existAudio) {
+        articleCount = articleCount + 1;
+      }
+
+      let existVideo = await Video.findOne({
+        category: new RegExp(finalKeywordList[i].keyword, "i"),
+      });
+      if (!existVideo) {
+        articleCount = articleCount + 1;
+      }
+
       /**article */
       let articlePrm = Article.aggregate([
         {
@@ -90,7 +113,7 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
           },
         },
         { $sort: { _id: -1 } },
-        { $limit: articleLimit + 1 },
+        { $limit: articleCount + 1 },
         {
           $lookup: {
             from: Publisher.collection.name,
@@ -122,8 +145,8 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
           },
         },
       ]);
-
       prmForArticle.push(articlePrm);
+
       /**audio */
       let audioPrm = Audio.aggregate([
         {
@@ -132,7 +155,7 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
           },
         },
         { $sort: { _id: -1 } },
-        { $limit: articleLimit + 1 },
+        { $limit: audioCount + 1 },
         {
           $lookup: {
             from: Publisher.collection.name,
@@ -173,7 +196,7 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
           },
         },
         { $sort: { _id: -1 } },
-        { $limit: articleLimit + 1 },
+        { $limit: videoCount + 1 },
         {
           $lookup: {
             from: Publisher.collection.name,
@@ -205,6 +228,10 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
       ]);
 
       prmForVideo.push(videoPrm);
+
+      articleCounts[i] = articleCount;
+      videoCounts[i] = videoCount;
+      audioCounts[i] = audioCount;
     }
 
     /**create final list with lastArticleId after promise resolution with shuffled articles */
@@ -214,19 +241,23 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
     let videoPromisesResponse = await Promise.all(prmForVideo);
 
     for (let i = 0; i < finalKeywordListLen; i++) {
+      let articleCount = articleCounts[i];
+      let audioCount = audioCounts[i];
+      let videoCount = videoCounts[i];
+
       let nextbatchArticles = false,
         nextbatchAudios = false,
         nextbatchVideos = false;
 
-      if (articleLimit + 1 == articlesPromisesResponse[i].length) {
+      if (articleCount + 1 == articlesPromisesResponse[i].length) {
         nextbatchArticles = true;
         articlesPromisesResponse[i].pop();
       }
-      if (articleLimit + 1 == audioPromisesResponse[i].length) {
+      if (audioCount + 1 == audioPromisesResponse[i].length) {
         nextbatchAudios = true;
         audioPromisesResponse[i].pop();
       }
-      if (articleLimit + 1 == videoPromisesResponse[i].length) {
+      if (videoCount + 1 == videoPromisesResponse[i].length) {
         nextbatchVideos = true;
         videoPromisesResponse[i].pop();
       }
@@ -265,6 +296,30 @@ exports.getNextArticles = async (req, res, next) => {
     let articlePage = parseInt(req.params.articlePage);
     let articleLimit = parseInt(req.params.articleLimit);
 
+    //checking if audio and video exist
+    let articleCount = Math.round(articleLimit / 3);
+    let audioCount = Math.round(articleLimit / 3);
+    let videoCount = Math.round(articleLimit / 3);
+
+    let existAudio = await Audio.find({
+      category: new RegExp(keyword, "i"),
+    })
+      .sort({ _id: -1 })
+      .skip(articlePage * audioCount);
+    if (existAudio.length <= 0) {
+      articleCount = articleCount + 1;
+    }
+
+    let existVideo = await Video.find({
+      category: new RegExp(keyword, "i"),
+    })
+      .sort({ _id: -1 })
+      .skip(articlePage * videoCount);
+
+    if (existVideo.length <= 0) {
+      articleCount = articleCount + 1;
+    }
+
     let prm = [];
 
     /**article */
@@ -275,8 +330,8 @@ exports.getNextArticles = async (req, res, next) => {
         },
       },
       { $sort: { _id: -1 } },
-      { $skip: articlePage * articleLimit },
-      { $limit: articleLimit + 1 },
+      { $skip: articlePage * articleCount },
+      { $limit: articleCount + 1 },
       {
         $lookup: {
           from: Publisher.collection.name,
@@ -308,7 +363,6 @@ exports.getNextArticles = async (req, res, next) => {
         },
       },
     ]);
-
     prm.push(articlePrm);
 
     /**audio */
@@ -319,8 +373,8 @@ exports.getNextArticles = async (req, res, next) => {
         },
       },
       { $sort: { _id: -1 } },
-      { $skip: articlePage * articleLimit },
-      { $limit: articleLimit + 1 },
+      { $skip: articlePage * audioCount },
+      { $limit: audioCount + 1 },
       {
         $lookup: {
           from: Publisher.collection.name,
@@ -360,8 +414,8 @@ exports.getNextArticles = async (req, res, next) => {
         },
       },
       { $sort: { _id: -1 } },
-      { $skip: articlePage * articleLimit },
-      { $limit: articleLimit + 1 },
+      { $skip: articlePage * videoCount },
+      { $limit: videoCount + 1 },
       {
         $lookup: {
           from: Publisher.collection.name,
@@ -399,15 +453,15 @@ exports.getNextArticles = async (req, res, next) => {
       nextbatchAudios = false,
       nextbatchVideos = false;
 
-    if (articleLimit + 1 == resp[0].length) {
+    if (articleCount + 1 == resp[0].length) {
       nextbatchArticles = true;
       resp[0].pop();
     }
-    if (articleLimit + 1 == resp[1].length) {
+    if (audioCount + 1 == resp[1].length) {
       nextbatchAudios = true;
       resp[1].pop();
     }
-    if (articleLimit + 1 == resp[2].length) {
+    if (videoCount + 1 == resp[2].length) {
       nextbatchVideos = true;
       resp[2].pop();
     }
@@ -458,8 +512,31 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
     let prmForAudio = [];
     let prmForVideo = [];
 
+    let articleCounts = [];
+    let audioCounts = [];
+    let videoCounts = [];
+
     let finalKeywordListLen = finalKeywordList.length;
     for (let i = 0; i < finalKeywordListLen; i++) {
+      //checking if audio and video exist
+      let articleCount = Math.round(articleLimit / 3);
+      let audioCount = Math.round(articleLimit / 3);
+      let videoCount = Math.round(articleLimit / 3);
+
+      let existAudio = await Audio.findOne({
+        category: new RegExp(finalKeywordList[i].keyword, "i"),
+      });
+      if (!existAudio) {
+        articleCount = articleCount + 1;
+      }
+
+      let existVideo = await Video.findOne({
+        category: new RegExp(finalKeywordList[i].keyword, "i"),
+      });
+      if (!existVideo) {
+        articleCount = articleCount + 1;
+      }
+
       /**article */
       let articlePrm = Article.aggregate([
         {
@@ -468,7 +545,7 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
           },
         },
         { $sort: { _id: -1 } },
-        { $limit: articleLimit + 1 },
+        { $limit: articleCount + 1 },
         {
           $lookup: {
             from: Publisher.collection.name,
@@ -510,7 +587,7 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
           },
         },
         { $sort: { _id: -1 } },
-        { $limit: articleLimit + 1 },
+        { $limit: audioCount + 1 },
         {
           $lookup: {
             from: Publisher.collection.name,
@@ -551,7 +628,7 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
           },
         },
         { $sort: { _id: -1 } },
-        { $limit: articleLimit + 1 },
+        { $limit: videoCount + 1 },
         {
           $lookup: {
             from: Publisher.collection.name,
@@ -583,6 +660,10 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
       ]);
 
       prmForVideo.push(videoPrm);
+
+      articleCounts[i] = articleCount;
+      videoCounts[i] = videoCount;
+      audioCounts[i] = audioCount;
     }
 
     /**create final list with lastArticleId after promise resolution with shuffled articles */
@@ -592,19 +673,23 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
     let videoPromisesResponse = await Promise.all(prmForVideo);
 
     for (let i = 0; i < finalKeywordListLen; i++) {
+      let articleCount = articleCounts[i];
+      let audioCount = audioCounts[i];
+      let videoCount = videoCounts[i];
+
       let nextbatchArticles = false,
         nextbatchAudios = false,
         nextbatchVideos = false;
 
-      if (articleLimit + 1 == articlesPromisesResponse[i].length) {
+      if (articleCount + 1 == articlesPromisesResponse[i].length) {
         nextbatchArticles = true;
         articlesPromisesResponse[i].pop();
       }
-      if (articleLimit + 1 == audioPromisesResponse[i].length) {
+      if (audioCount + 1 == audioPromisesResponse[i].length) {
         nextbatchAudios = true;
         audioPromisesResponse[i].pop();
       }
-      if (articleLimit + 1 == videoPromisesResponse[i].length) {
+      if (videoCount + 1 == videoPromisesResponse[i].length) {
         nextbatchVideos = true;
         videoPromisesResponse[i].pop();
       }

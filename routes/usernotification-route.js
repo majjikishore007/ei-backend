@@ -7,6 +7,7 @@ const {
   getAllUserNotificationsForUserIdPagination,
   getUnseenUserNotificationsForUserIdPagination,
   getUnreadUserNotificationsForUserIdPagination,
+  getUnseenUserNotificationCount,
   updateNotificationById,
 } = require("../controllers/usernotification");
 
@@ -16,6 +17,13 @@ const {
  * @access  Public
  */
 router.get("/", getAllUserNotifications);
+
+/**
+ * @description   this route is used to unseen usernotifications count
+ * @route   GET      /api/usernotification/unseen/count
+ * @access  Public
+ */
+router.get("/unseen/count", checkAuth, getUnseenUserNotificationCount);
 
 /**
  * @description   this route is used to get notification with followed publishers

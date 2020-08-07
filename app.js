@@ -68,6 +68,7 @@ const videoTopRoute = require("./routes/videotop");
 const audioRoute = require("./routes/audio");
 const pdfRoute = require("./routes/pdf");
 const subscribeNotification = require("./routes/subscribe-notification-route");
+const notificationLastVisit = require("./routes/notificationlastvisit-route");
 
 /**save keyword on new article upload */
 const { saveKeywordOnNewArticleUpload } = require("./controllers/keyword");
@@ -156,6 +157,7 @@ app.use("/api/audio", audioRoute);
 app.use("/api/pdf", pdfRoute);
 // Provide static directory for  frontend
 app.use("/api/subscribeNotification", subscribeNotification);
+app.use("/api/notificationlastvisit", notificationLastVisit);
 
 //Connect server to Angular index.html file
 app.get("*", (req, res) => {

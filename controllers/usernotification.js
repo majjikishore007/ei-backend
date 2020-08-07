@@ -1,4 +1,5 @@
 const Usernotification = require("../models/usernotification");
+const NotificationLastVisit = require("../models/notification_lastvisit");
 
 const mongoose = require("mongoose");
 
@@ -116,6 +117,34 @@ exports.getUnreadUserNotificationsForUserIdPagination = async (
     res.status(200).json({ success: true, data });
   } catch (error) {
     console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getUnseenUserNotificationCount = async (req, res, next) => {
+  try {
+    let notificationLastVisitExist = await NotificationLastVisit.findOne({
+      userId: req.userData.userId,
+    });
+    if (notificationLastVisitExist) {
+      /**query for only those notifications which has date greate than last visit */
+      let notificationsCount = await Usernotification.countDocuments({
+        reciever: mongoose.Types.ObjectId(req.userData.userId),
+        viewed: false,
+        read: false,
+        date: { $gt: notificationLastVisitExist.lastVisitedAt },
+      });
+      res.status(200).json({ success: true, data: notificationsCount });
+    } else {
+      /**query for only those notifications which has date greate than last visit */
+      let notificationsCount = await Usernotification.countDocuments({
+        reciever: mongoose.Types.ObjectId(req.userData.userId),
+        viewed: false,
+        read: false,
+      });
+      res.status(200).json({ success: true, data: notificationsCount });
+    }
+  } catch (error) {
     res.status(500).json({ success: false, error });
   }
 };

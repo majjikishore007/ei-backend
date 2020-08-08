@@ -95,6 +95,19 @@ exports.getCommentsByUserId = async (req, res, next) => {
   }
 };
 
+exports.updateCommentById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    await Comment.updateOne(
+      { _id: id, user: req.userData.userId },
+      { $set: req.body }
+    );
+    res.status(200).json({ success: true, message: "Comment updated" });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
 exports.deleteCommentById = async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -127,9 +140,16 @@ exports.getCommentsInAggregateByArticles = async (req, res, next) => {
 
 exports.getCommentsByArticleId = async (req, res, next) => {
   try {
-    let comments = await Comment.find({ article: req.params.articleId }).sort({
-      _id: -1,
-    });
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
+    let comments = await Comment.find({ article: req.params.articleId })
+      .sort({
+        _id: -1,
+      })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("user");
     res.json({ success: true, data: comments });
   } catch (error) {
     res.status(500).json({ success: false, error });

@@ -33,9 +33,42 @@ exports.voteForComment = async (req, res, next) => {
 
     res
       .status(201)
-      .json({ success: true, message: "vote has been adeed", data: result });
+      .json({ success: true, message: "vote has been added", data: result });
   } catch (error) {
+    if (error.code == 11000) {
+      await DebateCommentVote.findOneAndUpdate(
+        { debate: req.body.debate, user: req.userData.userId },
+        { $set: req.body }
+      );
+      return res
+        .status(200)
+        .json({ success: true, message: "vote has been updated" });
+    }
     console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getAllVotesForDebateComment = async (req, res, next) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+    let vote = req.params.vote;
+
+    let comment = mongoose.Types.ObjectId(req.params.comment);
+
+    const debateCommentVotes = await DebateCommentVote.find({
+      comment,
+      vote,
+    })
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("debate")
+      .populate("user");
+
+    res.status(201).json({ success: true, data: debateCommentVotes });
+  } catch (error) {
     res.status(500).json({ success: false, error });
   }
 };

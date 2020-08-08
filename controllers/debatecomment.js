@@ -7,7 +7,9 @@ const mongoose = require("mongoose");
 exports.getDebateCommentWithId = async (req, res, next) => {
   try {
     const id = req.params.id;
-    let doc = await DebateComment.findById(id);
+    let doc = await DebateComment.findById(id)
+      .populate("user")
+      .populate("debate");
     if (doc) {
       res.status(200).json({ success: true, data: doc });
     } else {
@@ -76,7 +78,10 @@ exports.addDebateComment = async (req, res, next) => {
 exports.updateDebateCommentById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    await DebateComment.updateOne({ _id: id }, { $set: req.body });
+    await DebateComment.updateOne(
+      { _id: id, user: req.userData.userId },
+      { $set: req.body }
+    );
     res.status(200).json({ success: true, message: "Debate updated" });
   } catch (error) {
     res.status(500).json({ success: false, error });
@@ -98,19 +103,17 @@ exports.deleteDebateComment = async (req, res, next) => {
 
 exports.getDebateCommentsForDebateId = async (req, res, next) => {
   try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
     const debate_id = req.params.id;
     let result = await DebateComment.find({ debate: debate_id })
       .sort("-_id")
+      .skip(page * limit)
+      .limit(limit)
       .populate("user");
 
     res.status(200).json({ success: true, data: result });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error });
-  }
-};
-
-exports.fun = async (req, res, next) => {
-  try {
   } catch (error) {
     res.status(500).json({ success: false, error: error });
   }

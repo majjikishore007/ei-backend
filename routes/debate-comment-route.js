@@ -41,10 +41,10 @@ router.delete("/:id", authCheck, deleteDebateComment);
 
 /**
  * @description   this route is used to get debateComment by debateId
- * @route   GET      /api/debateComment/debate/:id
+ * @route   GET      /api/debateComment/debate/:id/page/:page/limit/:limit
  * @access  Public
  */
-router.get("/debate/:id", getDebateCommentsForDebateId);
+router.get("/debate/:id/page/:page/limit/:limit", getDebateCommentsForDebateId);
 
 router.patch("/vote/:num/:id", (req, res) => {
   const n = req.params.num;

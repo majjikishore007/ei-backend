@@ -7,10 +7,18 @@ const mongoose = require("mongoose");
 
 exports.getCounterCommentWithparentComment = async (req, res, next) => {
   try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
     const parent_comment_id = req.params.id;
     let result = await BlogCounterComment.find({
       parent_comment: parent_comment_id,
-    }).sort("-_id");
+    })
+      .sort("-_id")
+      .skip(page * limit)
+      .limit(limit)
+      .populate("blog")
+      .populate("user");
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     res.status(500).json({ success: false, error });
@@ -63,6 +71,19 @@ exports.addCounterCommentForBlog = async (req, res, next) => {
     await usernotification.save();
 
     res.status(201).json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.deleteCommentById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    await BlogCounterComment.deleteOne({
+      _id: id,
+      user: req.userData.userId,
+    });
+    res.json({ success: true, message: "message has been deleted" });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

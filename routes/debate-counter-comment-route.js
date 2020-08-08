@@ -5,6 +5,7 @@ const authCheck = require("../middleware/check-auth");
 const {
   getCounterCommentWithparentComment,
   addCounterComment,
+  deleteCommentById,
 } = require("../controllers/debatecountercomment");
 
 router.get("/", (req, res) => {
@@ -13,10 +14,13 @@ router.get("/", (req, res) => {
 
 /**
  * @description   this route is used to get debate counter comment
- * @route   GET      /api/debateCounterComment/parentComment/:id
+ * @route   GET      /api/debateCounterComment/parentComment/:id/page/:page/limit/:limit
  * @access  Public
  */
-router.get("/parentComment/:id", getCounterCommentWithparentComment);
+router.get(
+  "/parentComment/:id/page/:page/limit/:limit",
+  getCounterCommentWithparentComment
+);
 
 /**
  * @description   this route is used to add counter comment
@@ -24,5 +28,12 @@ router.get("/parentComment/:id", getCounterCommentWithparentComment);
  * @access  Private
  */
 router.post("/", authCheck, addCounterComment);
+
+/**
+ * @description   this route is used to delete counter comment to debate
+ * @route   POST      /api/debateCounterComment/:id
+ * @access  Private
+ */
+router.delete("/:id", authCheck, deleteCommentById);
 
 module.exports = router;

@@ -1,8 +1,10 @@
 const router = require("express").Router();
-const DebateCommentVote = require("../models/debate_comment_vote");
 const checkAuth = require("../middleware/check-auth");
 
-const { voteForComment } = require("../controllers/debatecommentvote");
+const {
+  voteForComment,
+  getAllVotesForDebateComment,
+} = require("../controllers/debatecommentvote");
 
 router.get("/", (req, res) => {
   res.json("need to do this");
@@ -14,6 +16,16 @@ router.get("/", (req, res) => {
  * @access  Private
  */
 router.post("/", checkAuth, voteForComment);
+
+/**
+ * @description   this route is used to get votes for comment
+ * @route   POST      /api/debateCommentVote/page/:page/limit/:limit/:comment/:vote
+ * @access  Public
+ */
+router.get(
+  "/page/:page/limit/:limit/:comment/:vote",
+  getAllVotesForDebateComment
+);
 
 router.get("/comment/:id", (req, res) => {});
 

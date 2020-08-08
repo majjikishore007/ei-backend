@@ -9,6 +9,7 @@ const {
   getCommentsByUrlStr,
   getCommentsByUserId,
   deleteCommentById,
+  updateCommentById,
   getCommentsInAggregateByArticles,
   getCommentsByArticleId,
 } = require("../controllers/comment");
@@ -29,6 +30,13 @@ router.get("/", getAllComments);
  * @access  Private
  */
 router.post("/", checkAuth, validateOnCommentSave, saveComment);
+
+/**
+ * @description   this route is used to update blogComment by Id
+ * @route   PATCH      /api/comment/:id
+ * @access  Private
+ */
+router.patch("/:id", checkAuth, updateCommentById);
 
 /**
  * @description   this route is used to get a comment by article urlstr
@@ -79,8 +87,11 @@ router.get("/article/:id", (req, res) => {
 /**
  * @description   this route is used to get a comment by its articleId
  * @param articleId
- * @route   GET      /api/comment/article/:articleId
+ * @route   GET      /api/comment/article/:articleId/page:page/limit/:limit
  * @access  Public
  */
-router.get("/article/:articleId", getCommentsByArticleId);
+router.get(
+  "/article/:articleId/page/:page/limit/:limit",
+  getCommentsByArticleId
+);
 module.exports = router;

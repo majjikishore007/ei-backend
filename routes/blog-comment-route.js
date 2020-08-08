@@ -40,9 +40,9 @@ router.delete("/:id", authCheck, deleteBlogComment);
 
 /**
  * @description   this route is used to get blogComment by blogId
- * @route   GET      /api/blogComment/blog/:id
+ * @route   GET      /api/blogComment/blog/:id/page/:page/limit/:limit
  * @access  Public
  */
-router.get("/blog/:id", getBlogCommentsForBlogId);
+router.get("/blog/:id/page/:page/limit/:limit", getBlogCommentsForBlogId);
 
 module.exports = router;

@@ -38,6 +38,39 @@ exports.voteForBlogComment = async (req, res, next) => {
       .json({ success: true, message: "vote has been adeed", data: result });
   } catch (error) {
     console.log(error);
+    if (error.code == 11000) {
+      await BlogCommentVote.findOneAndUpdate(
+        { blog: req.body.blog, user: req.userData.userId },
+        { $set: req.body }
+      );
+      return res
+        .status(200)
+        .json({ success: true, message: "vote has been updated" });
+    }
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getAllVotesForBlogComment = async (req, res, next) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+    let vote = req.params.vote;
+
+    let comment = mongoose.Types.ObjectId(req.params.comment);
+
+    const blogCommentVotes = await BlogCommentVote.find({
+      comment,
+      vote,
+    })
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("blog")
+      .populate("user");
+
+    res.status(201).json({ success: true, data: blogCommentVotes });
+  } catch (error) {
     res.status(500).json({ success: false, error });
   }
 };

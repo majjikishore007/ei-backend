@@ -3,6 +3,7 @@ const checkAuth = require("../middleware/check-auth");
 
 const {
   voteForArticleComment,
+  getarticlecommentvote,
   getAllVotesForArticleComment,
 } = require("../controllers/articlecommentvote");
 
@@ -12,6 +13,16 @@ const {
  * @access  Private
  */
 router.post("/", checkAuth, voteForArticleComment);
+
+
+/**
+ * @description   this route is used to get articleComment vote(upvote / downvote)
+ * @route   get      /api/articleCommentVote/:commentid/:articleid
+ * @access  Public
+ */
+router.get("/getvote/:commentid/:articleid",  getarticlecommentvote);
+
+
 
 /**
  * @description   this route is used to get articleComment votes for comment

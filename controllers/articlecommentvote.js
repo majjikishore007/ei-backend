@@ -49,6 +49,23 @@ exports.voteForArticleComment = async (req, res, next) => {
   }
 };
 
+
+exports.getarticlecommentvote = async (req, res, next) => {
+  try {
+    const parent_comment_id = req.params.commentid;
+    const article_id = req.params.articleid;
+    let result = await ArticleCommentVote.find({
+      comment: parent_comment_id, article: article_id
+    }).sort("-_id");
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+   // console.log(error)
+   res.status(500).json({ success: false, error });
+  }
+}
+
+
+
 exports.getAllVotesForArticleComment = async (req, res, next) => {
   try {
     let page = parseInt(req.params.page);

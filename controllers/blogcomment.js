@@ -1,4 +1,6 @@
 const BlogComment = require("../models/blog_comment");
+const BlogCounterComment = require("../models/blog_counter_comment");
+const BlogCommentVote = require("../models/blog_comment_vote");
 const Blog = require("../models/blog");
 const User = require("../models/user");
 const UserNotification = require("../models/usernotification");
@@ -90,6 +92,78 @@ exports.getBlogCommentsForBlogId = async (req, res, next) => {
       .skip(page * limit)
       .limit(limit)
       .populate("user");
+
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error });
+  }
+};
+
+exports.getAllCommentsForBlogId = async (req, res, next) => {
+  try {
+    const blog_id = mongoose.Types.ObjectId(req.params.id);
+    let result = await BlogComment.aggregate([
+      { $match: { blog: blog_id } },
+      {
+        $lookup: {
+          from: User.collection.name,
+          localField: "user",
+          foreignField: "_id",
+          as: "userData",
+        },
+      },
+      { $unwind: "$userData" },
+      {
+        $lookup: {
+          from: BlogCounterComment.collection.name,
+          let: { commentId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ["$parent_comment", "$$commentId"] }],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: User.collection.name,
+                localField: "user",
+                foreignField: "_id",
+                as: "userData",
+              },
+            },
+            { $unwind: "$userData" },
+          ],
+          as: "counterComments",
+        },
+      },
+      {
+        $lookup: {
+          from: BlogCommentVote.collection.name,
+          let: { commentId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ["$comment", "$$commentId"] }],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: User.collection.name,
+                localField: "user",
+                foreignField: "_id",
+                as: "userData",
+              },
+            },
+            { $unwind: "$userData" },
+          ],
+          as: "commentVotes",
+        },
+      },
+    ]);
 
     res.status(200).json({ success: true, data: result });
   } catch (error) {

@@ -65,6 +65,25 @@ exports.getarticlecommentvote = async (req, res, next) => {
 }
 
 
+exports.getarticlecommentvotecount = async (req, res, next) => {
+  try {
+    const parent_comment_id = req.params.commentid;
+    const article_id = req.params.articleid;
+
+
+    let upvote = await ArticleCommentVote.find({
+      comment: parent_comment_id, article: article_id , vote : true
+    }).sort("-_id");
+    let downvote = await ArticleCommentVote.find({
+      comment: parent_comment_id, article: article_id , vote : false
+    }).sort("-_id");
+    res.status(200).json({ success: true, data: {upvotecount : upvote.length , downvotecount : downvote.length} });
+  } catch (error) {
+   // console.log(error)
+   res.status(500).json({ success: false, error });
+  }
+}
+
 
 exports.getAllVotesForArticleComment = async (req, res, next) => {
   try {

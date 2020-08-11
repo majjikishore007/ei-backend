@@ -76,7 +76,7 @@ const { saveKeywordOnNewArticleUpload } = require("./controllers/keyword");
 mongoose.Promise = global.Promise;
 mongoose.connect(
   config.uri,
-  {
+  { 
     useCreateIndex: true,
     useUnifiedTopology: true,
     useNewUrlParser: true,

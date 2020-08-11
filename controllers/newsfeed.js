@@ -22,8 +22,9 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
 
     let articleLimit = parseInt(req.params.articleLimit);
 
+    let kwPrm = [];
     /**get preference list for loggedin user */
-    let preferences = await Preference.aggregate([
+    let preferencesPrm = Preference.aggregate([
       { $match: { user: mongoose.Types.ObjectId(userId) } },
       { $sort: { _id: -1 } },
       { $skip: preferencePage * preferenceLimit },
@@ -45,9 +46,10 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
         },
       },
     ]);
+    kwPrm.push(preferencesPrm);
 
     /**get top counter keyword list */
-    let keywords = await Keyword.aggregate([
+    let keywordsPrm = Keyword.aggregate([
       { $sort: { count: -1, _id: -1 } },
       { $skip: keywordPage * keywordLimit },
       { $limit: keywordLimit },
@@ -58,6 +60,12 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
         },
       },
     ]);
+    kwPrm.push(keywordsPrm);
+
+    let resp = await Promise.all(kwPrm);
+
+    let preferences = resp[0];
+    let keywords = resp[1];
 
     /**get lastPreferenceId */
     let lastPreferenceId;
@@ -79,10 +87,6 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
     let prmForArticle = [];
     let prmForAudio = [];
     let prmForVideo = [];
-
-    let articleCounts = [];
-    let audioCounts = [];
-    let videoCounts = [];
 
     let finalKeywordListLen = finalKeywordList.length;
     for (let i = 0; i < finalKeywordListLen; i++) {
@@ -113,7 +117,7 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
           },
         },
         { $sort: { _id: -1 } },
-        { $limit: articleCount + 1 },
+        { $limit: articleCount },
         {
           $lookup: {
             from: Publisher.collection.name,
@@ -155,7 +159,7 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
           },
         },
         { $sort: { _id: -1 } },
-        { $limit: audioCount + 1 },
+        { $limit: audioCount },
         {
           $lookup: {
             from: Publisher.collection.name,
@@ -172,6 +176,7 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
             description: 1,
             price: 1,
             thumbnail: 1,
+            cover: "$thumbnail",
             audioUrl: 1,
             publisher: "$publisherData",
             category: 1,
@@ -196,7 +201,7 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
           },
         },
         { $sort: { _id: -1 } },
-        { $limit: videoCount + 1 },
+        { $limit: videoCount },
         {
           $lookup: {
             from: Publisher.collection.name,
@@ -213,6 +218,7 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
             description: 1,
             price: 1,
             thumbnail: 1,
+            cover: "$thumbnail",
             videoUrl: 1,
             publisher: "$publisherData",
             category: 1,
@@ -228,40 +234,20 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
       ]);
 
       prmForVideo.push(videoPrm);
-
-      articleCounts[i] = articleCount;
-      videoCounts[i] = videoCount;
-      audioCounts[i] = audioCount;
     }
 
     /**create final list with lastArticleId after promise resolution with shuffled articles */
     let finalList = [];
-    let articlesPromisesResponse = await Promise.all(prmForArticle);
-    let audioPromisesResponse = await Promise.all(prmForAudio);
-    let videoPromisesResponse = await Promise.all(prmForVideo);
+    let articlesPrm = Promise.all(prmForArticle);
+    let audioPrm = Promise.all(prmForAudio);
+    let videoPrm = Promise.all(prmForVideo);
+
+    let allResp = await Promise.all([articlesPrm, audioPrm, videoPrm]);
+    let articlesPromisesResponse = allResp[0];
+    let audioPromisesResponse = allResp[1];
+    let videoPromisesResponse = allResp[2];
 
     for (let i = 0; i < finalKeywordListLen; i++) {
-      let articleCount = articleCounts[i];
-      let audioCount = audioCounts[i];
-      let videoCount = videoCounts[i];
-
-      let nextbatchArticles = false,
-        nextbatchAudios = false,
-        nextbatchVideos = false;
-
-      if (articleCount + 1 == articlesPromisesResponse[i].length) {
-        nextbatchArticles = true;
-        articlesPromisesResponse[i].pop();
-      }
-      if (audioCount + 1 == audioPromisesResponse[i].length) {
-        nextbatchAudios = true;
-        audioPromisesResponse[i].pop();
-      }
-      if (videoCount + 1 == videoPromisesResponse[i].length) {
-        nextbatchVideos = true;
-        videoPromisesResponse[i].pop();
-      }
-
       let articles = articlesPromisesResponse[i];
       let audios = audioPromisesResponse[i];
       let videos = videoPromisesResponse[i];
@@ -270,9 +256,6 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
 
       finalList.push({
         keywordData: finalKeywordList[i],
-        nextbatchArticles,
-        nextbatchAudios,
-        nextbatchVideos,
         data: allItems,
       });
     }
@@ -331,7 +314,7 @@ exports.getNextArticles = async (req, res, next) => {
       },
       { $sort: { _id: -1 } },
       { $skip: articlePage * articleCount },
-      { $limit: articleCount + 1 },
+      { $limit: articleCount },
       {
         $lookup: {
           from: Publisher.collection.name,
@@ -374,7 +357,7 @@ exports.getNextArticles = async (req, res, next) => {
       },
       { $sort: { _id: -1 } },
       { $skip: articlePage * audioCount },
-      { $limit: audioCount + 1 },
+      { $limit: audioCount },
       {
         $lookup: {
           from: Publisher.collection.name,
@@ -391,6 +374,7 @@ exports.getNextArticles = async (req, res, next) => {
           description: 1,
           price: 1,
           thumbnail: 1,
+          cover: "$thumbnail",
           audioUrl: 1,
           publisher: "$publisherData",
           category: 1,
@@ -415,7 +399,7 @@ exports.getNextArticles = async (req, res, next) => {
       },
       { $sort: { _id: -1 } },
       { $skip: articlePage * videoCount },
-      { $limit: videoCount + 1 },
+      { $limit: videoCount },
       {
         $lookup: {
           from: Publisher.collection.name,
@@ -432,6 +416,7 @@ exports.getNextArticles = async (req, res, next) => {
           description: 1,
           price: 1,
           thumbnail: 1,
+          cover: "$thumbnail",
           videoUrl: 1,
           publisher: "$publisherData",
           category: 1,
@@ -449,23 +434,6 @@ exports.getNextArticles = async (req, res, next) => {
 
     let resp = await Promise.all(prm);
 
-    let nextbatchArticles = false,
-      nextbatchAudios = false,
-      nextbatchVideos = false;
-
-    if (articleCount + 1 == resp[0].length) {
-      nextbatchArticles = true;
-      resp[0].pop();
-    }
-    if (audioCount + 1 == resp[1].length) {
-      nextbatchAudios = true;
-      resp[1].pop();
-    }
-    if (videoCount + 1 == resp[2].length) {
-      nextbatchVideos = true;
-      resp[2].pop();
-    }
-
     let articles = resp[0];
     let audios = resp[1];
     let videos = resp[2];
@@ -474,9 +442,6 @@ exports.getNextArticles = async (req, res, next) => {
 
     let data = {
       keyword,
-      nextbatchArticles,
-      nextbatchAudios,
-      nextbatchVideos,
       data: allItems,
     };
     res.status(200).json({ success: true, data });
@@ -512,10 +477,6 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
     let prmForAudio = [];
     let prmForVideo = [];
 
-    let articleCounts = [];
-    let audioCounts = [];
-    let videoCounts = [];
-
     let finalKeywordListLen = finalKeywordList.length;
     for (let i = 0; i < finalKeywordListLen; i++) {
       //checking if audio and video exist
@@ -545,7 +506,7 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
           },
         },
         { $sort: { _id: -1 } },
-        { $limit: articleCount + 1 },
+        { $limit: articleCount },
         {
           $lookup: {
             from: Publisher.collection.name,
@@ -587,7 +548,7 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
           },
         },
         { $sort: { _id: -1 } },
-        { $limit: audioCount + 1 },
+        { $limit: audioCount },
         {
           $lookup: {
             from: Publisher.collection.name,
@@ -604,6 +565,7 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
             description: 1,
             price: 1,
             thumbnail: 1,
+            cover: "$thumbnail",
             audioUrl: 1,
             publisher: "$publisherData",
             category: 1,
@@ -628,7 +590,7 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
           },
         },
         { $sort: { _id: -1 } },
-        { $limit: videoCount + 1 },
+        { $limit: videoCount },
         {
           $lookup: {
             from: Publisher.collection.name,
@@ -645,6 +607,7 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
             description: 1,
             price: 1,
             thumbnail: 1,
+            cover: "$thumbnail",
             videoUrl: 1,
             publisher: "$publisherData",
             category: 1,
@@ -660,40 +623,20 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
       ]);
 
       prmForVideo.push(videoPrm);
-
-      articleCounts[i] = articleCount;
-      videoCounts[i] = videoCount;
-      audioCounts[i] = audioCount;
     }
 
     /**create final list with lastArticleId after promise resolution with shuffled articles */
     let finalList = [];
-    let articlesPromisesResponse = await Promise.all(prmForArticle);
-    let audioPromisesResponse = await Promise.all(prmForAudio);
-    let videoPromisesResponse = await Promise.all(prmForVideo);
+    let articlesPrm = Promise.all(prmForArticle);
+    let audioPrm = Promise.all(prmForAudio);
+    let videoPrm = Promise.all(prmForVideo);
+
+    let allResp = await Promise.all([articlesPrm, audioPrm, videoPrm]);
+    let articlesPromisesResponse = allResp[0];
+    let audioPromisesResponse = allResp[1];
+    let videoPromisesResponse = allResp[2];
 
     for (let i = 0; i < finalKeywordListLen; i++) {
-      let articleCount = articleCounts[i];
-      let audioCount = audioCounts[i];
-      let videoCount = videoCounts[i];
-
-      let nextbatchArticles = false,
-        nextbatchAudios = false,
-        nextbatchVideos = false;
-
-      if (articleCount + 1 == articlesPromisesResponse[i].length) {
-        nextbatchArticles = true;
-        articlesPromisesResponse[i].pop();
-      }
-      if (audioCount + 1 == audioPromisesResponse[i].length) {
-        nextbatchAudios = true;
-        audioPromisesResponse[i].pop();
-      }
-      if (videoCount + 1 == videoPromisesResponse[i].length) {
-        nextbatchVideos = true;
-        videoPromisesResponse[i].pop();
-      }
-
       let articles = articlesPromisesResponse[i];
       let audios = audioPromisesResponse[i];
       let videos = videoPromisesResponse[i];
@@ -702,9 +645,6 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
 
       finalList.push({
         keywordData: finalKeywordList[i],
-        nextbatchArticles,
-        nextbatchAudios,
-        nextbatchVideos,
         data: allItems,
       });
     }
@@ -729,4 +669,520 @@ const shuffleArray = async (array) => {
     array[j] = temp;
   }
   return array;
+};
+
+/******For Mobile *******/
+
+exports.getArticlesForMobile = async (req, res, next) => {
+  try {
+    let userId = req.userData.userId;
+
+    let preferencePage = parseInt(req.params.preferencePage);
+    let preferenceLimit = parseInt(req.params.preferenceLimit);
+
+    let keywordPage = parseInt(req.params.keywordPage);
+    let keywordLimit = parseInt(req.params.keywordLimit);
+
+    let articleLimit = parseInt(req.params.articleLimit);
+
+    /**get preference list for loggedin user */
+    let preferences = await Preference.aggregate([
+      { $match: { user: mongoose.Types.ObjectId(userId) } },
+      { $sort: { _id: -1 } },
+      { $skip: preferencePage * preferenceLimit },
+      { $limit: preferenceLimit },
+      {
+        $lookup: {
+          from: Keyword.collection.name,
+          localField: "keyword",
+          foreignField: "_id",
+          as: "keywordData",
+        },
+      },
+      { $unwind: "$keywordData" },
+      {
+        $project: {
+          // _id: "$keywordData._id",
+          count: "$keywordData.count",
+          keyword: "$keywordData.keyword",
+        },
+      },
+    ]);
+
+    /**get top counter keyword list */
+    let keywords = await Keyword.aggregate([
+      { $sort: { count: -1, _id: -1 } },
+      { $skip: keywordPage * keywordLimit },
+      { $limit: keywordLimit },
+      {
+        $project: {
+          keyword: 1,
+          count: 1,
+        },
+      },
+    ]);
+
+    /**get lastPreferenceId */
+    let lastPreferenceId;
+    if (preferences.length > 0) {
+      lastPreferenceId = preferences[preferences.length - 1]._id;
+    } else {
+      lastPreferenceId = null;
+    }
+
+    /**add preferences and keyword array and remove duplicates */
+
+    let finalKeywordList = [...preferences, ...keywords].filter(
+      (v, i, a) => a.findIndex((t) => t.keyword === v.keyword) === i
+    );
+    /**get that array shuffled */
+    finalKeywordList = await shuffleArray(finalKeywordList);
+
+    /**get articles with promise */
+    let prmForArticle = [];
+
+    let finalKeywordListLen = finalKeywordList.length;
+    for (let i = 0; i < finalKeywordListLen; i++) {
+      /**article */
+      let articlePrm = Article.aggregate([
+        {
+          $match: {
+            category: new RegExp(finalKeywordList[i].keyword, "i"),
+          },
+        },
+        { $sort: { _id: -1 } },
+        { $limit: articleLimit },
+        {
+          $lookup: {
+            from: Publisher.collection.name,
+            localField: "publisher",
+            foreignField: "_id",
+            as: "publisherData",
+          },
+        },
+        { $unwind: "$publisherData" },
+        {
+          $project: {
+            _id: 0,
+            title: 1,
+            description: 1,
+            price: 1,
+            author: 1,
+            cover: 1,
+            publisher: "$publisherData",
+            website: 1,
+            category: 1,
+            time: 1,
+            date: "$publishingDate",
+            id: "$_id",
+            lan: 1,
+            urlStr: 1,
+            public: 1,
+            created_at: 1,
+            type: "article",
+          },
+        },
+      ]);
+      prmForArticle.push(articlePrm);
+    }
+
+    /**create final list with lastArticleId after promise resolution with shuffled articles */
+    let finalList = [];
+    let articlesPromisesResponse = await Promise.all(prmForArticle);
+
+    for (let i = 0; i < finalKeywordListLen; i++) {
+      let articles = articlesPromisesResponse[i];
+
+      let allItems = await shuffleArray(articles);
+
+      finalList.push({
+        keywordData: finalKeywordList[i],
+        data: allItems,
+      });
+    }
+
+    /**create response object with list, lastPreferenceId and lastKeywordId */
+    let data = {
+      finalList,
+      lastPreferenceId,
+    };
+    /**response back to frontend with response object */
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getNextArticlesForMobile = async (req, res, next) => {
+  console.log(req.params);
+  try {
+    let keyword = req.params.keyword;
+    let articlePage = parseInt(req.params.articlePage);
+    let articleLimit = parseInt(req.params.articleLimit);
+
+    let prm = [];
+
+    /**article */
+    let articlePrm = Article.aggregate([
+      {
+        $match: {
+          category: new RegExp(keyword, "i"),
+        },
+      },
+      { $sort: { _id: -1 } },
+      { $skip: articlePage * articleLimit },
+      { $limit: articleLimit },
+      {
+        $lookup: {
+          from: Publisher.collection.name,
+          localField: "publisher",
+          foreignField: "_id",
+          as: "publisherData",
+        },
+      },
+      { $unwind: "$publisherData" },
+      {
+        $project: {
+          _id: 0,
+          title: 1,
+          description: 1,
+          price: 1,
+          author: 1,
+          cover: 1,
+          publisher: "$publisherData",
+          website: 1,
+          category: 1,
+          time: 1,
+          date: "$publishingDate",
+          id: "$_id",
+          lan: 1,
+          urlStr: 1,
+          public: 1,
+          created_at: 1,
+          type: "article",
+        },
+      },
+    ]);
+    prm.push(articlePrm);
+
+    let resp = await Promise.all(prm);
+
+    let articles = resp[0];
+
+    let allItems = await shuffleArray(articles);
+
+    let data = {
+      keyword,
+      data: allItems,
+    };
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getMediaForMobile = async (req, res, next) => {
+  try {
+    let userId = req.userData.userId;
+
+    let preferencePage = parseInt(req.params.preferencePage);
+    let preferenceLimit = parseInt(req.params.preferenceLimit);
+
+    let keywordPage = parseInt(req.params.keywordPage);
+    let keywordLimit = parseInt(req.params.keywordLimit);
+
+    let articleLimit = parseInt(req.params.articleLimit);
+
+    /**get preference list for loggedin user */
+    let preferences = await Preference.aggregate([
+      { $match: { user: mongoose.Types.ObjectId(userId) } },
+      { $sort: { _id: -1 } },
+      { $skip: preferencePage * preferenceLimit },
+      { $limit: preferenceLimit },
+      {
+        $lookup: {
+          from: Keyword.collection.name,
+          localField: "keyword",
+          foreignField: "_id",
+          as: "keywordData",
+        },
+      },
+      { $unwind: "$keywordData" },
+      {
+        $project: {
+          // _id: "$keywordData._id",
+          count: "$keywordData.count",
+          keyword: "$keywordData.keyword",
+        },
+      },
+    ]);
+
+    /**get top counter keyword list */
+    let keywords = await Keyword.aggregate([
+      { $sort: { count: -1, _id: -1 } },
+      { $skip: keywordPage * keywordLimit },
+      { $limit: keywordLimit },
+      {
+        $project: {
+          keyword: 1,
+          count: 1,
+        },
+      },
+    ]);
+
+    /**get lastPreferenceId */
+    let lastPreferenceId;
+    if (preferences.length > 0) {
+      lastPreferenceId = preferences[preferences.length - 1]._id;
+    } else {
+      lastPreferenceId = null;
+    }
+
+    /**add preferences and keyword array and remove duplicates */
+
+    let finalKeywordList = [...preferences, ...keywords].filter(
+      (v, i, a) => a.findIndex((t) => t.keyword === v.keyword) === i
+    );
+    /**get that array shuffled */
+    finalKeywordList = await shuffleArray(finalKeywordList);
+
+    /**get articles with promise */
+    let prmForAudio = [];
+    let prmForVideo = [];
+
+    let finalKeywordListLen = finalKeywordList.length;
+    for (let i = 0; i < finalKeywordListLen; i++) {
+      //checking if audio and video exist
+      let audioCount = articleLimit;
+      let videoCount = articleLimit;
+
+      /**audio */
+      let audioPrm = Audio.aggregate([
+        {
+          $match: {
+            category: new RegExp(finalKeywordList[i].keyword, "i"),
+          },
+        },
+        { $sort: { _id: -1 } },
+        { $limit: audioCount },
+        {
+          $lookup: {
+            from: Publisher.collection.name,
+            localField: "publisher",
+            foreignField: "_id",
+            as: "publisherData",
+          },
+        },
+        { $unwind: "$publisherData" },
+        {
+          $project: {
+            _id: 0,
+            title: 1,
+            description: 1,
+            price: 1,
+            cover: "$thumbnail",
+            audioUrl: 1,
+            publisher: "$publisherData",
+            category: 1,
+            date: "$publishingDate",
+            id: "$_id",
+            altImage: 1,
+            externalLink: 1,
+            urlStr: 1,
+            public: 1,
+            type: "audio",
+          },
+        },
+      ]);
+
+      prmForAudio.push(audioPrm);
+
+      /**video */
+      let videoPrm = Video.aggregate([
+        {
+          $match: {
+            category: new RegExp(finalKeywordList[i].keyword, "i"),
+          },
+        },
+        { $sort: { _id: -1 } },
+        { $limit: videoCount },
+        {
+          $lookup: {
+            from: Publisher.collection.name,
+            localField: "publisher",
+            foreignField: "_id",
+            as: "publisherData",
+          },
+        },
+        { $unwind: "$publisherData" },
+        {
+          $project: {
+            _id: 0,
+            title: 1,
+            description: 1,
+            price: 1,
+            cover: "$thumbnail",
+            videoUrl: 1,
+            publisher: "$publisherData",
+            category: 1,
+            date: "$publishingDate",
+            id: "$_id",
+            altImage: 1,
+            urlStr: 1,
+            externalLink: 1,
+            public: 1,
+            type: "video",
+          },
+        },
+      ]);
+
+      prmForVideo.push(videoPrm);
+    }
+
+    /**create final list with lastArticleId after promise resolution with shuffled articles */
+    let finalList = [];
+    let audioPrm = Promise.all(prmForAudio);
+    let videoPrm = Promise.all(prmForVideo);
+
+    let allResp = await Promise.all([audioPrm, videoPrm]);
+    let audioPromisesResponse = allResp[0];
+    let videoPromisesResponse = allResp[1];
+
+    for (let i = 0; i < finalKeywordListLen; i++) {
+      let audios = audioPromisesResponse[i];
+      let videos = videoPromisesResponse[i];
+
+      let allItems = await shuffleArray(audios.concat(videos));
+
+      finalList.push({
+        keywordData: finalKeywordList[i],
+        data: allItems,
+      });
+    }
+
+    /**create response object with list, lastPreferenceId and lastKeywordId */
+    let data = {
+      finalList,
+      lastPreferenceId,
+    };
+    /**response back to frontend with response object */
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getNextMediaForMobile = async (req, res, next) => {
+  try {
+    let keyword = req.params.keyword;
+    let articlePage = parseInt(req.params.articlePage);
+    let articleLimit = parseInt(req.params.articleLimit);
+
+    //checking if audio and video exist
+    let audioCount = articleLimit;
+    let videoCount = articleLimit;
+
+    let prm = [];
+
+    /**audio */
+    let audioPrm = Audio.aggregate([
+      {
+        $match: {
+          category: new RegExp(keyword, "i"),
+        },
+      },
+      { $sort: { _id: -1 } },
+      { $skip: articlePage * audioCount },
+      { $limit: audioCount },
+      {
+        $lookup: {
+          from: Publisher.collection.name,
+          localField: "publisher",
+          foreignField: "_id",
+          as: "publisherData",
+        },
+      },
+      { $unwind: "$publisherData" },
+      {
+        $project: {
+          _id: 0,
+          title: 1,
+          description: 1,
+          price: 1,
+          cover: "$thumbnail",
+          audioUrl: 1,
+          publisher: "$publisherData",
+          category: 1,
+          date: "$publishingDate",
+          id: "$_id",
+          altImage: 1,
+          externalLink: 1,
+          urlStr: 1,
+          public: 1,
+          type: "audio",
+        },
+      },
+    ]);
+    prm.push(audioPrm);
+
+    /**video */
+    let videoPrm = Video.aggregate([
+      {
+        $match: {
+          category: new RegExp(keyword, "i"),
+        },
+      },
+      { $sort: { _id: -1 } },
+      { $skip: articlePage * videoCount },
+      { $limit: videoCount },
+      {
+        $lookup: {
+          from: Publisher.collection.name,
+          localField: "publisher",
+          foreignField: "_id",
+          as: "publisherData",
+        },
+      },
+      { $unwind: "$publisherData" },
+      {
+        $project: {
+          _id: 0,
+          title: 1,
+          description: 1,
+          price: 1,
+          cover: "$thumbnail",
+          videoUrl: 1,
+          publisher: "$publisherData",
+          category: 1,
+          date: "$publishingDate",
+          id: "$_id",
+          altImage: 1,
+          urlStr: 1,
+          externalLink: 1,
+          public: 1,
+          type: "video",
+        },
+      },
+    ]);
+    prm.push(videoPrm);
+
+    let resp = await Promise.all(prm);
+
+    let audios = resp[0];
+    let videos = resp[1];
+
+    let allItems = await shuffleArray(audios.concat(videos));
+
+    let data = {
+      keyword,
+      data: allItems,
+    };
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error });
+  }
 };

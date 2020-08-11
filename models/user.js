@@ -116,6 +116,7 @@ const userSchema = new Schema({
   token: { type: String },
   expireDate: { type: Date },
   otp: { type: String },
+  email_verified: { type: Boolean },
   date: { type: Date },
 });
 

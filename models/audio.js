@@ -23,5 +23,6 @@ const audioSchema = new Schema({
   externalLink: { type: Boolean },
   public: { type: Boolean, default: false },
 });
+audioSchema.index({ category: 1 });
 
 module.exports = mongoose.model("Audio", audioSchema);

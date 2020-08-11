@@ -6,6 +6,8 @@ const {
   loginUser,
   loginAsGuestUser,
   mobileGoogleLogin,
+  verifyEmail,
+  resendOtpInEmail,
 } = require("../controllers/authentication");
 
 /**validation functions */
@@ -38,5 +40,19 @@ router.post("/guest", loginAsGuestUser);
  * @access  Public
  */
 router.post("/mobileGoogleLogin", mobileGoogleLogin);
+
+/**
+ * @description   this route is used to resend otp in email
+ * @route   POST      /authentication/resendOtp/email/:email
+ * @access  Public
+ */
+router.get("/resendOtp/email/:email", resendOtpInEmail);
+
+/**
+ * @description   this route is used to verify email with otp
+ * @route   POST      /authentication/verifyEmail/otp/:otp/email/:email
+ * @access  Public
+ */
+router.get("/verifyEmail/otp/:otp/email/:email", verifyEmail);
 
 module.exports = router;

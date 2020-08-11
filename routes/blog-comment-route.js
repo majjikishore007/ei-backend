@@ -8,6 +8,7 @@ const {
   updateBlogCommentById,
   deleteBlogComment,
   getBlogCommentsForBlogId,
+  getAllCommentsForBlogId,
 } = require("../controllers/blogcomment");
 
 /**
@@ -37,6 +38,13 @@ router.patch("/:id", authCheck, updateBlogCommentById);
  * @access  Private
  */
 router.delete("/:id", authCheck, deleteBlogComment);
+
+/**
+ * @description   this route is used to get all blogComments with counter comments and upvotes by blogId
+ * @route   GET      /api/blogComment/blogAggregate/:id
+ * @access  Public
+ */
+router.get("/blogAggregate/:id", getAllCommentsForBlogId);
 
 /**
  * @description   this route is used to get blogComment by blogId

@@ -25,5 +25,6 @@ const videoSchema = new Schema({
   embeddUrl: { type: String },
   public: { type: Boolean, default: false },
 });
+videoSchema.index({ category: 1 });
 
 module.exports = mongoose.model("Video", videoSchema);

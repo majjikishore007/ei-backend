@@ -28,4 +28,6 @@ const articleSchema = new Schema({
   public: { type: Boolean, default: false },
 });
 
+articleSchema.index({ category: 1 });
+
 module.exports = mongoose.model("Article", articleSchema);

@@ -7,6 +7,7 @@ const transpoter = require("../config/mail-setup");
 
 exports.registerUser = async (req, res, next) => {
   try {
+    let otp = Math.floor(100000 + Math.random() * 900000) + "";
     /*Create new user object and apply user input*/
     let user = new User({
       email: req.body.email.toLowerCase(),
@@ -15,8 +16,10 @@ exports.registerUser = async (req, res, next) => {
       thumbnail:
         "https://storage.googleapis.com/extra-insights-images/user.png",
       role: { subscriber: true, author: false, admin: false },
-      phone: req.body.pbone,
+      phone: req.body.phone,
       phone_verified: false,
+      otp,
+      email_verified: false,
       date: Date.now(),
     });
     // Save user to database
@@ -74,18 +77,43 @@ exports.registerUser = async (req, res, next) => {
             ",</p>" +
             maildata.welcomeMail.body,
         };
-        transpoter.sendMail(mailOption, (er, information) => {
-          if (er) {
-            res.status(201).json({
-              success: true,
-              message:
-                "Acount registered!, But There is an issue to verfiy you right now",
-            });
-          } else {
-            res
-              .status(201)
-              .json({ success: true, message: "Acount registered!" });
-          }
+
+        const emailVerify = {
+          from: maildata.emailVerifyMail.form,
+          to: req.body.email,
+          subject: maildata.emailVerifyMail.subject,
+          html:
+            "<p> Hello " +
+            req.body.displayName.split(" ")[0] +
+            ",</p>" +
+            maildata.emailVerifyMail.upperBody +
+            "<p>Your OTP is " +
+            otp +
+            "</p>" +
+            "<p> Link: <a href='https://extrainsights.in/verify-email' target='_blank'>https://extrainsights.in/verify-email</a></p>" +
+            maildata.emailVerifyMail.lowerBody,
+        };
+
+        [mailOption, emailVerify].map((option) => {
+          transpoter.sendMail(option, (er, information) => {
+            // if (er) {
+            //   res.status(201).json({
+            //     success: true,
+            //     message:
+            //       "Acount registered!, But There is an issue to verfiy you right now",
+            //   });
+            // } else {
+            //   res.status(201).json({
+            //     success: true,
+            //     message: "Acount registered! Check email for verification code",
+            //   });
+            // }
+          });
+        });
+
+        res.status(201).json({
+          success: true,
+          message: "Acount registered! Check email for verification code",
         });
 
         // Return success
@@ -216,6 +244,76 @@ exports.mobileGoogleLogin = async (req, res, next) => {
         });
     }
   } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.verifyEmail = async (req, res, next) => {
+  try {
+    let otp = req.params.otp;
+    let email = req.params.email;
+    let user = await User.findOne({ otp, email });
+    if (!user) {
+      return res.status(400).json({ success: false, message: "wrong otp" });
+    }
+    await User.findOneAndUpdate(
+      { otp, email },
+      {
+        $set: {
+          email_verified: true,
+          otp: "",
+        },
+      }
+    );
+    res
+      .status(200)
+      .json({ success: true, message: "Email verified successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.resendOtpInEmail = async (req, res, next) => {
+  try {
+    let otp = Math.floor(100000 + Math.random() * 900000) + "";
+    let email = req.params.email;
+    let user = await User.findOne({ email, email_verified: false });
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Your Account is already verified" });
+    }
+    await User.findOneAndUpdate({ email }, { $set: { otp } });
+    const emailVerify = {
+      from: maildata.emailVerifyMail.form,
+      to: req.params.email,
+      subject: maildata.emailVerifyMail.subject,
+      html:
+        "<p> Hello " +
+        user.displayName.split(" ")[0] +
+        ",</p>" +
+        maildata.emailVerifyMail.upperBody +
+        "<p>Your OTP is " +
+        otp +
+        "</p>" +
+        "<p> Link: <a href='https://extrainsights.in/verify-email' target='_blank'>https://extrainsights.in/verify-email</a></p>" +
+        maildata.emailVerifyMail.lowerBody,
+    };
+    transpoter.sendMail(emailVerify, (er, information) => {
+      if (er) {
+        res.status(400).json({
+          success: false,
+          message: "There is an issue to verfiy you right now",
+        });
+      } else {
+        res.status(200).json({
+          success: true,
+          message: "Check email for verification code",
+        });
+      }
+    });
+  } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };

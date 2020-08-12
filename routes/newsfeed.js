@@ -9,6 +9,7 @@ const {
   getNextArticlesForMobile,
   getMediaForMobile,
   getNextMediaForMobile,
+  getOnlyMediaForMobile,
 } = require("../controllers/newsfeed");
 
 /**
@@ -115,6 +116,18 @@ router.get(
   "/mobile/media/:preferencePage/:preferenceLimit/:keywordPage/:keywordLimit/:articleLimit",
   checkAuth,
   getMediaForMobile
+);
+
+/**
+ * @description   this route is used to get  audio,video paginationwise
+ * @param page
+ * @param limit
+ * @route   GET      /api/newsfeed/mobile/getOnlyMediaForMobile/audio/video/page/:page/limit/:limit
+ * @access  Public
+ */
+router.get(
+  "/mobile/getOnlyMediaForMobile/audio/video/page/:page/limit/:limit",
+  getOnlyMediaForMobile
 );
 
 module.exports = router;

@@ -8,7 +8,7 @@ const videoSchema = new Schema({
   title: { type: String, required: true },
   thumbnail: { type: String },
   description: { type: String, required: true },
-  videoUrl: { type: String, required: true },
+  videoUrl: { type: String},
   category: { type: String, required: true },
   price: { type: Number, default: 0 },
   publisher: { type: Schema.Types.ObjectId, ref: "Publisher" },

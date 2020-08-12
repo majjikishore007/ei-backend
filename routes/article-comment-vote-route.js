@@ -4,6 +4,7 @@ const checkAuth = require("../middleware/check-auth");
 const {
   voteForArticleComment,
   getarticlecommentvote,
+  getarticlecommentvotecount,
   getAllVotesForArticleComment,
 } = require("../controllers/articlecommentvote");
 
@@ -22,7 +23,12 @@ router.post("/", checkAuth, voteForArticleComment);
  */
 router.get("/getvote/:commentid/:articleid",  getarticlecommentvote);
 
-
+/**
+ * @description   this route is used to get count of articleComment vote(upvote / downvote)
+ * @route   get      /api/getvotecount/:commentid/:articleid
+ * @access  Public
+ */
+router.get("/getnoofvotes/:commentid/:articleid",  getarticlecommentvotecount);
 
 /**
  * @description   this route is used to get articleComment votes for comment
@@ -33,5 +39,7 @@ router.get(
   "/page/:page/limit/:limit/:comment/:vote",
   getAllVotesForArticleComment
 );
+
+
 
 module.exports = router;

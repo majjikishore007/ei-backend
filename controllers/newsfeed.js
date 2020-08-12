@@ -815,7 +815,6 @@ exports.getArticlesForMobile = async (req, res, next) => {
 };
 
 exports.getNextArticlesForMobile = async (req, res, next) => {
-  console.log(req.params);
   try {
     let keyword = req.params.keyword;
     let articlePage = parseInt(req.params.articlePage);
@@ -1181,6 +1180,109 @@ exports.getNextMediaForMobile = async (req, res, next) => {
       data: allItems,
     };
     res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getOnlyMediaForMobile = async (req, res, next) => {
+  try {
+    let limit = parseInt(req.params.limit);
+    let page = parseInt(req.params.page);
+
+    /**get articles with promise */
+    let pr = [];
+
+    //checking if audio and video exist
+    let audioCount = limit;
+    let videoCount = limit;
+
+    /**audio */
+    let audioPrms = Audio.aggregate([
+      { $sort: { _id: -1 } },
+      { $skip: page * limit },
+      { $limit: audioCount },
+      {
+        $lookup: {
+          from: Publisher.collection.name,
+          localField: "publisher",
+          foreignField: "_id",
+          as: "publisherData",
+        },
+      },
+      { $unwind: "$publisherData" },
+      {
+        $project: {
+          _id: 0,
+          title: 1,
+          description: 1,
+          price: 1,
+          thumbnail: 1,
+          cover: "$thumbnail",
+          audioUrl: 1,
+          publisher: "$publisherData",
+          category: 1,
+          date: "$publishingDate",
+          id: "$_id",
+          altImage: 1,
+          externalLink: 1,
+          urlStr: 1,
+          public: 1,
+          type: "audio",
+        },
+      },
+    ]);
+
+    pr.push(audioPrms);
+
+    /**video */
+    let videoPrms = Video.aggregate([
+      { $sort: { _id: -1 } },
+      { $skip: page * limit },
+      { $limit: videoCount },
+      {
+        $lookup: {
+          from: Publisher.collection.name,
+          localField: "publisher",
+          foreignField: "_id",
+          as: "publisherData",
+        },
+      },
+      { $unwind: "$publisherData" },
+      {
+        $project: {
+          _id: 0,
+          title: 1,
+          description: 1,
+          price: 1,
+          thumbnail: 1,
+          cover: "$thumbnail",
+          videoUrl: 1,
+          publisher: "$publisherData",
+          category: 1,
+          date: "$publishingDate",
+          id: "$_id",
+          altImage: 1,
+          urlStr: 1,
+          externalLink: 1,
+          public: 1,
+          type: "video",
+        },
+      },
+    ]);
+
+    pr.push(videoPrms);
+
+    let resp = await Promise.all(pr);
+
+    let audios = resp[0];
+    let videos = resp[1];
+
+    let allItems = await shuffleArray(audios.concat(videos));
+
+    /**response back to frontend with response object */
+    res.status(200).json({ success: true, allItems });
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, error });

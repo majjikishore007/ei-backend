@@ -74,3 +74,23 @@ exports.getAllVotesForBlogComment = async (req, res, next) => {
     res.status(500).json({ success: false, error });
   }
 };
+
+
+exports.getblogcommentvotecount = async (req, res, next) => {
+  try {
+    const parent_comment_id = req.params.commentid;
+    const blog_id = req.params.blogid;
+
+
+    let upvote = await BlogCommentVote.find({
+      comment: parent_comment_id, blog: blog_id , vote : true
+    }).sort("-_id");
+    let downvote = await BlogCommentVote.find({
+      comment: parent_comment_id, blog: blog_id, vote : false
+    }).sort("-_id");
+    res.status(200).json({ success: true, data: {upvotecount : upvote.length , downvotecount : downvote.length} });
+  } catch (error) {
+ 
+   res.status(500).json({ success: false, error });
+  }
+}

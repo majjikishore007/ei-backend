@@ -72,6 +72,7 @@ exports.getSimilarArticles = async (req, res, next) => {
                 $options: "i",
               },
             },
+            { $or: [{ device: "both" }, { device: req.params.device }] },
           ],
         },
       },
@@ -120,6 +121,7 @@ const getUnique = (array) => {
 exports.getTopFiveLatestArticles = async (req, res, next) => {
   try {
     let articles = await Article.aggregate([
+      { $match: { $or: [{ device: "both" }, { device: req.params.device }] } },
       { $sort: { _id: -1 } },
       { $limit: 5 },
       {
@@ -178,8 +180,24 @@ exports.getLastSevenDaysTopFiveMostViewedArticles = async (req, res, next) => {
       {
         $lookup: {
           from: Article.collection.name,
-          localField: "article",
-          foreignField: "_id",
+          let: { articleId: "$article" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$_id", "$$articleId"] },
+                    {
+                      $or: [
+                        { $eq: ["$device", "both"] },
+                        { $eq: ["$device", req.params.device] },
+                      ],
+                    },
+                  ],
+                },
+              },
+            },
+          ],
           as: "articleData",
         },
       },
@@ -247,7 +265,15 @@ exports.getToptenTopRatedArticles = async (req, res, next) => {
             {
               $match: {
                 $expr: {
-                  $and: [{ $eq: ["$_id", "$$articleId"] }],
+                  $and: [
+                    { $eq: ["$_id", "$$articleId"] },
+                    {
+                      $or: [
+                        { $eq: ["$device", "both"] },
+                        { $eq: ["$device", req.params.device] },
+                      ],
+                    },
+                  ],
                 },
               },
             },

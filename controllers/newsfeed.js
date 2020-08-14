@@ -113,7 +113,10 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
       let articlePrm = Article.aggregate([
         {
           $match: {
-            category: new RegExp(finalKeywordList[i].keyword, "i"),
+            $and: [
+              { category: new RegExp(finalKeywordList[i].keyword, "i") },
+              { $or: [{ device: "both" }, { device: req.params.device }] },
+            ],
           },
         },
         { $sort: { _id: -1 } },
@@ -309,7 +312,10 @@ exports.getNextArticles = async (req, res, next) => {
     let articlePrm = Article.aggregate([
       {
         $match: {
-          category: new RegExp(keyword, "i"),
+          $and: [
+            { category: new RegExp(keyword, "i") },
+            { $or: [{ device: "both" }, { device: req.params.device }] },
+          ],
         },
       },
       { $sort: { _id: -1 } },
@@ -502,7 +508,10 @@ exports.getKeywordsWithArticles = async (req, res, next) => {
       let articlePrm = Article.aggregate([
         {
           $match: {
-            category: new RegExp(finalKeywordList[i].keyword, "i"),
+            $and: [
+              { category: new RegExp(finalKeywordList[i].keyword, "i") },
+              { $or: [{ device: "both" }, { device: req.params.device }] },
+            ],
           },
         },
         { $sort: { _id: -1 } },
@@ -747,7 +756,10 @@ exports.getArticlesForMobile = async (req, res, next) => {
       let articlePrm = Article.aggregate([
         {
           $match: {
-            category: new RegExp(finalKeywordList[i].keyword, "i"),
+            $and: [
+              { category: new RegExp(finalKeywordList[i].keyword, "i") },
+              { $or: [{ device: "both" }, { device: req.params.device }] },
+            ],
           },
         },
         { $sort: { _id: -1 } },
@@ -848,7 +860,10 @@ exports.getArticlesForMobileForKeywordOnly = async (req, res, next) => {
       let articlePrm = Article.aggregate([
         {
           $match: {
-            category: new RegExp(finalKeywordList[i].keyword, "i"),
+            $and: [
+              { category: new RegExp(finalKeywordList[i].keyword, "i") },
+              { $or: [{ device: "both" }, { device: req.params.device }] },
+            ],
           },
         },
         { $sort: { _id: -1 } },
@@ -920,7 +935,10 @@ exports.getNextArticlesForMobile = async (req, res, next) => {
     let articlePrm = Article.aggregate([
       {
         $match: {
-          category: new RegExp(keyword, "i"),
+          $and: [
+            { category: new RegExp(keyword, "i") },
+            { $or: [{ device: "both" }, { device: req.params.device }] },
+          ],
         },
       },
       { $sort: { _id: -1 } },

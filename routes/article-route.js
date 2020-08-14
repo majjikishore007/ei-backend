@@ -48,14 +48,14 @@ const { validateOnUploadArticle } = require("./validation/article");
  * @route   GET      /api/article/topten
  * @access  Public
  */
-router.get("/topten", getToptenArticles);
+router.get("/topten/device/:device", getToptenArticles);
 
 /**
  * @description   this route is used to get articles for mobile
  * @route   GET      /api/article/page/:num/limit/:limit
  * @access  Public
  */
-router.get("/page/:num/limit/:limit", getArticlesForMobile);
+router.get("/page/:num/limit/:limit/device/:device", getArticlesForMobile);
 
 /**
  * @description   this route is used to upload an article by admin
@@ -148,7 +148,7 @@ router.delete("/:articleId", checkAuthAuthorOrAdmin, deleteArticleById);
  * @route   GET      /api/article/publisher/:publisherId
  * @access  Public
  */
-router.get("/publisher/:publisherId", getArticlesByPublisherId);
+router.get("/publisher/:publisherId/device/:device", getArticlesByPublisherId);
 
 /**
  * @description   this route is used to get list of articles by publisherId
@@ -156,7 +156,7 @@ router.get("/publisher/:publisherId", getArticlesByPublisherId);
  * @access  Public
  */
 router.get(
-  "/publisher/:publisherId/page/:page/limit/:limit",
+  "/publisher/:publisherId/page/:page/limit/:limit/device/:device",
   getArticlesByPublisherIdPagination
 );
 
@@ -166,7 +166,7 @@ router.get(
  * @access  Public
  */
 router.get(
-  "/noOfArticleForPublisher/:publisherId",
+  "/noOfArticleForPublisher/:publisherId/device/:device",
   getNoOfArticleForPublisherId
 );
 
@@ -177,7 +177,10 @@ router.get(
  * @route   GET      /api/article/category/:categorySearch
  * @access  Public
  */
-router.get("/category/:categorySearch", getArticlesByCategoryFilter);
+router.get(
+  "/category/:categorySearch/device/:device",
+  getArticlesByCategoryFilter
+);
 
 /**
  * @description   this route is used to get list of articles by category filter
@@ -185,7 +188,7 @@ router.get("/category/:categorySearch", getArticlesByCategoryFilter);
  * @access  Public
  */
 router.get(
-  "/category/:categorySearch/page/:page/limit/:limit",
+  "/category/:categorySearch/page/:page/limit/:limit/device/:device",
   getArticlesByCategoryFilterPagination
 );
 
@@ -194,7 +197,10 @@ router.get(
  * @route   GET      /api/article/category-total/:category
  * @access  Public
  */
-router.get("/category-total/:category", getArticlesByCategoryTotal);
+router.get(
+  "/category-total/:category/device/:device",
+  getArticlesByCategoryTotal
+);
 
 /**
  * @description   this route is used to get list of articles by category in total
@@ -202,7 +208,7 @@ router.get("/category-total/:category", getArticlesByCategoryTotal);
  * @access  Public
  */
 router.get(
-  "/category-total/:category/page/:page/limit/:limit",
+  "/category-total/:category/page/:page/limit/:limit/device/:device",
   getArticlesByCategoryTotalPagination
 );
 
@@ -212,7 +218,7 @@ router.get(
  * @access  Public
  */
 router.get(
-  "/publisher/:publisherId/category/:categorySearch",
+  "/publisher/:publisherId/category/:categorySearch/device/:device",
   getArticlesByPublisherIdAndCategory
 );
 
@@ -222,7 +228,7 @@ router.get(
  * @access  Public
  */
 router.get(
-  "/publisher/:publisherId/category/:categorySearch/page/:page/limit/:limit",
+  "/publisher/:publisherId/category/:categorySearch/page/:page/limit/:limit/device/:device",
   getArticlesByPublisherIdAndCategoryPagination
 );
 
@@ -233,7 +239,7 @@ router.get(
  * @access  Public
  */
 router.get(
-  "/mobile/publisher/:publisherId/category/:categorySearch",
+  "/mobile/publisher/:publisherId/category/:categorySearch/device/:device",
   getArticlesByPublisherIdAndCategoryForMobile
 );
 
@@ -244,7 +250,7 @@ router.get(
  * @access  Public
  */
 router.get(
-  "/mobile/publisher/:publisherId/category/:categorySearch/page/:page/limit/:limit",
+  "/mobile/publisher/:publisherId/category/:categorySearch/page/:page/limit/:limit/device/:device",
   getArticlesByPublisherIdAndCategoryForMobilePagination
 );
 
@@ -338,27 +344,36 @@ router.put("/:id", async (req, res, next) => {
  * @route   GET      /api/article/comment&rating/:userId
  * @access  Public
  */
-router.get("/comment&rating/:userId", getArticlesWithCommentsAndRatings);
+router.get(
+  "/comment&rating/:userId/device/:device",
+  getArticlesWithCommentsAndRatings
+);
 
 /**
  * @description   this route is used to get count of  all articles
  * @route   GET      /api/article/count/article
  * @access  Public
  */
-router.get("/count/article", getCountOfTotalArticles);
+router.get("/count/article/device/:device", getCountOfTotalArticles);
 
 /**
  * @description   this route is used to get inital limited articles
  * @route   GET      /api/article/getInitialArticles/:limitCount
  * @access  Public
  */
-router.get("/getInitialArticles/:limitCount", getInitialArticles);
+router.get(
+  "/getInitialArticles/:limitCount/device/:device",
+  getInitialArticles
+);
 
 /**
  * @description   this route is used to get every next limited articles
  * @route   GET      /api/article/nextbatch/:limitCount/:lastArticleId
  * @access  Public
  */
-router.get("/nextbatch/:limitCount/:lastArticleId", getNextArticles);
+router.get(
+  "/nextbatch/:limitCount/:lastArticleId/device/:device",
+  getNextArticles
+);
 
 module.exports = router;

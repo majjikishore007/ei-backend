@@ -61,7 +61,14 @@ exports.getSearchResultForSearch = async (req, res, next) => {
     let parallelProcess = [];
     /**article result */
     let articlesPrm = Article.aggregate([
-      { $match: { $text: { $search: strippedText } } },
+      {
+        $match: {
+          $and: [
+            { $text: { $search: strippedText } },
+            { $or: [{ device: "both" }, { device: req.params.device }] },
+          ],
+        },
+      },
       { $sort: { score: { $meta: "textScore" } } },
       { $sort: { _id: -1 } },
       { $skip: page * limit },

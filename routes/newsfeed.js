@@ -21,7 +21,10 @@ const {
  * @route   GET      /api/newsfeed/getArticles/:keyword/:articlePage/:articleLimit
  * @access  Private
  */
-router.get("/getArticles/:keyword/:articlePage/:articleLimit", getNextArticles);
+router.get(
+  "/getArticles/:keyword/:articlePage/:articleLimit/device/:device",
+  getNextArticles
+);
 
 /**
  * @description this route is used to get articles, audios, videos for limited keywords only after when prefernce count 0
@@ -32,7 +35,7 @@ router.get("/getArticles/:keyword/:articlePage/:articleLimit", getNextArticles);
  * @access  Private
  */
 router.get(
-  "/getArticlesForOnlyKeywords/:keywordPage/:keywordLimit/:articleLimit",
+  "/getArticlesForOnlyKeywords/:keywordPage/:keywordLimit/:articleLimit/device/:device",
   getKeywordsWithArticles
 );
 
@@ -45,7 +48,7 @@ router.get(
  * @access  Private
  */
 router.get(
-  "/mobile/getArticles/:keyword/:articlePage/:articleLimit",
+  "/mobile/getArticles/:keyword/:articlePage/:articleLimit/device/:device",
   checkAuth,
   getNextArticlesForMobile
 );
@@ -55,12 +58,12 @@ router.get(
  * @param keywordPage
  * @param keywordLimit
  * @param articleLimit
- * @route   GET      /api/newsfeed/mobile/onlykeyword/getArticles/:keywordPage/:keywordLimit/:articleLimit
+ * @route   GET      /api/newsfeed/mobile/onlykeyword/getArticles/:keywordPage/:keywordLimit/:articleLimit/device/:device
  * @access  Private
  */
 
 router.get(
-  "/mobile/onlykeyword/getArticles/:keywordPage/:keywordLimit/:articleLimit",
+  "/mobile/onlykeyword/getArticles/:keywordPage/:keywordLimit/:articleLimit/device/:device",
   getArticlesForMobileForKeywordOnly
 );
 
@@ -76,7 +79,7 @@ router.get(
  * @access  Private
  */
 router.get(
-  "/:preferencePage/:preferenceLimit/:keywordPage/:keywordLimit/:articleLimit",
+  "/:preferencePage/:preferenceLimit/:keywordPage/:keywordLimit/:articleLimit/device/:device",
   checkAuth,
   getArticlesWithLimitedPreferencesAndLimitedKeywords
 );
@@ -110,7 +113,7 @@ router.get(
  */
 
 router.get(
-  "/mobile/:preferencePage/:preferenceLimit/:keywordPage/:keywordLimit/:articleLimit",
+  "/mobile/:preferencePage/:preferenceLimit/:keywordPage/:keywordLimit/:articleLimit/device/:device",
   checkAuth,
   getArticlesForMobile
 );

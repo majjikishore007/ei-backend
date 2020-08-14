@@ -11,7 +11,9 @@ const mongoose = require("mongoose");
 exports.getInitialArticles = async (req, res, next) => {
   try {
     let limitCount = +req.params.limitCount || 20;
-    let docs = await Article.find()
+    let docs = await Article.find({
+      $or: [{ device: "both" }, { device: req.params.device }],
+    })
       .sort({ _id: -1 })
       .limit(limitCount)
       .populate("publisher");
@@ -55,7 +57,10 @@ exports.getNextArticles = async (req, res, next) => {
   try {
     let lastArticleId = mongoose.Types.ObjectId(req.params.lastArticleId);
     let limitCount = +req.params.limitCount || 20;
-    let docs = await Article.find({ _id: { $lt: lastArticleId } })
+    let docs = await Article.find({
+      _id: { $lt: lastArticleId },
+      $or: [{ device: "both" }, { device: req.params.device }],
+    })
       .sort({ _id: -1 })
       .limit(limitCount)
       .populate("publisher");
@@ -97,7 +102,9 @@ exports.getNextArticles = async (req, res, next) => {
 
 exports.getToptenArticles = async (req, res, next) => {
   try {
-    let docs = await Article.find()
+    let docs = await Article.find({
+      $or: [{ device: "both" }, { device: req.params.device }],
+    })
       .sort({ _id: -1 })
       .limit(10)
       .populate("publisher");
@@ -141,7 +148,7 @@ exports.getArticlesForMobile = async (req, res, next) => {
   try {
     const limit = parseInt(req.params.limit);
     const page = parseInt(req.params.num);
-    Article.find()
+    Article.find({ $or: [{ device: "both" }, { device: req.params.device }] })
       .populate("publisher")
       .sort("-_id")
       .skip(limit * page)
@@ -206,6 +213,7 @@ exports.uploadArticleAdmin = async (req, res, next) => {
         .trim()
         .replace(/[&\/\\#, +()$~%.'":;*?<>{}]+/gi, "-"),
       public: true,
+      device: req.body.device,
     });
     await article.save();
     res.status(201).json({
@@ -254,6 +262,7 @@ exports.uploadArticlePublisher = async (req, res, next) => {
       urlStr: req.body.title
         .trim()
         .replace(/[&\/\\#=, +()$~%.'":;*?<>{}]+/gi, "-"),
+      device: req.body.device,
     });
     await article.save();
     res
@@ -410,7 +419,10 @@ exports.deleteArticleById = async (req, res, next) => {
 exports.getArticlesByPublisherId = async (req, res, next) => {
   try {
     const id = req.params.publisherId;
-    let docs = await Article.find({ publisher: id }).populate("publisher");
+    let docs = await Article.find({
+      publisher: id,
+      $or: [{ device: "both" }, { device: req.params.device }],
+    }).populate("publisher");
     if (docs.length > 0) {
       let restructuredResult = docs.map((doc) => {
         return {
@@ -453,7 +465,10 @@ exports.getArticlesByPublisherIdPagination = async (req, res, next) => {
     let page = parseInt(req.params.page);
     let limit = parseInt(req.params.limit);
 
-    let docs = await Article.find({ publisher: id })
+    let docs = await Article.find({
+      publisher: id,
+      $or: [{ device: "both" }, { device: req.params.device }],
+    })
       .sort({ _id: -1 })
       .skip(page * limit)
       .limit(limit)
@@ -497,7 +512,10 @@ exports.getArticlesByPublisherIdPagination = async (req, res, next) => {
 exports.getNoOfArticleForPublisherId = async (req, res, next) => {
   try {
     const id = req.params.publisherId;
-    let articles = await Article.find({ publisher: id });
+    let articles = await Article.find({
+      publisher: id,
+      $or: [{ device: "both" }, { device: req.params.device }],
+    });
     res.json({ success: true, count: articles.length });
   } catch (error) {
     res.status(500).json({ success: false, error });
@@ -510,6 +528,7 @@ exports.getArticlesByCategoryFilter = async (req, res, next) => {
     let articles = await Article.find({
       category: new RegExp(cat, "i"),
       public: true,
+      $or: [{ device: "both" }, { device: req.params.device }],
     })
       .sort({ _id: -1 })
       .limit(5)
@@ -550,6 +569,7 @@ exports.getArticlesByCategoryFilterPagination = async (req, res, next) => {
     let articles = await Article.find({
       category: new RegExp(cat, "i"),
       public: true,
+      $or: [{ device: "both" }, { device: req.params.device }],
     })
       .sort({ _id: -1 })
       .skip(page * limit)
@@ -587,7 +607,10 @@ exports.getArticlesByCategoryFilterPagination = async (req, res, next) => {
 exports.getArticlesByCategoryTotal = async (req, res, next) => {
   try {
     const cat = req.params.category;
-    let articles = await Article.find({ category: new RegExp(cat, "i") })
+    let articles = await Article.find({
+      category: new RegExp(cat, "i"),
+      $or: [{ device: "both" }, { device: req.params.device }],
+    })
       .sort({ _id: -1 })
       .populate("publisher");
     let restructuredResult = articles.map((doc) => {
@@ -623,7 +646,10 @@ exports.getArticlesByCategoryTotalPagination = async (req, res, next) => {
     let page = parseInt(req.params.page);
     let limit = parseInt(req.params.limit);
 
-    let articles = await Article.find({ category: new RegExp(cat, "i") })
+    let articles = await Article.find({
+      category: new RegExp(cat, "i"),
+      $or: [{ device: "both" }, { device: req.params.device }],
+    })
       .sort({ _id: -1 })
       .skip(page * limit)
       .limit(limit)
@@ -660,7 +686,13 @@ exports.getArticlesByPublisherIdAndCategory = async (req, res, next) => {
     const id = req.params.publisherId;
     const cat = req.params.categorySearch;
     let articles = await Article.find({
-      $and: [{ publisher: id, category: new RegExp(cat, "i") }],
+      $and: [
+        {
+          publisher: id,
+          category: new RegExp(cat, "i"),
+          $or: [{ device: "both" }, { device: req.params.device }],
+        },
+      ],
     }).populate("publisher");
     let restructuredResult = articles.map((doc) => {
       return {
@@ -705,7 +737,13 @@ exports.getArticlesByPublisherIdAndCategoryPagination = async (
     let limit = parseInt(req.params.limit);
 
     let articles = await Article.find({
-      $and: [{ publisher: id, category: new RegExp(cat, "i") }],
+      $and: [
+        {
+          publisher: id,
+          category: new RegExp(cat, "i"),
+          $or: [{ device: "both" }, { device: req.params.device }],
+        },
+      ],
     })
       .skip(page * limit)
       .limit(limit)
@@ -750,7 +788,13 @@ exports.getArticlesByPublisherIdAndCategoryForMobile = async (
     const id = req.params.publisherId;
     const cat = req.params.categorySearch;
     let articles = await Article.find({
-      $and: [{ publisher: id, category: new RegExp(cat, "i") }],
+      $and: [
+        {
+          publisher: id,
+          category: new RegExp(cat, "i"),
+          $or: [{ device: "both" }, { device: req.params.device }],
+        },
+      ],
     }).populate("publisher");
     let restructuredResult = articles.map((doc) => {
       return {
@@ -795,7 +839,13 @@ exports.getArticlesByPublisherIdAndCategoryForMobilePagination = async (
     let limit = parseInt(req.params.limit);
 
     let articles = await Article.find({
-      $and: [{ publisher: id, category: new RegExp(cat, "i") }],
+      $and: [
+        {
+          publisher: id,
+          category: new RegExp(cat, "i"),
+          $or: [{ device: "both" }, { device: req.params.device }],
+        },
+      ],
     })
       .skip(page * limit)
       .limit(limit)
@@ -843,7 +893,10 @@ exports.getArticlesWithCommentsAndRatings = async (req, res, next) => {
     const articleByuser = [];
     let prArr = [];
     for (x of publishers) {
-      let prm = Article.find({ publisher: x._id })
+      let prm = Article.find({
+        publisher: x._id,
+        $or: [{ device: "both" }, { device: req.params.device }],
+      })
         .sort("-_id")
         .select("title publisher urlStr");
       prArr.push(prm);
@@ -902,7 +955,9 @@ exports.getArticlesWithCommentsAndRatings = async (req, res, next) => {
 
 exports.getCountOfTotalArticles = async (req, res, next) => {
   try {
-    let articleCount = await Article.countDocuments({});
+    let articleCount = await Article.countDocuments({
+      $or: [{ device: "both" }, { device: req.params.device }],
+    });
     res.status(200).json({ success: true, count: articleCount });
   } catch (error) {
     res.status(500).json({ success: false, error });

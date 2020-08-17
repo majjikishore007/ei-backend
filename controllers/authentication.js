@@ -28,38 +28,34 @@ exports.registerUser = async (req, res, next) => {
       if (err) {
         // Check if error is an error indicating duplicate accounts
         if (err.code === 11000) {
-          res
-            .status(409)
-            .json({ success: false, message: "E-mail already exists" }); // Return error
+          res.json({ success: false, message: "E-mail already exists" }); // Return error
         } else {
           // Check if error is a validation rror
           if (err.errors) {
             // Check if validation error is in the email field
             if (err.errors.email) {
-              res
-                .status(400)
-                .json({ success: false, message: err.errors.email.message }); // Return error
+              res.json({ success: false, message: err.errors.email.message }); // Return error
             } else {
               // Check if validation error is in the username field
               if (err.errors.displayName) {
-                res.status(400).json({
+                res.json({
                   success: false,
                   message: err.errors.displayName.message,
                 }); // Return error
               } else {
                 // Check if validation error is in the password field
                 if (err.errors.password) {
-                  res.status(400).json({
+                  res.json({
                     success: false,
                     message: err.errors.password.message,
                   }); // Return error
                 } else {
-                  res.status(400).json({ success: false, message: err }); // Return any other error not already covered
+                  res.json({ success: false, message: err }); // Return any other error not already covered
                 }
               }
             }
           } else {
-            res.status(400).json({
+            res.json({
               success: false,
               message: "Could not save user. Error: ",
               err,
@@ -128,9 +124,9 @@ exports.registerUser = async (req, res, next) => {
 exports.loginUser = async (req, res) => {
   passport.authenticate("local", (err, user, info) => {
     if (err) {
-      res.status(400).json({ success: false, message: err });
+      res.json({ success: false, message: err });
     } else if (!user) {
-      res.status(400).json({ success: false, message: info.message });
+      res.json({ success: false, message: info.message });
     } else {
       const token = jwt.sign({ userId: user._id }, config.secret, {
         expiresIn: "30d",
@@ -143,9 +139,7 @@ exports.loginUser = async (req, res) => {
 
 exports.loginAsGuestUser = async (req, res, next) => {
   if (!req.body.email) {
-    res
-      .status(400)
-      .json({ success: false, message: "You must provide an e-mail" }); // Return error
+    res.json({ success: false, message: "You must provide an e-mail" }); // Return error
   } else {
     // Create new user object and apply user input
     let user = new User({
@@ -160,20 +154,16 @@ exports.loginAsGuestUser = async (req, res, next) => {
     user.save((err) => {
       if (err) {
         if (err.code === 11000) {
-          res
-            .status(409)
-            .json({ success: false, message: "E-mail already exists" });
+          res.json({ success: false, message: "E-mail already exists" });
         } else {
           if (err.errors) {
             if (err.errors.email) {
-              res
-                .status(400)
-                .json({ success: false, message: err.errors.email.message });
+              res.json({ success: false, message: err.errors.email.message });
             } else {
-              res.status(400).json({ success: false, message: err });
+              res.json({ success: false, message: err });
             }
           } else {
-            res.status(400).json({
+            res.json({
               success: false,
               message: "Could not save user. Error: ",
               err,

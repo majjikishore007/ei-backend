@@ -95,6 +95,7 @@ exports.getBlogCommentsForBlogId = async (req, res, next) => {
 
     res.status(200).json({ success: true, data: result });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ success: false, error: error });
   }
 };

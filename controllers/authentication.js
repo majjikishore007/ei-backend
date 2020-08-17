@@ -124,6 +124,7 @@ exports.registerUser = async (req, res, next) => {
   }
 };
 
+
 exports.loginUser = async (req, res) => {
   passport.authenticate("local", (err, user, info) => {
     if (err) {
@@ -135,7 +136,7 @@ exports.loginUser = async (req, res) => {
         expiresIn: "30d",
       });
 
-      res.status(200).json({ success: true, token: token, user: user._id });
+      res.status(200).json({ success: true, token: token, user: user._id , subscribed : user.role.subscriber , expires : user.expireDate });
     }
   })(req, res);
 };

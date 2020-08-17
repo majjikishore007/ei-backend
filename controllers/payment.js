@@ -179,7 +179,7 @@ exports.createPaymentToSubscribe = async (req, res, next) => {
 
 exports.paymentCallbackWithOrderIdToSubscribe = async (req, res, next) => {
   try {
-    const id = req.params.id;
+    const id = req.params.id; //payment id
     instance.payments.fetch(id, async (err, info) => {
       if (err) {
         return res.json({ success: false, error: "Inavlid callback url" });

@@ -76,6 +76,21 @@ exports.addCounterCommentForBlog = async (req, res, next) => {
   }
 };
 
+exports.updateBlogCounterCommentById = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    await BlogCounterComment.updateOne(
+      { _id: id, user: req.userData.userId },
+      { $set: req.body }
+    );
+    res
+      .status(200)
+      .json({ success: true, message: "Blog counter comment updated" });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
 exports.deleteCommentById = async (req, res, next) => {
   try {
     const id = req.params.id;

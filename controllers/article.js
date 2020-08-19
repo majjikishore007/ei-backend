@@ -447,6 +447,53 @@ exports.getArticlesByPublisherId = async (req, res, next) => {
   }
 };
 
+exports.getArticlesByPublisherIdPagination = async (req, res, next) => {
+  try {
+    const id = req.params.publisherId;
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
+    let docs = await Article.find({ publisher: id })
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("publisher");
+    if (docs.length > 0) {
+      let restructuredResult = docs.map((doc) => {
+        return {
+          title: doc.title,
+          description: doc.description,
+          price: doc.price,
+          author: doc.author,
+          cover: doc.cover,
+          publisher: doc.publisher,
+          website: doc.website,
+          category: doc.category,
+          time: doc.time,
+          date: doc.publishingDate,
+          id: doc._id,
+          lan: doc.lan,
+          urlStr: doc.urlStr,
+          public: doc.public,
+          altImage: doc.altImage,
+          seo: doc.seo,
+          publisherId: doc.publisher ? doc.publisher._id : null,
+        };
+      });
+
+      res.status(200).json({
+        success: true,
+        count: restructuredResult.length,
+        data: restructuredResult,
+      });
+    } else {
+      res.status(400).json({ success: false, message: "Articles not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
 exports.getNoOfArticleForPublisherId = async (req, res, next) => {
   try {
     const id = req.params.publisherId;
@@ -495,12 +542,91 @@ exports.getArticlesByCategoryFilter = async (req, res, next) => {
     res.status(500).json({ success: false, error });
   }
 };
+exports.getArticlesByCategoryFilterPagination = async (req, res, next) => {
+  try {
+    const cat = req.params.categorySearch;
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+    let articles = await Article.find({
+      category: new RegExp(cat, "i"),
+      public: true,
+    })
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("publisher");
+
+    let restructuredResult = articles.map((doc) => {
+      return {
+        title: doc.title,
+        description: doc.description,
+        price: doc.price,
+        author: doc.author,
+        cover: doc.cover,
+        publisher: doc.publisher,
+        website: doc.website,
+        category: doc.category,
+        time: doc.time,
+        date: doc.publishingDate,
+        id: doc._id,
+        lan: doc.lan,
+        urlStr: doc.urlStr,
+        public: doc.public,
+        altImage: doc.altImage,
+        seo: doc.seo,
+        publisherId: doc.publisher ? doc.publisher._id : null,
+      };
+    });
+
+    res.status(200).json({ success: true, data: restructuredResult });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
 
 exports.getArticlesByCategoryTotal = async (req, res, next) => {
   try {
     const cat = req.params.category;
     let articles = await Article.find({ category: new RegExp(cat, "i") })
       .sort({ _id: -1 })
+      .populate("publisher");
+    let restructuredResult = articles.map((doc) => {
+      return {
+        title: doc.title,
+        description: doc.description,
+        price: doc.price,
+        author: doc.author,
+        cover: doc.cover,
+        publisher: doc.publisher,
+        website: doc.website,
+        category: doc.category,
+        time: doc.time,
+        date: doc.publishingDate,
+        id: doc._id,
+        lan: doc.lan,
+        urlStr: doc.urlStr,
+        public: doc.public,
+        altImage: doc.altImage,
+        seo: doc.seo,
+        publisherId: doc.publisher ? doc.publisher._id : null,
+      };
+    });
+    res.status(200).json({ success: true, data: restructuredResult });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getArticlesByCategoryTotalPagination = async (req, res, next) => {
+  try {
+    const cat = req.params.category;
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
+    let articles = await Article.find({ category: new RegExp(cat, "i") })
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
       .populate("publisher");
     let restructuredResult = articles.map((doc) => {
       return {
@@ -567,6 +693,54 @@ exports.getArticlesByPublisherIdAndCategory = async (req, res, next) => {
   }
 };
 
+exports.getArticlesByPublisherIdAndCategoryPagination = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const id = req.params.publisherId;
+    const cat = req.params.categorySearch;
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
+    let articles = await Article.find({
+      $and: [{ publisher: id, category: new RegExp(cat, "i") }],
+    })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("publisher");
+    let restructuredResult = articles.map((doc) => {
+      return {
+        title: doc.title,
+        description: doc.description,
+        price: doc.price,
+        author: doc.author,
+        cover: doc.cover,
+        publisher: doc.publisher,
+        website: doc.website,
+        category: doc.category,
+        time: doc.time,
+        date: doc.publishingDate,
+        id: doc._id,
+        lan: doc.lan,
+        urlStr: doc.urlStr,
+        public: doc.public,
+        altImage: doc.altImage,
+        seo: doc.seo,
+        publisherId: doc.publisher ? doc.publisher._id : null,
+      };
+    });
+    res.status(200).json({
+      success: true,
+      count: articles.length,
+      data: restructuredResult,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
 exports.getArticlesByPublisherIdAndCategoryForMobile = async (
   req,
   res,
@@ -578,6 +752,54 @@ exports.getArticlesByPublisherIdAndCategoryForMobile = async (
     let articles = await Article.find({
       $and: [{ publisher: id, category: new RegExp(cat, "i") }],
     }).populate("publisher");
+    let restructuredResult = articles.map((doc) => {
+      return {
+        title: doc.title,
+        description: doc.description,
+        price: doc.price,
+        author: doc.author,
+        cover: doc.cover,
+        publisher: doc.publisher,
+        website: doc.website,
+        category: doc.category,
+        time: doc.time,
+        date: doc.publishingDate,
+        id: doc._id,
+        lan: doc.lan,
+        urlStr: doc.urlStr,
+        public: doc.public,
+        altImage: doc.altImage,
+        seo: doc.seo,
+        publisherId: doc.publisher ? doc.publisher._id : null,
+      };
+    });
+    res.status(200).json({
+      success: true,
+      count: articles.length,
+      data: restructuredResult,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getArticlesByPublisherIdAndCategoryForMobilePagination = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const id = req.params.publisherId;
+    const cat = req.params.categorySearch;
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
+    let articles = await Article.find({
+      $and: [{ publisher: id, category: new RegExp(cat, "i") }],
+    })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("publisher");
     let restructuredResult = articles.map((doc) => {
       return {
         title: doc.title,

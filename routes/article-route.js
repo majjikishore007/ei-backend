@@ -27,11 +27,16 @@ const {
   editArticleById,
   deleteArticleById,
   getArticlesByPublisherId,
+  getArticlesByPublisherIdPagination,
   getNoOfArticleForPublisherId,
   getArticlesByCategoryFilter,
+  getArticlesByCategoryFilterPagination,
   getArticlesByCategoryTotal,
+  getArticlesByCategoryTotalPagination,
   getArticlesByPublisherIdAndCategory,
+  getArticlesByPublisherIdAndCategoryPagination,
   getArticlesByPublisherIdAndCategoryForMobile,
+  getArticlesByPublisherIdAndCategoryForMobilePagination,
   getArticlesWithCommentsAndRatings,
   getCountOfTotalArticles,
 } = require("../controllers/article");
@@ -146,6 +151,16 @@ router.delete("/:articleId", checkAuthAuthorOrAdmin, deleteArticleById);
 router.get("/publisher/:publisherId", getArticlesByPublisherId);
 
 /**
+ * @description   this route is used to get list of articles by publisherId
+ * @route   GET      /api/article/publisher/:publisherId/page/:page/limit/:limit
+ * @access  Public
+ */
+router.get(
+  "/publisher/:publisherId/page/:page/limit/:limit",
+  getArticlesByPublisherIdPagination
+);
+
+/**
  * @description   this route is used to get number of articles by publisherId
  * @route   GET      /api/article/noOfArticleForPublisher/:publisherId
  * @access  Public
@@ -165,11 +180,31 @@ router.get(
 router.get("/category/:categorySearch", getArticlesByCategoryFilter);
 
 /**
+ * @description   this route is used to get list of articles by category filter
+ * @route   GET      /api/article/category/:categorySearch/page/:page/limit/:limit
+ * @access  Public
+ */
+router.get(
+  "/category/:categorySearch/page/:page/limit/:limit",
+  getArticlesByCategoryFilterPagination
+);
+
+/**
  * @description   this route is used to get list of articles by category in total
  * @route   GET      /api/article/category-total/:category
  * @access  Public
  */
 router.get("/category-total/:category", getArticlesByCategoryTotal);
+
+/**
+ * @description   this route is used to get list of articles by category in total
+ * @route   GET      /api/article/category-total/:category/page/:page/limit/:limit
+ * @access  Public
+ */
+router.get(
+  "/category-total/:category/page/:page/limit/:limit",
+  getArticlesByCategoryTotalPagination
+);
 
 /**
  * @description   this route is used to get list of articles by with given publisher and given category
@@ -183,6 +218,16 @@ router.get(
 
 /**
  * @description   this route is used to get list of articles by with given publisher and given category
+ * @route   GET      /api/article/publisher/:publisherId/category/:categorySearch/page/:page/limit/:limit
+ * @access  Public
+ */
+router.get(
+  "/publisher/:publisherId/category/:categorySearch/page/:page/limit/:limit",
+  getArticlesByPublisherIdAndCategoryPagination
+);
+
+/**
+ * @description   this route is used to get list of articles by with given publisher and given category
  *                for mobile device
  * @route   GET      /api/article/publisher/:publisherId/category/:categorySearch
  * @access  Public
@@ -190,6 +235,17 @@ router.get(
 router.get(
   "/mobile/publisher/:publisherId/category/:categorySearch",
   getArticlesByPublisherIdAndCategoryForMobile
+);
+
+/**
+ * @description   this route is used to get list of articles by with given publisher and given category
+ *                for mobile device
+ * @route   GET      /api/article/publisher/:publisherId/category/:categorySearch/page/:page/limit/:limit
+ * @access  Public
+ */
+router.get(
+  "/mobile/publisher/:publisherId/category/:categorySearch/page/:page/limit/:limit",
+  getArticlesByPublisherIdAndCategoryForMobilePagination
 );
 
 router.get("/restruture/:id", async (req, res) => {

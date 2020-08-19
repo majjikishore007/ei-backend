@@ -35,7 +35,29 @@ exports.getBookmarks = async (req, res, next) => {
         });
       });
   } catch (error) {
-    res.status(500).json({ success: false, error: error});
+    res.status(500).json({ success: false, error: error });
+  }
+};
+
+exports.getBookmarksPagination = async (req, res, next) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
+    BookMark.find({ user: req.userData.userId })
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("article")
+      .exec((err, publisher) => {
+        Publisher.populate(publisher, {
+          path: "article.publisher",
+        }).then((bookmarks) => {
+          res.status(200).json({ success: true, data: bookmarks });
+        });
+      });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error });
   }
 };
 
@@ -46,13 +68,13 @@ exports.getBookmarkById = async (req, res, next) => {
       article: articleId,
       user: req.userData.userId,
     });
-    if(bookmark) {
+    if (bookmark) {
       res.status(200).json({ success: true, data: bookmark });
-    }else{
-      res.status(200).json({ success: false, error : "not found" });
+    } else {
+      res.status(200).json({ success: false, error: "not found" });
     }
   } catch (error) {
-    res.status(500).json({ success: false, error: error});
+    res.status(500).json({ success: false, error: error });
   }
 };
 
@@ -64,6 +86,6 @@ exports.deleteBookmarkById = async (req, res, next) => {
     });
     res.status(200).json({ success: true, message: "deleted" });
   } catch (error) {
-    res.status(500).json({ success: false, error: error});
+    res.status(500).json({ success: false, error: error });
   }
 };

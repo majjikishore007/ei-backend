@@ -5,6 +5,7 @@ const authCheck = require("../middleware/check-auth");
 const {
   getCounterCommentWithparentComment,
   addCounterCommentForBlog,
+  updateBlogCounterCommentById,
   deleteCommentById,
 } = require("../controllers/blogcountercomment");
 
@@ -24,6 +25,14 @@ router.get(
  * @access  Private
  */
 router.post("/", authCheck, addCounterCommentForBlog);
+
+/**
+ * @description   this route is used to update blogcounterComment by Id
+ * @param id - blog counter comment id
+ * @route   PATCH      /api/blogCounterComment/:id
+ * @access  Private
+ */
+router.patch("/:id", authCheck, updateBlogCounterCommentById);
 
 /**
  * @description   this route is used to delete counter comment to blog

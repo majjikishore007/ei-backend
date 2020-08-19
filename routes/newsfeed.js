@@ -6,6 +6,7 @@ const {
   getKeywordsWithArticles,
   getNextArticles,
   getArticlesForMobile,
+  getArticlesForMobileForKeywordOnly,
   getNextArticlesForMobile,
   getMediaForMobile,
   getNextMediaForMobile,
@@ -47,6 +48,20 @@ router.get(
   "/mobile/getArticles/:keyword/:articlePage/:articleLimit",
   checkAuth,
   getNextArticlesForMobile
+);
+
+/**
+ * @description   this route is used to get  articles according to trending keywords
+ * @param keywordPage
+ * @param keywordLimit
+ * @param articleLimit
+ * @route   GET      /api/newsfeed/mobile/onlykeyword/getArticles/:keywordPage/:keywordLimit/:articleLimit
+ * @access  Private
+ */
+
+router.get(
+  "/mobile/onlykeyword/getArticles/:keywordPage/:keywordLimit/:articleLimit",
+  getArticlesForMobileForKeywordOnly
 );
 
 /**

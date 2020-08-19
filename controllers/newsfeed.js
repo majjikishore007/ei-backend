@@ -814,6 +814,100 @@ exports.getArticlesForMobile = async (req, res, next) => {
   }
 };
 
+exports.getArticlesForMobileForKeywordOnly = async (req, res, next) => {
+  try {
+    let keywordPage = parseInt(req.params.keywordPage);
+    let keywordLimit = parseInt(req.params.keywordLimit);
+
+    let articleLimit = parseInt(req.params.articleLimit);
+    /**get top counter keyword list */
+    let keywords = await Keyword.aggregate([
+      { $sort: { count: -1, _id: -1 } },
+      { $skip: keywordPage * keywordLimit },
+      { $limit: keywordLimit },
+      {
+        $project: {
+          keyword: 1,
+          count: 1,
+        },
+      },
+    ]);
+
+    let finalKeywordList = [...keywords].filter(
+      (v, i, a) => a.findIndex((t) => t.keyword === v.keyword) === i
+    );
+    /**get that array shuffled */
+    finalKeywordList = await shuffleArray(finalKeywordList);
+
+    /**get articles with promise */
+    let prmForArticle = [];
+
+    let finalKeywordListLen = finalKeywordList.length;
+    for (let i = 0; i < finalKeywordListLen; i++) {
+      /**article */
+      let articlePrm = Article.aggregate([
+        {
+          $match: {
+            category: new RegExp(finalKeywordList[i].keyword, "i"),
+          },
+        },
+        { $sort: { _id: -1 } },
+        { $limit: articleLimit },
+        {
+          $lookup: {
+            from: Publisher.collection.name,
+            localField: "publisher",
+            foreignField: "_id",
+            as: "publisherData",
+          },
+        },
+        { $unwind: "$publisherData" },
+        {
+          $project: {
+            _id: 0,
+            title: 1,
+            description: 1,
+            price: 1,
+            author: 1,
+            cover: 1,
+            publisher: "$publisherData",
+            website: 1,
+            category: 1,
+            time: 1,
+            date: "$publishingDate",
+            id: "$_id",
+            lan: 1,
+            urlStr: 1,
+            public: 1,
+            created_at: 1,
+            type: "article",
+          },
+        },
+      ]);
+      prmForArticle.push(articlePrm);
+    }
+
+    /**create final list with lastArticleId after promise resolution with shuffled articles */
+    let finalList = [];
+    let articlesPromisesResponse = await Promise.all(prmForArticle);
+
+    for (let i = 0; i < finalKeywordListLen; i++) {
+      let articles = articlesPromisesResponse[i];
+
+      let allItems = await shuffleArray(articles);
+
+      finalList.push({
+        keywordData: finalKeywordList[i],
+        data: allItems,
+      });
+    }
+    res.status(200).json({ success: true, data: finalList });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
 exports.getNextArticlesForMobile = async (req, res, next) => {
   try {
     let keyword = req.params.keyword;

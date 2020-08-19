@@ -6,6 +6,7 @@ const {
   getarticlecommentvote,
   getarticlecommentvotecount,
   getAllVotesForArticleComment,
+  getVoteStatusForArticleComment,
 } = require("../controllers/articlecommentvote");
 
 /**
@@ -15,20 +16,26 @@ const {
  */
 router.post("/", checkAuth, voteForArticleComment);
 
+/**
+ * @description   this route is used to get articleComment vote status for loggedin user
+ * @route   get      /api/articleCommentVote/:commentid
+ * @access  Private
+ */
+router.get("/:commentid", checkAuth, getVoteStatusForArticleComment);
 
 /**
  * @description   this route is used to get articleComment vote(upvote / downvote)
  * @route   get      /api/articleCommentVote/:commentid/:articleid
  * @access  Public
  */
-router.get("/getvote/:commentid/:articleid",  getarticlecommentvote);
+router.get("/getvote/:commentid/:articleid", getarticlecommentvote);
 
 /**
  * @description   this route is used to get count of articleComment vote(upvote / downvote)
  * @route   get      /api/getvotecount/:commentid/:articleid
  * @access  Public
  */
-router.get("/getnoofvotes/:commentid/:articleid",  getarticlecommentvotecount);
+router.get("/getnoofvotes/:commentid/:articleid", getarticlecommentvotecount);
 
 /**
  * @description   this route is used to get articleComment votes for comment
@@ -39,7 +46,5 @@ router.get(
   "/page/:page/limit/:limit/:comment/:vote",
   getAllVotesForArticleComment
 );
-
-
 
 module.exports = router;

@@ -49,41 +49,47 @@ exports.voteForArticleComment = async (req, res, next) => {
   }
 };
 
-
 exports.getarticlecommentvote = async (req, res, next) => {
   try {
     const parent_comment_id = req.params.commentid;
     const article_id = req.params.articleid;
     let result = await ArticleCommentVote.find({
-      comment: parent_comment_id, article: article_id
+      comment: parent_comment_id,
+      article: article_id,
     }).sort("-_id");
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-   // console.log(error)
-   res.status(500).json({ success: false, error });
+    // console.log(error)
+    res.status(500).json({ success: false, error });
   }
-}
-
+};
 
 exports.getarticlecommentvotecount = async (req, res, next) => {
   try {
     const parent_comment_id = req.params.commentid;
     const article_id = req.params.articleid;
 
-
     let upvote = await ArticleCommentVote.find({
-      comment: parent_comment_id, article: article_id , vote : true
+      comment: parent_comment_id,
+      article: article_id,
+      vote: true,
     }).sort("-_id");
     let downvote = await ArticleCommentVote.find({
-      comment: parent_comment_id, article: article_id , vote : false
+      comment: parent_comment_id,
+      article: article_id,
+      vote: false,
     }).sort("-_id");
-    res.status(200).json({ success: true, data: {upvotecount : upvote.length , downvotecount : downvote.length} });
+    res
+      .status(200)
+      .json({
+        success: true,
+        data: { upvotecount: upvote.length, downvotecount: downvote.length },
+      });
   } catch (error) {
-   // console.log(error)
-   res.status(500).json({ success: false, error });
+    // console.log(error)
+    res.status(500).json({ success: false, error });
   }
-}
-
+};
 
 exports.getAllVotesForArticleComment = async (req, res, next) => {
   try {
@@ -104,6 +110,32 @@ exports.getAllVotesForArticleComment = async (req, res, next) => {
       .populate("user");
 
     res.status(201).json({ success: true, data: articleCommentVotes });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getVoteStatusForArticleComment = async (req, res, next) => {
+  try {
+    const comment_id = req.params.commentid;
+    let result = await ArticleCommentVote.findOne({
+      comment: comment_id,
+      user: req.userData.userId,
+    });
+    let response = {};
+    if (result) {
+      response = {
+        success: true,
+        voteGiven: true,
+        vote: result.vote,
+      };
+    } else {
+      response = {
+        success: true,
+        voteGiven: false,
+      };
+    }
+    res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

@@ -4,7 +4,8 @@ const checkAuth = require("../middleware/check-auth");
 const {
   voteForBlogComment,
   getAllVotesForBlogComment,
-  getblogcommentvotecount
+  getblogcommentvotecount,
+  getVoteStatusForBlogComment,
 } = require("../controllers/blogcommentvote");
 
 /**
@@ -13,6 +14,13 @@ const {
  * @access  Private
  */
 router.post("/", checkAuth, voteForBlogComment);
+
+/**
+ * @description   this route is used to get blog comment vote status for loggedin user
+ * @route   get      /api/blogCommentVote/:commentid
+ * @access  Private
+ */
+router.get("/:commentid", checkAuth, getVoteStatusForBlogComment);
 
 /**
  * @description   this route is used to get votes for comment
@@ -28,5 +36,5 @@ router.get(
  * @route   get      /api/getvotecount/:commentid/:blogid
  * @access  Public
  */
-router.get("/getnoofvotes/:commentid/:blogid",  getblogcommentvotecount);
+router.get("/getnoofvotes/:commentid/:blogid", getblogcommentvotecount);
 module.exports = router;

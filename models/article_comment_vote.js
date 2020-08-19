@@ -10,7 +10,7 @@ const articleCommentVoteSchema = new Schema({
   comment: {
     type: mongoose.Types.ObjectId,
     required: true,
-    ref: "ArticleComment",
+    ref: "Comment",
   },
   vote: { type: Boolean, required: true },
   created_at: { type: Date, default: Date.now() },

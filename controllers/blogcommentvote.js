@@ -75,22 +75,54 @@ exports.getAllVotesForBlogComment = async (req, res, next) => {
   }
 };
 
-
 exports.getblogcommentvotecount = async (req, res, next) => {
   try {
     const parent_comment_id = req.params.commentid;
     const blog_id = req.params.blogid;
 
-
     let upvote = await BlogCommentVote.find({
-      comment: parent_comment_id, blog: blog_id , vote : true
+      comment: parent_comment_id,
+      blog: blog_id,
+      vote: true,
     }).sort("-_id");
     let downvote = await BlogCommentVote.find({
-      comment: parent_comment_id, blog: blog_id, vote : false
+      comment: parent_comment_id,
+      blog: blog_id,
+      vote: false,
     }).sort("-_id");
-    res.status(200).json({ success: true, data: {upvotecount : upvote.length , downvotecount : downvote.length} });
+    res
+      .status(200)
+      .json({
+        success: true,
+        data: { upvotecount: upvote.length, downvotecount: downvote.length },
+      });
   } catch (error) {
- 
-   res.status(500).json({ success: false, error });
+    res.status(500).json({ success: false, error });
   }
-}
+};
+
+exports.getVoteStatusForBlogComment = async (req, res, next) => {
+  try {
+    const comment_id = req.params.commentid;
+    let result = await BlogCommentVote.findOne({
+      comment: comment_id,
+      user: req.userData.userId,
+    });
+    let response = {};
+    if (result) {
+      response = {
+        success: true,
+        voteGiven: true,
+        vote: result.vote,
+      };
+    } else {
+      response = {
+        success: true,
+        voteGiven: false,
+      };
+    }
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};

@@ -72,3 +72,29 @@ exports.getAllVotesForDebateComment = async (req, res, next) => {
     res.status(500).json({ success: false, error });
   }
 };
+
+exports.getVoteStatusForDebateComment = async (req, res, next) => {
+  try {
+    const comment_id = req.params.commentid;
+    let result = await DebateCommentVote.findOne({
+      comment: comment_id,
+      user: req.userData.userId,
+    });
+    let response = {};
+    if (result) {
+      response = {
+        success: true,
+        voteGiven: true,
+        vote: result.vote,
+      };
+    } else {
+      response = {
+        success: true,
+        voteGiven: false,
+      };
+    }
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};

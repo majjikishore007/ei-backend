@@ -4,6 +4,7 @@ const checkAuth = require("../middleware/check-auth");
 /**controller functions for payments */
 const {
   addNotificationSubscriber,
+  removeNotoficationSubscriber,
   sharedArticleNotify,
 } = require("../controllers/subscribernotification");
 
@@ -13,6 +14,13 @@ const {
  * @access  Private
  */
 router.post("/subscribe", checkAuth, addNotificationSubscriber);
+
+/**
+ * @description   this route is used to delete notification subscribe to database with userId and token
+ * @route   DELETE      /api/notification/unsubscribe
+ * @access  Private
+ */
+router.delete("/unsubscribe", checkAuth, removeNotoficationSubscriber);
 
 /**
  * @description   this route is used to test push notification if working or not

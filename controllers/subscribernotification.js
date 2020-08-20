@@ -29,6 +29,20 @@ exports.addNotificationSubscriber = async (req, res, next) => {
   }
 };
 
+exports.removeNotoficationSubscriber = async (req, res, next) => {
+  try {
+    await NotificationSubscriber.findOneAndDelete({
+      device: req.body.device,
+      user: req.userData.userId,
+    });
+    res
+      .status(200)
+      .json({ success: true, message: "Push Notification UnSubscribed" });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
 exports.sharedArticleNotify = async (req, res, next) => {
   try {
     let article = mongoose.Types.ObjectId(req.body.article);

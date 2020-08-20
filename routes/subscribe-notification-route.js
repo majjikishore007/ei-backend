@@ -20,7 +20,7 @@ router.post("/subscribe", checkAuth, addNotificationSubscriber);
  * @route   DELETE      /api/notification/unsubscribe
  * @access  Private
  */
-router.delete("/unsubscribe", checkAuth, removeNotoficationSubscriber);
+router.post("/unsubscribe", checkAuth, removeNotoficationSubscriber);
 
 /**
  * @description   this route is used to test push notification if working or not

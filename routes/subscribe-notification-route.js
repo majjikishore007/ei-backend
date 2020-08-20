@@ -6,6 +6,7 @@ const {
   addNotificationSubscriber,
   removeNotoficationSubscriber,
   sharedArticleNotify,
+  getNotificationSubscriber
 } = require("../controllers/subscribernotification");
 
 /**
@@ -27,6 +28,17 @@ router.post("/unsubscribe", checkAuth, removeNotoficationSubscriber);
  * @route   GET      /api/notification/testPush
  * @access  Private
  */
+
+router.get("/status/:token", checkAuth, getNotificationSubscriber);
+
+/**
+ * @description   this route is used to test push notification if working or not
+ * @route   GET      /api/notification/testPush
+ * @access  Private
+ */
+
+
+
 router.get("/testPush", addNotificationSubscriber);
 
 /**

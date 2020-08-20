@@ -28,6 +28,27 @@ exports.addNotificationSubscriber = async (req, res, next) => {
     res.status(500).json({ success: false, error });
   }
 };
+exports.getNotificationSubscriber = async (req, res, next) => {
+  try {
+    let exist = await NotificationSubscriber.findOne({
+      device: req.params.token,
+    });
+    if (exist) {
+      return res.status(200).json({
+        success: true,
+        message: "Device already registered for push notification",
+      });
+    }else {
+      return res.status(400).json({
+        success: false,
+        message: "Device not found",
+      });
+    }
+    
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
 
 exports.removeNotoficationSubscriber = async (req, res, next) => {
   try {

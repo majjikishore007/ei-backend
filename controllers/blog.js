@@ -6,7 +6,7 @@ exports.getAllBlogPosts = async (req, res, next) => {
     let blogs = await Blog.find()
       .sort({ _id: -1 })
       .limit(+req.params.limitCount)
-      .populate("author", "displayName");
+      .populate("author", "displayName thumbnail");
     res.status(200).json({ success: true, count: blogs.length, data: blogs });
   } catch (error) {
     res.status(500).json({ success: false, error });

@@ -10,7 +10,7 @@ const articleCounterCommentSchema = new Schema({
   parent_comment: {
     type: mongoose.Types.ObjectId,
     required: true,
-    ref: "ArticleComment",
+    ref: "Comment",
   },
   message: { type: String, required: true },
   created_at: { type: Date, default: Date.now() },

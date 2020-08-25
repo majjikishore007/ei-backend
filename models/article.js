@@ -26,8 +26,10 @@ const articleSchema = new Schema({
   },
   urlStr: { type: String },
   public: { type: Boolean, default: false },
+  device: { type: String, enum: ["app", "website", "both"] },
 });
 
 articleSchema.index({ category: 1 });
+articleSchema.index({ title: "text", description: "text", category: "text" });
 
 module.exports = mongoose.model("Article", articleSchema);

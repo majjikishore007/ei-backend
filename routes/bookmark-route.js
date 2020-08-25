@@ -7,6 +7,7 @@ const checkAuth = require("../middleware/check-auth");
 const {
   addBookmark,
   getBookmarks,
+  getBookmarksPagination,
   getBookmarkById,
   deleteBookmarkById,
 } = require("../controllers/bookmark");
@@ -27,6 +28,13 @@ router.post("/", checkAuth, validationOnAddbookmark, addBookmark);
  * @access  Private
  */
 router.get("/", checkAuth, getBookmarks);
+
+/**
+ * @description   this route is used to get all bookmarks paginationwise  for loggedin user
+ * @route   GET      /api/bookmark/page/:page/limit/:limit
+ * @access  Private
+ */
+router.get("/page/:page/limit/:limit", checkAuth, getBookmarksPagination);
 
 router.get("/update/update", (req, res) => {
   BookMark.find()

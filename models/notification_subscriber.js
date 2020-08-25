@@ -11,8 +11,8 @@ const NotificationSubscriberSchema = new Schema({
   },
 });
 
-NotificationSubscriberSchema.index({ user: 1 });
-NotificationSubscriberSchema.index({ device: 1 }, { unique: true });
+
+NotificationSubscriberSchema.index({user : 1, device: 1 }, { unique: true });
 
 module.exports = mongoose.model(
   "NotificationSubscriber",

@@ -70,6 +70,8 @@ const pdfRoute = require("./routes/pdf");
 const subscribeNotification = require("./routes/subscribe-notification-route");
 const notificationLastVisit = require("./routes/notificationlastvisit-route");
 const landingRoute = require("./routes/landing");
+const searchRoute = require("./routes/search");
+const recomendationRoute = require("./routes/recomendation-route");
 
 /**save keyword on new article upload */
 const { saveKeywordOnNewArticleUpload } = require("./controllers/keyword");
@@ -160,6 +162,8 @@ app.use("/api/pdf", pdfRoute);
 app.use("/api/subscribeNotification", subscribeNotification);
 app.use("/api/notificationlastvisit", notificationLastVisit);
 app.use("/api/landing", landingRoute);
+app.use("/api/search", searchRoute);
+app.use("/api/recomendation", recomendationRoute);
 
 //Connect server to Angular index.html file
 app.get("*", (req, res) => {

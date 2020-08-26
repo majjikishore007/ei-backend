@@ -6,6 +6,11 @@ const Viewarticle = require("../models/articleview");
 const Usernotification = require("../models/usernotification");
 const Follow = require("../models/follow");
 
+const { addToDatabase } = require("./keyword");
+const {
+  NewResourceUploadNotification,
+} = require("../notification/collection-watch");
+
 const mongoose = require("mongoose");
 
 exports.getInitialArticles = async (req, res, next) => {
@@ -215,7 +220,13 @@ exports.uploadArticleAdmin = async (req, res, next) => {
       public: true,
       device: req.body.device,
     });
-    await article.save();
+    let uploadedArticle = await article.save();
+    /**for collecting keywords from categories */
+    if (req.body.category) {
+      await addToDatabase(req.body.category);
+    }
+    /**to send notification while uploading article */
+    await NewResourceUploadNotification(uploadedArticle, "article");
     res.status(201).json({
       success: true,
       message: "article has been submitted",
@@ -265,6 +276,9 @@ exports.uploadArticlePublisher = async (req, res, next) => {
       device: req.body.device,
     });
     await article.save();
+    if (req.body.category) {
+      await addToDatabase(req.body.category);
+    }
     res
       .status(201)
       .json({ success: true, message: "article has been submitted" });

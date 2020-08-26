@@ -4,6 +4,10 @@ const User = require("../models/user");
 const PublisherNotification = require("../models/publishernotification");
 const mongoose = require("mongoose");
 
+const {
+  ChangeInPublisherNotification,
+} = require("../notification/collection-watch");
+
 exports.getDebateCommentWithId = async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -49,6 +53,7 @@ exports.addDebateComment = async (req, res, next) => {
     let userResult = await User.findOne({ _id: req.userData.userId });
 
     let prm = [];
+    let notifications = [];
     debateArticles.forEach((debateArticle) => {
       let publishernotification = {
         notificationType: "comment-on-debate",
@@ -65,8 +70,21 @@ exports.addDebateComment = async (req, res, next) => {
         date: Date.now(),
       };
       prm.push(publishernotification);
+      notifications.push(publishernotification);
     });
-    await PublisherNotification.insertMany(prm);
+    let pubNot = await PublisherNotification.insertMany(prm);
+
+    if (pubNot && pubNot.insertedIds) {
+      let pr = [];
+      for (let i = 0; i < notifications.length - 1; i++) {
+        let x = notifications[i];
+        x._id = pubNot.insertedIds[i];
+        let y = ChangeInPublisherNotification(x, "comment-on-debate");
+        pr.push(y);
+      }
+
+      await Promise.all(pr);
+    }
 
     res.status(201).json({ success: true, data: result });
   } catch (error) {

@@ -1,17 +1,11 @@
 const Article = require("../models/article");
 const Debate = require("../models/debate");
 const Blog = require("../models/blog");
-// const Audio = require("../models/audio");
-// const Video = require("../models/video");
-const User = require("../models/user");
 const Publisher = require("../models/publisher");
 const Follow = require("../models/follow");
 const Preference = require("../models/preference");
 const Keyword = require("../models/keyword");
 const Subscriber = require("../models/notification_subscriber");
-const PublisherNotification = require("../models/publishernotification");
-
-const UserNotification = require("../models/usernotification");
 const eventEmitter = require("../notification/event-emitter");
 
 const mongoose = require("mongoose");
@@ -27,684 +21,674 @@ admin.initializeApp({
 /**push notification function */
 const { sendPushNotification } = require("../notification/push-notification");
 
-exports.watchChangeInPublisherNotification = async () => {
+exports.ChangeInPublisherNotification = async (
+  resourceDocument,
+  resourceType
+) => {
   try {
-    let pipeline = [
-      {
-        $match: { operationType: "insert" },
-      },
-    ];
-    let changeStreamForComment = PublisherNotification.watch(pipeline);
+    let event = {
+      fullDocument: resourceDocument,
+    };
+    if (event.fullDocument) {
+      let result = event.fullDocument;
+      /**for comment on article */
+      if (resourceType == "comment-on-article") {
+        /**send notificationto publisher about some user commented on his/her article */
+        eventEmitter.emit("comment-on-article", {
+          reciever: result.reciever,
+          data: result,
+        });
+        /**push notification to article publisher*/
+        let article = await Article.findOne({ _id: result.article });
 
-    changeStreamForComment.on("change", async (event) => {
-      if (event.fullDocument) {
-        let result = event.fullDocument;
-        /**for comment on article */
-        if (result.notificationType == "comment-on-article") {
-          /**send notificationto publisher about some user commented on his/her article */
-          eventEmitter.emit("comment-on-article", {
-            reciever: result.reciever,
-            data: result,
-          });
-          /**push notification to article publisher*/
-          let article = await Article.findOne({ _id: result.article });
+        let results = await Subscriber.aggregate([
+          {
+            $match: {
+              user: mongoose.Types.ObjectId(result.reciever),
+            },
+          },
+          {
+            $group: {
+              _id: "user",
+              tokens: {
+                $push: "$device",
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              tokens: 1,
+            },
+          },
+        ]);
 
-          let results = await Subscriber.aggregate([
-            {
-              $match: {
-                user: mongoose.Types.ObjectId(result.reciever),
-              },
-            },
-            {
-              $group: {
-                _id: "user",
-                tokens: {
-                  $push: "$device",
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                tokens: 1,
-              },
-            },
-          ]);
-
-          if (results.length > 0) {
-            let notification = {
-              title: article.title,
-              body: result.message,
-              image: article.cover,
-            };
-            let data = {
-              id: article._id,
-              comment: result.articleComment,
-            };
-            await sendPushNotification(
-              admin,
-              notification,
-              "comment-on-article",
-              results[0].tokens,
-              data
-            );
-          }
-        }
-        /**for sharing of an article */
-        if (result.notificationType == "share-article") {
-          eventEmitter.emit("share-article", {
-            reciever: result.reciever,
-            data: result,
-          });
-          /**push notification to original commentor*/
-          let article = await Article.findOne({ _id: result.article });
-
-          let results = await Subscriber.aggregate([
-            {
-              $match: {
-                user: mongoose.Types.ObjectId(result.reciever),
-              },
-            },
-            {
-              $group: {
-                _id: "user",
-                tokens: {
-                  $push: "$device",
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                tokens: 1,
-              },
-            },
-          ]);
-
-          if (results.length > 0) {
-            let notification = {
-              title: article.title,
-              body: result.message,
-              image: article.cover,
-            };
-            let data = {
-              id: article._id,
-            };
-            await sendPushNotification(
-              admin,
-              notification,
-              "share-article",
-              results[0].tokens,
-              data
-            );
-          }
-        }
-        /** comment on a debate */
-        if (result.notificationType == "comment-on-debate") {
-          eventEmitter.emit("comment-on-debate", {
-            reciever: result.reciever,
-            data: result,
-          });
-          /**push notification to article publisher for comment on debate featured article*/
-          let debate = await Debate.findOne({ _id: result.debate });
-
-          let results = await Subscriber.aggregate([
-            {
-              $match: {
-                user: mongoose.Types.ObjectId(result.reciever),
-              },
-            },
-            {
-              $group: {
-                _id: "user",
-                tokens: {
-                  $push: "$device",
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                tokens: 1,
-              },
-            },
-          ]);
-
-          if (results.length > 0) {
-            let notification = {
-              title: debate.title,
-              body: result.message,
-              image: debate.cover,
-            };
-            let data = {
-              id: debate._id,
-              comment: result.debateComment,
-            };
-            await sendPushNotification(
-              admin,
-              notification,
-              "comment-on-debate",
-              results[0].tokens,
-              data
-            );
-          }
-        }
-        /**follow a publisher */
-        if (result.notificationType == "follow-publisher") {
-          eventEmitter.emit("follow-publisher", {
-            reciever: result.reciever,
-            data: result,
-          });
-          /**push notification to publisher to notify someone follow*/
-          let publisher = await Publisher.findOne({ _id: result.publisher });
-
-          let results = await Subscriber.aggregate([
-            {
-              $match: {
-                user: mongoose.Types.ObjectId(result.reciever),
-              },
-            },
-            {
-              $group: {
-                _id: "user",
-                tokens: {
-                  $push: "$device",
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                tokens: 1,
-              },
-            },
-          ]);
-
-          if (results.length > 0) {
-            let notification = {
-              title: publisher.name,
-              body: result.message,
-              image: publisher.logo,
-            };
-            let data = {
-              id: publisher._id,
-            };
-            await sendPushNotification(
-              admin,
-              notification,
-              "follow-publisher",
-              results[0].tokens,
-              data
-            );
-          }
-        }
-        /**rate a article */
-        if (result.notificationType == "rate-article") {
-          eventEmitter.emit("rate-article", {
-            reciever: result.reciever,
-            data: result,
-          });
-          /**push notification to article publisher*/
-          let article = await Article.findOne({ _id: result.article });
-
-          let results = await Subscriber.aggregate([
-            {
-              $match: {
-                user: mongoose.Types.ObjectId(result.reciever),
-              },
-            },
-            {
-              $group: {
-                _id: "user",
-                tokens: {
-                  $push: "$device",
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                tokens: 1,
-              },
-            },
-          ]);
-
-          if (results.length > 0) {
-            let notification = {
-              title: article.title,
-              body: result.message,
-              image: article.cover,
-            };
-            let data = {
-              id: article._id,
-            };
-            await sendPushNotification(
-              admin,
-              notification,
-              "rate-article",
-              results[0].tokens,
-              data
-            );
-          }
+        if (results.length > 0) {
+          let notification = {
+            title: article.title,
+            body: result.message,
+            image: article.cover,
+          };
+          let data = {
+            id: article._id,
+            comment: result.articleComment,
+          };
+          await sendPushNotification(
+            admin,
+            notification,
+            "comment-on-article",
+            results[0].tokens,
+            data
+          );
         }
       }
-    });
+      /**for sharing of an article */
+      if (resourceType == "share-article") {
+        eventEmitter.emit("share-article", {
+          reciever: result.reciever,
+          data: result,
+        });
+        /**push notification to original commentor*/
+        let article = await Article.findOne({ _id: result.article });
+
+        let results = await Subscriber.aggregate([
+          {
+            $match: {
+              user: mongoose.Types.ObjectId(result.reciever),
+            },
+          },
+          {
+            $group: {
+              _id: "user",
+              tokens: {
+                $push: "$device",
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              tokens: 1,
+            },
+          },
+        ]);
+
+        if (results.length > 0) {
+          let notification = {
+            title: article.title,
+            body: result.message,
+            image: article.cover,
+          };
+          let data = {
+            id: article._id,
+          };
+          await sendPushNotification(
+            admin,
+            notification,
+            "share-article",
+            results[0].tokens,
+            data
+          );
+        }
+      }
+      /** comment on a debate */
+      if (resourceType == "comment-on-debate") {
+        eventEmitter.emit("comment-on-debate", {
+          reciever: result.reciever,
+          data: result,
+        });
+        /**push notification to article publisher for comment on debate featured article*/
+        let debate = await Debate.findOne({ _id: result.debate });
+
+        let results = await Subscriber.aggregate([
+          {
+            $match: {
+              user: mongoose.Types.ObjectId(result.reciever),
+            },
+          },
+          {
+            $group: {
+              _id: "user",
+              tokens: {
+                $push: "$device",
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              tokens: 1,
+            },
+          },
+        ]);
+
+        if (results.length > 0) {
+          let notification = {
+            title: debate.title,
+            body: result.message,
+            image: debate.cover,
+          };
+          let data = {
+            id: debate._id,
+            comment: result.debateComment,
+          };
+          await sendPushNotification(
+            admin,
+            notification,
+            "comment-on-debate",
+            results[0].tokens,
+            data
+          );
+        }
+      }
+      /**follow a publisher */
+      if (resourceType == "follow-publisher") {
+        eventEmitter.emit("follow-publisher", {
+          reciever: result.reciever,
+          data: result,
+        });
+        /**push notification to publisher to notify someone follow*/
+        let publisher = await Publisher.findOne({ _id: result.publisher });
+
+        let results = await Subscriber.aggregate([
+          {
+            $match: {
+              user: mongoose.Types.ObjectId(result.reciever),
+            },
+          },
+          {
+            $group: {
+              _id: "user",
+              tokens: {
+                $push: "$device",
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              tokens: 1,
+            },
+          },
+        ]);
+
+        if (results.length > 0) {
+          let notification = {
+            title: publisher.name,
+            body: result.message,
+            image: publisher.logo,
+          };
+          let data = {
+            id: publisher._id,
+          };
+          await sendPushNotification(
+            admin,
+            notification,
+            "follow-publisher",
+            results[0].tokens,
+            data
+          );
+        }
+      }
+      /**rate a article */
+      if (resourceType == "rate-article") {
+        eventEmitter.emit("rate-article", {
+          reciever: result.reciever,
+          data: result,
+        });
+        /**push notification to article publisher*/
+        let article = await Article.findOne({ _id: result.article });
+
+        let results = await Subscriber.aggregate([
+          {
+            $match: {
+              user: mongoose.Types.ObjectId(result.reciever),
+            },
+          },
+          {
+            $group: {
+              _id: "user",
+              tokens: {
+                $push: "$device",
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              tokens: 1,
+            },
+          },
+        ]);
+
+        if (results.length > 0) {
+          let notification = {
+            title: article.title,
+            body: result.message,
+            image: article.cover,
+          };
+          let data = {
+            id: article._id,
+          };
+          await sendPushNotification(
+            admin,
+            notification,
+            "rate-article",
+            results[0].tokens,
+            data
+          );
+        }
+      }
+    }
   } catch (error) {
     console.log(error);
   }
 };
 
-exports.watchChangeInUserNotification = async () => {
+exports.ChangeInUserNotification = async (resourceDocument, resourceType) => {
   try {
-    let pipeline = [
-      {
-        $match: { operationType: "insert" },
-      },
-    ];
-    let changeStreamForComment = UserNotification.watch(pipeline);
+    let event = {
+      fullDocument: resourceDocument,
+    };
 
-    changeStreamForComment.on("change", async (event) => {
-      if (event.fullDocument) {
-        let result = event.fullDocument;
+    if (event.fullDocument) {
+      let result = event.fullDocument;
 
-        /**for reply on debate comment */
-        if (result.notificationType == "counter-comment-on-debate") {
-          /**send notificationto publisher about some user commented on his/her article and
-           * user replied to a comment
-           */
-          eventEmitter.emit("counter-comment-on-debate", {
-            reciever: result.reciever,
-            data: result,
-          });
+      /**for reply on debate comment */
+      if (resourceType == "counter-comment-on-debate") {
+        /**send notificationto publisher about some user commented on his/her article and
+         * user replied to a comment
+         */
+        eventEmitter.emit("counter-comment-on-debate", {
+          reciever: result.reciever,
+          data: result,
+        });
 
-          /**push notification to original commentor*/
-          let debate = await Debate.findOne({ _id: result.debate });
+        /**push notification to original commentor*/
+        let debate = await Debate.findOne({ _id: result.debate });
 
-          let results = await Subscriber.aggregate([
-            {
-              $match: {
-                user: mongoose.Types.ObjectId(result.reciever),
+        let results = await Subscriber.aggregate([
+          {
+            $match: {
+              user: mongoose.Types.ObjectId(result.reciever),
+            },
+          },
+          {
+            $group: {
+              _id: "user",
+              tokens: {
+                $push: "$device",
               },
             },
-            {
-              $group: {
-                _id: "user",
-                tokens: {
-                  $push: "$device",
-                },
-              },
+          },
+          {
+            $project: {
+              _id: 0,
+              tokens: 1,
             },
-            {
-              $project: {
-                _id: 0,
-                tokens: 1,
-              },
-            },
-          ]);
+          },
+        ]);
 
-          if (results.length > 0) {
-            let notification = {
-              title: debate.title,
-              body: result.message,
-              image: debate.cover,
-            };
-            let data = {
-              id: debate._id,
-              parentComment: result.debateParentComment,
-              comment: result.debateComment,
-            };
+        if (results.length > 0) {
+          let notification = {
+            title: debate.title,
+            body: result.message,
+            image: debate.cover,
+          };
+          let data = {
+            id: debate._id,
+            parentComment: result.debateParentComment,
+            comment: result.debateComment,
+          };
 
-            await sendPushNotification(
-              admin,
-              notification,
-              "counter-comment-on-debate",
-              results[0].tokens,
-              data
-            );
-          }
-        }
-        if (result.notificationType == "upvote-comment-on-debate") {
-          /**send notification to user
-           * someone upvote to a comment
-           */
-          eventEmitter.emit("upvote-comment-on-debate", {
-            reciever: result.reciever,
-            data: result,
-          });
-
-          /**push notification to original commentor */
-          let debate = await Debate.findOne({ _id: result.debate });
-
-          let results = await Subscriber.aggregate([
-            {
-              $match: {
-                user: mongoose.Types.ObjectId(result.reciever),
-              },
-            },
-            {
-              $group: {
-                _id: "user",
-                tokens: {
-                  $push: "$device",
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                tokens: 1,
-              },
-            },
-          ]);
-          if (results.length > 0) {
-            let notification = {
-              title: debate.title,
-              body: result.message,
-              image: debate.cover,
-            };
-            let data = {
-              id: debate._id,
-              comment: result.debateComment,
-            };
-            await sendPushNotification(
-              admin,
-              notification,
-              "upvote-comment-on-debate",
-              results[0].tokens,
-              data
-            );
-          }
-        }
-
-        /**for reply on article comment */
-        if (result.notificationType == "counter-comment-on-article") {
-          /**send notificationto publisher about some user commented on his/her article and
-           * user replied to a comment
-           */
-          eventEmitter.emit("counter-comment-on-article", {
-            reciever: result.reciever,
-            data: result,
-          });
-          /**push notification to original commentor*/
-          let article = await Article.findOne({ _id: result.article });
-
-          let results = await Subscriber.aggregate([
-            {
-              $match: {
-                user: mongoose.Types.ObjectId(result.reciever),
-              },
-            },
-            {
-              $group: {
-                _id: "user",
-                tokens: {
-                  $push: "$device",
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                tokens: 1,
-              },
-            },
-          ]);
-
-          if (results.length > 0) {
-            let notification = {
-              title: article.title,
-              body: result.message,
-              image: article.cover,
-            };
-            let data = {
-              id: article._id,
-              parentComment: result.articleParentComment,
-              comment: result.articleComment,
-            };
-            await sendPushNotification(
-              admin,
-              notification,
-              "counter-comment-on-article",
-              results[0].tokens,
-              data
-            );
-          }
-        }
-        if (result.notificationType == "upvote-comment-on-article") {
-          /**send notification to user
-           * someone upvote to a comment
-           */
-          eventEmitter.emit("upvote-comment-on-article", {
-            reciever: result.reciever,
-            data: result,
-          });
-          /**push notification to original commentor */
-          let article = await Article.findOne({ _id: result.article });
-
-          let results = await Subscriber.aggregate([
-            {
-              $match: {
-                user: mongoose.Types.ObjectId(result.reciever),
-              },
-            },
-            {
-              $group: {
-                _id: "user",
-                tokens: {
-                  $push: "$device",
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                tokens: 1,
-              },
-            },
-          ]);
-
-          if (results.length > 0) {
-            let notification = {
-              title: article.title,
-              body: result.message,
-              image: article.cover,
-            };
-            let data = {
-              id: article._id,
-              comment: result.articleComment,
-            };
-
-            await sendPushNotification(
-              admin,
-              notification,
-              "upvote-comment-on-article",
-              results[0].tokens,
-              data
-            );
-          }
-        }
-
-        /**blog comments */
-        if (result.notificationType == "comment-on-blog") {
-          /**send notification to user(author(admin))
-           * someone comment on blog
-           */
-          eventEmitter.emit("comment-on-blog", {
-            reciever: result.reciever,
-            data: result,
-          });
-          /**push notification to original commentor*/
-          let blog = await Blog.findOne({ _id: result.blog });
-
-          let results = await Subscriber.aggregate([
-            {
-              $match: {
-                user: mongoose.Types.ObjectId(result.reciever),
-              },
-            },
-            {
-              $group: {
-                _id: "user",
-                tokens: {
-                  $push: "$device",
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                tokens: 1,
-              },
-            },
-          ]);
-
-          if (results.length > 0) {
-            let notification = {
-              title: blog.title,
-              body: result.message,
-              image: blog.cover,
-            };
-            let data = {
-              id: blog._id,
-              comment: result.blogComment,
-            };
-            await sendPushNotification(
-              admin,
-              notification,
-              "comment-on-blog",
-              results[0].tokens,
-              data
-            );
-          }
-        }
-        if (result.notificationType == "upvote-comment-on-blog") {
-          /**send notification to user
-           * someone upvote your comment
-           */
-          eventEmitter.emit("upvote-comment-on-blog", {
-            reciever: result.reciever,
-            data: result,
-          });
-
-          /**push notification to original commentor */
-          let blog = await Blog.findOne({ _id: result.blog });
-
-          let results = await Subscriber.aggregate([
-            {
-              $match: {
-                user: mongoose.Types.ObjectId(result.reciever),
-              },
-            },
-            {
-              $group: {
-                _id: "user",
-                tokens: {
-                  $push: "$device",
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                tokens: 1,
-              },
-            },
-          ]);
-
-          if (results.length > 0) {
-            let notification = {
-              title: blog.title,
-              body: result.message,
-              image: blog.cover,
-            };
-            let data = {
-              id: blog._id,
-              comment: result.blogComment,
-            };
-
-            await sendPushNotification(
-              admin,
-              notification,
-              "upvote-comment-on-blog",
-              results[0].tokens,
-              data
-            );
-          }
-        }
-        if (result.notificationType == "counter-comment-on-blog") {
-          /**send notification to user
-           * someone replied to your comment
-           */
-          eventEmitter.emit("counter-comment-on-blog", {
-            reciever: result.reciever,
-            data: result,
-          });
-
-          /**push notification to original commentor*/
-          let blog = await Blog.findOne({ _id: result.blog });
-
-          let results = await Subscriber.aggregate([
-            {
-              $match: {
-                user: mongoose.Types.ObjectId(result.reciever),
-              },
-            },
-            {
-              $group: {
-                _id: "user",
-                tokens: {
-                  $push: "$device",
-                },
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                tokens: 1,
-              },
-            },
-          ]);
-
-          if (results.length > 0) {
-            let notification = {
-              title: blog.title,
-              body: result.message,
-              image: blog.cover,
-            };
-            let data = {
-              id: blog._id,
-              parentComment: result.blogParentComment,
-              comment: result.blogComment,
-            };
-
-            await sendPushNotification(
-              admin,
-              notification,
-              "counter-comment-on-blog",
-              results[0].tokens,
-              data
-            );
-          }
+          await sendPushNotification(
+            admin,
+            notification,
+            "counter-comment-on-debate",
+            results[0].tokens,
+            data
+          );
         }
       }
-    });
+      if (resourceType == "upvote-comment-on-debate") {
+        /**send notification to user
+         * someone upvote to a comment
+         */
+        eventEmitter.emit("upvote-comment-on-debate", {
+          reciever: result.reciever,
+          data: result,
+        });
+
+        /**push notification to original commentor */
+        let debate = await Debate.findOne({ _id: result.debate });
+
+        let results = await Subscriber.aggregate([
+          {
+            $match: {
+              user: mongoose.Types.ObjectId(result.reciever),
+            },
+          },
+          {
+            $group: {
+              _id: "user",
+              tokens: {
+                $push: "$device",
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              tokens: 1,
+            },
+          },
+        ]);
+        if (results.length > 0) {
+          let notification = {
+            title: debate.title,
+            body: result.message,
+            image: debate.cover,
+          };
+          let data = {
+            id: debate._id,
+            comment: result.debateComment,
+          };
+          await sendPushNotification(
+            admin,
+            notification,
+            "upvote-comment-on-debate",
+            results[0].tokens,
+            data
+          );
+        }
+      }
+
+      /**for reply on article comment */
+      if (resourceType == "counter-comment-on-article") {
+        /**send notificationto publisher about some user commented on his/her article and
+         * user replied to a comment
+         */
+        eventEmitter.emit("counter-comment-on-article", {
+          reciever: result.reciever,
+          data: result,
+        });
+        /**push notification to original commentor*/
+        let article = await Article.findOne({ _id: result.article });
+
+        let results = await Subscriber.aggregate([
+          {
+            $match: {
+              user: mongoose.Types.ObjectId(result.reciever),
+            },
+          },
+          {
+            $group: {
+              _id: "user",
+              tokens: {
+                $push: "$device",
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              tokens: 1,
+            },
+          },
+        ]);
+
+        if (results.length > 0) {
+          let notification = {
+            title: article.title,
+            body: result.message,
+            image: article.cover,
+          };
+          let data = {
+            id: article._id,
+            parentComment: result.articleParentComment,
+            comment: result.articleComment,
+          };
+          await sendPushNotification(
+            admin,
+            notification,
+            "counter-comment-on-article",
+            results[0].tokens,
+            data
+          );
+        }
+      }
+      if (resourceType == "upvote-comment-on-article") {
+        /**send notification to user
+         * someone upvote to a comment
+         */
+        eventEmitter.emit("upvote-comment-on-article", {
+          reciever: result.reciever,
+          data: result,
+        });
+        /**push notification to original commentor */
+        let article = await Article.findOne({ _id: result.article });
+
+        let results = await Subscriber.aggregate([
+          {
+            $match: {
+              user: mongoose.Types.ObjectId(result.reciever),
+            },
+          },
+          {
+            $group: {
+              _id: "user",
+              tokens: {
+                $push: "$device",
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              tokens: 1,
+            },
+          },
+        ]);
+
+        if (results.length > 0) {
+          let notification = {
+            title: article.title,
+            body: result.message,
+            image: article.cover,
+          };
+          let data = {
+            id: article._id,
+            comment: result.articleComment,
+          };
+
+          await sendPushNotification(
+            admin,
+            notification,
+            "upvote-comment-on-article",
+            results[0].tokens,
+            data
+          );
+        }
+      }
+
+      /**blog comments */
+      if (resourceType == "comment-on-blog") {
+        /**send notification to user(author(admin))
+         * someone comment on blog
+         */
+        eventEmitter.emit("comment-on-blog", {
+          reciever: result.reciever,
+          data: result,
+        });
+        /**push notification to original commentor*/
+        let blog = await Blog.findOne({ _id: result.blog });
+
+        let results = await Subscriber.aggregate([
+          {
+            $match: {
+              user: mongoose.Types.ObjectId(result.reciever),
+            },
+          },
+          {
+            $group: {
+              _id: "user",
+              tokens: {
+                $push: "$device",
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              tokens: 1,
+            },
+          },
+        ]);
+
+        if (results.length > 0) {
+          let notification = {
+            title: blog.title,
+            body: result.message,
+            image: blog.cover,
+          };
+          let data = {
+            id: blog._id,
+            comment: result.blogComment,
+          };
+          await sendPushNotification(
+            admin,
+            notification,
+            "comment-on-blog",
+            results[0].tokens,
+            data
+          );
+        }
+      }
+      if (resourceType == "upvote-comment-on-blog") {
+        /**send notification to user
+         * someone upvote your comment
+         */
+        eventEmitter.emit("upvote-comment-on-blog", {
+          reciever: result.reciever,
+          data: result,
+        });
+
+        /**push notification to original commentor */
+        let blog = await Blog.findOne({ _id: result.blog });
+
+        let results = await Subscriber.aggregate([
+          {
+            $match: {
+              user: mongoose.Types.ObjectId(result.reciever),
+            },
+          },
+          {
+            $group: {
+              _id: "user",
+              tokens: {
+                $push: "$device",
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              tokens: 1,
+            },
+          },
+        ]);
+
+        if (results.length > 0) {
+          let notification = {
+            title: blog.title,
+            body: result.message,
+            image: blog.cover,
+          };
+          let data = {
+            id: blog._id,
+            comment: result.blogComment,
+          };
+
+          await sendPushNotification(
+            admin,
+            notification,
+            "upvote-comment-on-blog",
+            results[0].tokens,
+            data
+          );
+        }
+      }
+      if (resourceType == "counter-comment-on-blog") {
+        /**send notification to user
+         * someone replied to your comment
+         */
+        eventEmitter.emit("counter-comment-on-blog", {
+          reciever: result.reciever,
+          data: result,
+        });
+
+        /**push notification to original commentor*/
+        let blog = await Blog.findOne({ _id: result.blog });
+
+        let results = await Subscriber.aggregate([
+          {
+            $match: {
+              user: mongoose.Types.ObjectId(result.reciever),
+            },
+          },
+          {
+            $group: {
+              _id: "user",
+              tokens: {
+                $push: "$device",
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              tokens: 1,
+            },
+          },
+        ]);
+
+        if (results.length > 0) {
+          let notification = {
+            title: blog.title,
+            body: result.message,
+            image: blog.cover,
+          };
+          let data = {
+            id: blog._id,
+            parentComment: result.blogParentComment,
+            comment: result.blogComment,
+          };
+
+          await sendPushNotification(
+            admin,
+            notification,
+            "counter-comment-on-blog",
+            results[0].tokens,
+            data
+          );
+        }
+      }
+    }
   } catch (error) {
     console.log(error);
   }
 };
 
-exports.watchNewResourceUploadNotification = async () => {
+exports.NewResourceUploadNotification = async (
+  resourceDocument,
+  resourceType
+) => {
   try {
-    let pipeline = [
-      {
-        $match: { operationType: "insert" },
-      },
-    ];
-
-    /**article upload */
-    let changeStreamForArticle = Article.watch(pipeline);
-
-    changeStreamForArticle.on("change", async (event) => {
+    let event = {
+      fullDocument: resourceDocument,
+    };
+    if (resourceType == "article") {
+      /**article create */
       if (event.fullDocument) {
         /**get followers of uploader publisher */
         let finalUserList = [];
@@ -758,7 +742,9 @@ exports.watchNewResourceUploadNotification = async () => {
               },
             },
           ]);
-          finalUserList = finalUserList.concat(preferedUsers[0].users);
+          if (preferedUsers.length > 0) {
+            finalUserList = finalUserList.concat(preferedUsers[0].users);
+          }
         }
 
         let results = await Subscriber.aggregate([
@@ -797,12 +783,9 @@ exports.watchNewResourceUploadNotification = async () => {
           );
         }
       }
-    });
-
-    /**debate create */
-    let changeStreamForDebate = Debate.watch(pipeline);
-
-    changeStreamForDebate.on("change", async (event) => {
+    }
+    if (resourceType == "debate") {
+      /**debate create */
       if (event.fullDocument) {
         let results = await Subscriber.aggregate([
           {
@@ -840,134 +823,127 @@ exports.watchNewResourceUploadNotification = async () => {
           );
         }
       }
-    });
+    }
+    if (resourceType == "audio") {
+      /**audio upload */
+      if (event.fullDocument) {
+        /**get followers of uploader publisher */
 
-    // /**audio upload */
-    // let changeStreamForAudio = Audio.watch(pipeline);
+        let followers = await Follow.aggregate([
+          {
+            $match: {
+              publisher: mongoose.Types.ObjectId(event.fullDocument.publisher),
+            },
+          },
+          {
+            $group: {
+              _id: "$publisher",
+              users: {
+                $push: "$user",
+              },
+            },
+          },
+        ]);
 
-    // changeStreamForAudio.on("change", async (event) => {
-    //   if (event.fullDocument) {
-    //     /**get followers of uploader publisher */
+        if (followers.length < 0) {
+          return;
+        }
 
-    //     let followers = await Follow.aggregate([
-    //       {
-    //         $match: {
-    //           publisher: mongoose.Types.ObjectId(event.fullDocument.publisher),
-    //         },
-    //       },
-    //       {
-    //         $group: {
-    //           _id: "$publisher",
-    //           users: {
-    //             $push: "$user",
-    //           },
-    //         },
-    //       },
-    //     ]);
+        let results = await Subscriber.aggregate([
+          { $match: { user: { $in: followers[0].users } } },
+          {
+            $group: {
+              _id: "user",
+              tokens: {
+                $push: "$device",
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              tokens: 1,
+            },
+          },
+        ]);
+        if (results.length < 0) {
+          return;
+        }
 
-    //     if (followers.length < 0) {
-    //       return;
-    //     }
+        /**create notification data */
+        let notification = {
+          title: event.fullDocument.title,
+          body: event.fullDocument.description,
+          image: event.fullDocument.cover,
+        };
+        await sendPushNotification(
+          notification,
+          "audio-upload",
+          results[0].tokens,
+          event.fullDocument._id
+        );
+      }
+    }
+    if (resourceType == "video") {
+      /**video upload */
+      if (event.fullDocument) {
+        /**get followers of uploader publisher */
 
-    //     let results = await Subscriber.aggregate([
-    //       { $match: { user: { $in: followers[0].users } } },
-    //       {
-    //         $group: {
-    //           _id: "user",
-    //           tokens: {
-    //             $push: "$device",
-    //           },
-    //         },
-    //       },
-    //       {
-    //         $project: {
-    //           _id: 0,
-    //           tokens: 1,
-    //         },
-    //       },
-    //     ]);
-    //     if (results.length < 0) {
-    //       return;
-    //     }
+        let followers = await Follow.aggregate([
+          {
+            $match: {
+              publisher: mongoose.Types.ObjectId(event.fullDocument.publisher),
+            },
+          },
+          {
+            $group: {
+              _id: "$publisher",
+              users: {
+                $push: "$user",
+              },
+            },
+          },
+        ]);
 
-    //     /**create notification data */
-    //     let notification = {
-    //       title: event.fullDocument.title,
-    //       body: event.fullDocument.description,
-    //       image: event.fullDocument.cover,
-    //     };
-    //     await sendPushNotification(
-    //       notification,
-    //       "audio-upload",
-    //       results[0].tokens,
-    //       event.fullDocument._id
-    //     );
-    //   }
-    // });
+        if (followers.length < 0) {
+          return;
+        }
 
-    // /**video upload */
+        let results = await Subscriber.aggregate([
+          { $match: { user: { $in: followers[0].users } } },
+          {
+            $group: {
+              _id: "user",
+              tokens: {
+                $push: "$device",
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              tokens: 1,
+            },
+          },
+        ]);
+        if (results.length < 0) {
+          return;
+        }
 
-    // let changeStreamForVideo = Video.watch(pipeline);
-
-    // changeStreamForVideo.on("change", async (event) => {
-    //   if (event.fullDocument) {
-    //     /**get followers of uploader publisher */
-
-    //     let followers = await Follow.aggregate([
-    //       {
-    //         $match: {
-    //           publisher: mongoose.Types.ObjectId(event.fullDocument.publisher),
-    //         },
-    //       },
-    //       {
-    //         $group: {
-    //           _id: "$publisher",
-    //           users: {
-    //             $push: "$user",
-    //           },
-    //         },
-    //       },
-    //     ]);
-
-    //     if (followers.length < 0) {
-    //       return;
-    //     }
-
-    //     let results = await Subscriber.aggregate([
-    //       { $match: { user: { $in: followers[0].users } } },
-    //       {
-    //         $group: {
-    //           _id: "user",
-    //           tokens: {
-    //             $push: "$device",
-    //           },
-    //         },
-    //       },
-    //       {
-    //         $project: {
-    //           _id: 0,
-    //           tokens: 1,
-    //         },
-    //       },
-    //     ]);
-    //     if (results.length < 0) {
-    //       return;
-    //     }
-
-    //     /**create notification data */
-    //     let notification = {
-    //       title: event.fullDocument.title,
-    //       body: event.fullDocument.description,
-    //       image: event.fullDocument.cover,
-    //     };
-    //     await sendPushNotification(
-    //       notification,
-    //       "video-upload",
-    //       results[0].tokens,
-    //       event.fullDocument._id
-    //     );
-    //   }
-    // });
+        /**create notification data */
+        let notification = {
+          title: event.fullDocument.title,
+          body: event.fullDocument.description,
+          image: event.fullDocument.cover,
+        };
+        await sendPushNotification(
+          notification,
+          "video-upload",
+          results[0].tokens,
+          event.fullDocument._id
+        );
+      }
+    }
   } catch (error) {
     console.log(error);
   }

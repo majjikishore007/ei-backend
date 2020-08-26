@@ -5,6 +5,10 @@ const PublisherNotification = require("../models/publishernotification");
 
 const mongoose = require("mongoose");
 
+const {
+  ChangeInPublisherNotification,
+} = require("../notification/collection-watch");
+
 exports.addNotificationSubscriber = async (req, res, next) => {
   try {
     let exist = await NotificationSubscriber.findOne({
@@ -38,13 +42,12 @@ exports.getNotificationSubscriber = async (req, res, next) => {
         success: true,
         message: "Device already registered for push notification",
       });
-    }else {
+    } else {
       return res.status(400).json({
         success: false,
         message: "Device not found",
       });
     }
-    
   } catch (error) {
     res.status(500).json({ success: false, error });
   }
@@ -80,7 +83,8 @@ exports.sharedArticleNotify = async (req, res, next) => {
       date: Date.now(),
     });
 
-    await pubNotification.save();
+    let notification = await pubNotification.save();
+    await ChangeInPublisherNotification(notification, "share-article");
     res
       .status(200)
       .json({ success: true, message: "Publisher Notification Saved" });

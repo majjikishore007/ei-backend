@@ -4,6 +4,10 @@ const User = require("../models/user");
 const UserNotification = require("../models/usernotification");
 const mongoose = require("mongoose");
 
+const {
+  ChangeInUserNotification,
+} = require("../notification/collection-watch");
+
 exports.voteForComment = async (req, res, next) => {
   try {
     const debateCommentVote = new DebateCommentVote({
@@ -29,8 +33,9 @@ exports.voteForComment = async (req, res, next) => {
       date: Date.now(),
     });
 
-    await usernotification.save();
-
+    let notification = await usernotification.save();
+    /**send push notification */
+    await ChangeInUserNotification(notification, "upvote-comment-on-debate");
     res
       .status(201)
       .json({ success: true, message: "vote has been added", data: result });

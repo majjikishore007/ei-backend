@@ -2,6 +2,8 @@ const Pdf = require("../models/pdf");
 const Publisher = require("../models/publisher");
 const mongoose = require("mongoose");
 
+const { addToDatabase } = require("./keyword");
+
 exports.getAllPdfPageWiseLimitWise = async (req, res, next) => {
   try {
     let page = parseInt(req.params.page);
@@ -56,6 +58,9 @@ exports.savePdfPublisher = async (req, res, next) => {
       public: true,
     });
     await newPdf.save();
+    if (req.body.category) {
+      await addToDatabase(req.body.category);
+    }
     res.status(201).json({ success: true, message: "Pdf Saved Successfully" });
   } catch (error) {
     res.status(500).json({ success: false, error });

@@ -4,6 +4,10 @@ const User = require("../models/user");
 const UserNotification = require("../models/usernotification");
 const mongoose = require("mongoose");
 
+const {
+  ChangeInUserNotification,
+} = require("../notification/collection-watch");
+
 exports.voteForArticleComment = async (req, res, next) => {
   try {
     const articleCommentVote = new ArticleCommentVote({
@@ -31,7 +35,9 @@ exports.voteForArticleComment = async (req, res, next) => {
       date: Date.now(),
     });
 
-    await usernotification.save();
+    let notification = await usernotification.save();
+
+    await ChangeInUserNotification(notification, "upvote-comment-on-article");
 
     res.status(201).json({ success: true, message: "vote has been added" });
   } catch (error) {
@@ -79,12 +85,10 @@ exports.getarticlecommentvotecount = async (req, res, next) => {
       article: article_id,
       vote: false,
     }).sort("-_id");
-    res
-      .status(200)
-      .json({
-        success: true,
-        data: { upvotecount: upvote.length, downvotecount: downvote.length },
-      });
+    res.status(200).json({
+      success: true,
+      data: { upvotecount: upvote.length, downvotecount: downvote.length },
+    });
   } catch (error) {
     // console.log(error)
     res.status(500).json({ success: false, error });

@@ -9,6 +9,8 @@ const {
   updateDebateCommentById,
   deleteDebateComment,
   getDebateCommentsForDebateId,
+  getDebateCommentsPagination,
+  getDebateCounterCommentsPagination,
 } = require("../controllers/debatecomment");
 
 /**
@@ -67,5 +69,27 @@ router.get("/amin/amin", (req, res) => {
       res.json(err);
     });
 });
+
+/**test */
+/**
+ * @description   this route is used to get debateComment with upvotec count and loggedin user upvote status
+ *  with counter comments(pagination)
+ * @route   GET      /api/debateComment/debate/:id/commentPage/:commentPage/commentLimit/:commentLimit/counterCommentPage/:counterCommentPage/counterCommentLimit/:counterCommentLimit
+ * @access  Public
+ */
+router.get(
+  "/debate/:id/commentPage/:commentPage/commentLimit/:commentLimit/counterCommentPage/:counterCommentPage/counterCommentLimit/:counterCommentLimit",
+  getDebateCommentsPagination
+);
+
+/**
+ * @description   this route is used to get debate counter Comments(pagination)
+ * @route   GET      /api/debateComment/debate/:id/comment/:id/counterCommentPage/:counterCommentPage/counterCommentLimit/:counterCommentLimit
+ * @access  Public
+ */
+router.get(
+  "/debate/:debateId/comment/:commentId/counterCommentPage/:counterCommentPage/counterCommentLimit/:counterCommentLimit",
+  getDebateCounterCommentsPagination
+);
 
 module.exports = router;

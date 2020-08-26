@@ -10,11 +10,26 @@ const {
 
 exports.voteForComment = async (req, res, next) => {
   try {
+    let exist = await DebateCommentVote.findOne({
+      comment: req.body.comment,
+      user: req.userData.userId,
+    });
+    if (exist) {
+      let resultUpdated = await DebateCommentVote.findOneAndUpdate(
+        { comment: req.body.comment, user: req.userData.userId },
+        { $set: req.body },
+        { new: true }
+      );
+      return res
+        .status(200)
+        .json({ success: true, voteGiven: true, vote: resultUpdated.vote });
+    }
+
     const debateCommentVote = new DebateCommentVote({
       debate: req.body.debate,
       user: req.userData.userId,
       comment: req.body.comment,
-      vote: true, // true = upvote , false = downvote
+      vote: req.body.vote, // true = upvote , false = downvote
     });
     let result = await debateCommentVote.save();
 
@@ -25,7 +40,9 @@ exports.voteForComment = async (req, res, next) => {
 
     let usernotification = new UserNotification({
       notificationType: "upvote-comment-on-debate",
-      message: `${userResult.displayName} Upvoted your comment`,
+      message: req.body.vote
+        ? `${userResult.displayName} Upvoted your comment`
+        : `${userResult.displayName} Downvoted your comment`,
       sender: req.userData.userId,
       reciever: originalComment.user,
       debate: req.body.debate,
@@ -36,19 +53,8 @@ exports.voteForComment = async (req, res, next) => {
     let notification = await usernotification.save();
     /**send push notification */
     await ChangeInUserNotification(notification, "upvote-comment-on-debate");
-    res
-      .status(201)
-      .json({ success: true, message: "vote has been added", data: result });
+    res.status(201).json({ success: true, voteGiven: true, vote: result.vote });
   } catch (error) {
-    if (error.code == 11000) {
-      await DebateCommentVote.findOneAndUpdate(
-        { debate: req.body.debate, user: req.userData.userId },
-        { $set: req.body }
-      );
-      return res
-        .status(200)
-        .json({ success: true, message: "vote has been updated" });
-    }
     console.log(error);
     res.status(500).json({ success: false, error });
   }
@@ -99,6 +105,26 @@ exports.getVoteStatusForDebateComment = async (req, res, next) => {
       };
     }
     res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getVotes = async (req, res, next) => {
+  try {
+    let comment = mongoose.Types.ObjectId(req.params.comment);
+
+    const upvoteCount = await DebateCommentVote.countDocuments({
+      comment,
+      vote: true,
+    });
+    const downvoteCount = await DebateCommentVote.countDocuments({
+      comment,
+      vote: false,
+    });
+    res
+      .status(200)
+      .json({ success: true, data: { upvoteCount, downvoteCount } });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

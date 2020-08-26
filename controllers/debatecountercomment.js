@@ -56,6 +56,8 @@ exports.addCounterComment = async (req, res, next) => {
 
     let userResult = await User.findOne({ _id: req.userData.userId });
 
+    result.userData = userResult;
+
     let prm = [];
     debateArticles.forEach((debateArticle) => {
       let publishernotification = {
@@ -91,8 +93,11 @@ exports.addCounterComment = async (req, res, next) => {
     let notification = await usernotification.save();
     /**send push notication */
     await ChangeInUserNotification(notification, "counter-comment-on-debate");
-    res.status(201).json({ success: true, data: result });
+    let datas = JSON.parse(JSON.stringify(result));
+    datas.userData = userResult;
+    res.status(201).json({ success: true, data: datas });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };

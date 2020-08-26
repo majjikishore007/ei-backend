@@ -1,4 +1,6 @@
 const DebateComment = require("../models/debate_comment");
+const DebateCounterComment = require("../models/debate_counter_comment");
+const DebateCommentVote = require("../models/debate_comment_vote");
 const DebateArticle = require("../models/debate_article");
 const User = require("../models/user");
 const PublisherNotification = require("../models/publishernotification");
@@ -85,10 +87,10 @@ exports.addDebateComment = async (req, res, next) => {
 
       await Promise.all(pr);
     }
-
-    res.status(201).json({ success: true, data: result });
+    let datas = JSON.parse(JSON.stringify(result));
+    datas.userData = userResult;
+    res.status(201).json({ success: true, data: datas });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };
@@ -132,6 +134,135 @@ exports.getDebateCommentsForDebateId = async (req, res, next) => {
       .populate("user");
 
     res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error });
+  }
+};
+
+exports.getDebateCommentsPagination = async (req, res, next) => {
+  try {
+    /**debate id */
+    let debateId = req.params.id;
+
+    /**comment */
+    let commentPage = parseInt(req.params.commentPage);
+    let commentLimit = parseInt(req.params.commentLimit);
+
+    /**counter comment */
+    let counterCommentPage = parseInt(req.params.counterCommentPage);
+    let counterCommentLimit = parseInt(req.params.counterCommentLimit);
+
+    let debateComments = await DebateComment.aggregate([
+      { $match: { debate: mongoose.Types.ObjectId(debateId) } },
+      { $sort: { _id: -1 } },
+      { $skip: commentPage * commentLimit },
+      { $limit: commentLimit },
+      {
+        $lookup: {
+          from: User.collection.name,
+          localField: "user",
+          foreignField: "_id",
+          as: "userData",
+        },
+      },
+      { $unwind: "$userData" },
+      {
+        $lookup: {
+          from: DebateCounterComment.collection.name,
+          let: { commentId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ["$parent_comment", "$$commentId"] }],
+                },
+              },
+            },
+            { $sort: { _id: -1 } },
+            { $skip: counterCommentPage * counterCommentLimit },
+            { $limit: counterCommentLimit },
+            {
+              $lookup: {
+                from: User.collection.name,
+                localField: "user",
+                foreignField: "_id",
+                as: "userData",
+              },
+            },
+            { $unwind: "$userData" },
+          ],
+          as: "counterComments",
+        },
+      },
+      {
+        $lookup: {
+          from: DebateCommentVote.collection.name,
+          let: { commentId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ["$comment", "$$commentId"] }],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: User.collection.name,
+                localField: "user",
+                foreignField: "_id",
+                as: "userData",
+              },
+            },
+            { $unwind: "$userData" },
+          ],
+          as: "commentVotes",
+        },
+      },
+    ]);
+
+    res.status(200).json({ success: true, data: debateComments });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error });
+  }
+};
+
+exports.getDebateCounterCommentsPagination = async (req, res, next) => {
+  try {
+    /**debate id */
+    let debateId = req.params.debateId;
+
+    /**comment id */
+    let commentId = req.params.commentId;
+
+    /**counter comment */
+    let counterCommentPage = parseInt(req.params.counterCommentPage);
+    let counterCommentLimit = parseInt(req.params.counterCommentLimit);
+
+    let debateCounterComments = await DebateCounterComment.aggregate([
+      {
+        $match: {
+          $and: [
+            { debate: mongoose.Types.ObjectId(debateId) },
+            { parent_comment: mongoose.Types.ObjectId(commentId) },
+          ],
+        },
+      },
+      { $sort: { _id: -1 } },
+      { $skip: counterCommentPage * counterCommentLimit },
+      { $limit: counterCommentLimit },
+      {
+        $lookup: {
+          from: User.collection.name,
+          localField: "user",
+          foreignField: "_id",
+          as: "userData",
+        },
+      },
+      { $unwind: "$userData" },
+    ]);
+
+    res.status(200).json({ success: true, data: debateCounterComments });
   } catch (error) {
     res.status(500).json({ success: false, error: error });
   }

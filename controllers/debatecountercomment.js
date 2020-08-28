@@ -6,6 +6,10 @@ const PublisherNotification = require("../models/publishernotification");
 const UserNotification = require("../models/usernotification");
 const mongoose = require("mongoose");
 
+const {
+  ChangeInUserNotification,
+} = require("../notification/collection-watch");
+
 exports.getCounterCommentWithparentComment = async (req, res, next) => {
   try {
     let page = parseInt(req.params.page);
@@ -52,6 +56,8 @@ exports.addCounterComment = async (req, res, next) => {
 
     let userResult = await User.findOne({ _id: req.userData.userId });
 
+    result.userData = userResult;
+
     let prm = [];
     debateArticles.forEach((debateArticle) => {
       let publishernotification = {
@@ -84,10 +90,14 @@ exports.addCounterComment = async (req, res, next) => {
       debateComment: result ? result._id : null,
       date: Date.now(),
     });
-    await usernotification.save();
-
-    res.status(201).json({ success: true, data: result });
+    let notification = await usernotification.save();
+    /**send push notication */
+    await ChangeInUserNotification(notification, "counter-comment-on-debate");
+    let datas = JSON.parse(JSON.stringify(result));
+    datas.userData = userResult;
+    res.status(201).json({ success: true, data: datas });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };

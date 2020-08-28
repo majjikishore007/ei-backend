@@ -4,6 +4,10 @@ const User = require("../models/user");
 const Article = require("../models/article");
 const mongoose = require("mongoose");
 
+const {
+  ChangeInPublisherNotification,
+} = require("../notification/collection-watch");
+
 exports.getAllRatings = async (req, res, next) => {
   try {
     let ratings = await Rating.find();
@@ -36,7 +40,8 @@ exports.addRating = async (req, res, next) => {
       article: req.body.articleId,
       date: Date.now(),
     });
-    await publishernotification.save();
+    let notification = await publishernotification.save();
+    await ChangeInPublisherNotification(notification, "rate-article");
     res.status(201).json({ success: true, message: "rate successfully" });
   } catch (error) {
     if (error.code == 11000) {
@@ -56,7 +61,8 @@ exports.addRating = async (req, res, next) => {
         article: req.body.articleId,
         date: Date.now(),
       });
-      await publishernotification.save();
+      let notification = await publishernotification.save();
+      await ChangeInPublisherNotification(notification, "rate-article");
       res.status(200).json({ success: true, message: "update rating" });
     } else {
       res.status(500).json({ success: false, error });

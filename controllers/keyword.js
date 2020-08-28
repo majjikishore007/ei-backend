@@ -1,7 +1,4 @@
 const Keyword = require("../models/keyword");
-const Article = require("../models/article");
-const Audio = require("../models/audio");
-const Video = require("../models/video");
 const Preference = require("../models/preference");
 const mongoose = require("mongoose");
 
@@ -121,46 +118,7 @@ exports.getkeywordswithSkippingKeywords = async (req, res, next) => {
   }
 };
 
-/**
- * descrption - this function is using to watch the upload of new article in collection so that
- * when new article get uploaded in collection that time using category we can collect all keywords and
- * put those into keyword collection
- */
-exports.saveKeywordOnNewArticleUpload = async () => {
-  try {
-    let pipeline = [
-      {
-        $match: { operationType: "insert" },
-      },
-    ];
-
-    let changeStreamForArticle = Article.watch(pipeline);
-    let changeStreamForAudio = Audio.watch(pipeline);
-    let changeStreamForVideo = Video.watch(pipeline);
-
-    changeStreamForArticle.on("change", (event) => {
-      if (event.fullDocument.category) {
-        addToDatabase(event.fullDocument.category);
-      }
-    });
-
-    changeStreamForAudio.on("change", (event) => {
-      if (event.fullDocument.category) {
-        addToDatabase(event.fullDocument.category);
-      }
-    });
-
-    changeStreamForVideo.on("change", (event) => {
-      if (event.fullDocument.category) {
-        addToDatabase(event.fullDocument.category);
-      }
-    });
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const addToDatabase = async (str) => {
+exports.addToDatabase = async (str) => {
   const val = (str + "").split(",");
   for (let i = 0; i < val.length; i++) {
     if (val[i] !== undefined) {
@@ -169,7 +127,7 @@ const addToDatabase = async (str) => {
         const keyword = new Keyword({
           keyword: kw,
         });
-        await keyword.save();
+        let x = await keyword.save();
       } catch (error) {
         if (error.code === 11000 && kw) {
           await Keyword.update({ keyword: kw }, { $inc: { count: 1 } });

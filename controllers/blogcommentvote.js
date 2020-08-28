@@ -4,6 +4,10 @@ const User = require("../models/user");
 const UserNotification = require("../models/usernotification");
 const mongoose = require("mongoose");
 
+const {
+  ChangeInUserNotification,
+} = require("../notification/collection-watch");
+
 exports.voteForBlogComment = async (req, res, next) => {
   try {
     const blogCommentVote = new BlogCommentVote({
@@ -31,7 +35,8 @@ exports.voteForBlogComment = async (req, res, next) => {
       date: Date.now(),
     });
 
-    await usernotification.save();
+    let notification = await usernotification.save();
+    await ChangeInUserNotification(notification, "upvote-comment-on-blog");
 
     res
       .status(201)
@@ -90,12 +95,10 @@ exports.getblogcommentvotecount = async (req, res, next) => {
       blog: blog_id,
       vote: false,
     }).sort("-_id");
-    res
-      .status(200)
-      .json({
-        success: true,
-        data: { upvotecount: upvote.length, downvotecount: downvote.length },
-      });
+    res.status(200).json({
+      success: true,
+      data: { upvotecount: upvote.length, downvotecount: downvote.length },
+    });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

@@ -5,6 +5,10 @@ const User = require("../models/user");
 const UserNotification = require("../models/usernotification");
 const mongoose = require("mongoose");
 
+const {
+  ChangeInUserNotification,
+} = require("../notification/collection-watch");
+
 exports.getCounterCommentWithparentComment = async (req, res, next) => {
   try {
     let page = parseInt(req.params.page);
@@ -68,7 +72,8 @@ exports.addCounterCommentForBlog = async (req, res, next) => {
       blogComment: result ? result._id : null,
       date: Date.now(),
     });
-    await usernotification.save();
+    let notification = await usernotification.save();
+    await ChangeInUserNotification(notification, "counter-comment-on-blog");
 
     res.status(201).json({ success: true, data: result });
   } catch (error) {

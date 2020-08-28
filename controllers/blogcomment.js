@@ -6,6 +6,10 @@ const User = require("../models/user");
 const UserNotification = require("../models/usernotification");
 const mongoose = require("mongoose");
 
+const {
+  ChangeInUserNotification,
+} = require("../notification/collection-watch");
+
 exports.getBlogCommentWithId = async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -46,7 +50,8 @@ exports.addBlogComment = async (req, res, next) => {
         blogComment: result ? result._id : null,
         date: Date.now(),
       });
-      await usernotification.save();
+      let notification = await usernotification.save();
+      await ChangeInUserNotification(notification, "comment-on-blog");
     }
 
     res.status(201).json({ success: true, data: result });

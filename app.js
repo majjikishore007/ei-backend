@@ -73,9 +73,6 @@ const landingRoute = require("./routes/landing");
 const searchRoute = require("./routes/search");
 const recomendationRoute = require("./routes/recomendation-route");
 
-/**save keyword on new article upload */
-const { saveKeywordOnNewArticleUpload } = require("./controllers/keyword");
-
 mongoose.Promise = global.Promise;
 mongoose.connect(
   config.uri,
@@ -174,14 +171,6 @@ app.get("*", (req, res) => {
 cron.schedule("*/2 * * * *", () => {
   insertRssIntoAllContent();
 });
-
-/**run funcion to watching new article upload */
-saveKeywordOnNewArticleUpload();
-
-/**comment on article */
-require("./notification/collection-watch").watchChangeInPublisherNotification();
-require("./notification/collection-watch").watchChangeInUserNotification();
-require("./notification/collection-watch").watchNewResourceUploadNotification();
 
 //Start Server: Listen on port 8080
 let server = app.listen(port, () => {

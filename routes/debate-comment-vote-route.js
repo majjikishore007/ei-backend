@@ -5,6 +5,7 @@ const {
   voteForComment,
   getAllVotesForDebateComment,
   getVoteStatusForDebateComment,
+  getVotes,
 } = require("../controllers/debatecommentvote");
 
 router.get("/", (req, res) => {
@@ -34,6 +35,8 @@ router.get(
   "/page/:page/limit/:limit/:comment/:vote",
   getAllVotesForDebateComment
 );
+
+router.get("/getVotes/comment/:comment", getVotes);
 
 router.get("/comment/:id", (req, res) => {});
 

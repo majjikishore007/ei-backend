@@ -3,6 +3,10 @@ const Comment = require("../models/comment");
 const User = require("../models/user");
 const Publishernotification = require("../models/publishernotification");
 
+const {
+  ChangeInPublisherNotification,
+} = require("../notification/collection-watch");
+
 exports.getAllComments = async (req, res, next) => {
   try {
     let comments = await Comment.aggregate([
@@ -58,7 +62,8 @@ exports.saveComment = async (req, res, next) => {
       articleComment: savedComment ? savedComment._id : null,
       date: Date.now(),
     });
-    await publishernotification.save();
+    let notification = await publishernotification.save();
+    await ChangeInPublisherNotification(notification, "comment-on-article");
     res.status(201).json({ success: true, message: "Comment added" });
   } catch (error) {
     console.log(error);

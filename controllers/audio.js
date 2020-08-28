@@ -2,6 +2,8 @@ const Audio = require("../models/audio");
 const Publisher = require("../models/publisher");
 const mongoose = require("mongoose");
 
+const { addToDatabase } = require("./keyword");
+
 exports.getAudiosPageWiseLimitWise = async (req, res, next) => {
   try {
     let page = parseInt(req.params.page);
@@ -57,6 +59,9 @@ exports.saveAudioPublisher = async (req, res, next) => {
       public: true,
     });
     await audio.save();
+    if (req.body.category) {
+      await addToDatabase(req.body.category);
+    }
     res
       .status(201)
       .json({ success: true, message: "Audio Saved Successfully" });

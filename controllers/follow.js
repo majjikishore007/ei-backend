@@ -5,6 +5,10 @@ const PublisherNotification = require("../models/publishernotification");
 const mongoose = require("mongoose");
 const Publisher = require("../models/publisher");
 
+const {
+  ChangeInPublisherNotification,
+} = require("../notification/collection-watch");
+
 exports.getFollowForLoggedinUser = async (req, res, next) => {
   try {
     let follows = await Follow.find({ user: req.userData.userId });
@@ -50,7 +54,8 @@ exports.saveFollow = async (req, res, next) => {
     });
 
     await follow.save();
-    await publishernotification.save();
+    let notification = await publishernotification.save();
+    await ChangeInPublisherNotification(notification, "follow-publisher");
     res.status(201).json({ success: true, message: "following successfully" });
   } catch (error) {
     if (error.code === 11000) {

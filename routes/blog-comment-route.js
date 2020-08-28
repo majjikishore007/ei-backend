@@ -9,6 +9,8 @@ const {
   deleteBlogComment,
   getBlogCommentsForBlogId,
   getAllCommentsForBlogId,
+  getBlogCommentsPagination,
+  getBlogCounterCommentsPagination,
 } = require("../controllers/blogcomment");
 
 /**
@@ -52,5 +54,27 @@ router.get("/blogAggregate/:id", getAllCommentsForBlogId);
  * @access  Public
  */
 router.get("/blog/:id/page/:page/limit/:limit", getBlogCommentsForBlogId);
+
+/**test */
+/**
+ * @description   this route is used to get blogComment with upvotec count and loggedin user upvote status
+ *  with counter comments(pagination)
+ * @route   GET      /api/blogComment/blog/:id/commentPage/:commentPage/commentLimit/:commentLimit/counterCommentPage/:counterCommentPage/counterCommentLimit/:counterCommentLimit
+ * @access  Public
+ */
+router.get(
+  "/blog/:id/commentPage/:commentPage/commentLimit/:commentLimit/counterCommentPage/:counterCommentPage/counterCommentLimit/:counterCommentLimit",
+  getBlogCommentsPagination
+);
+
+/**
+ * @description   this route is used to get blog counter Comments(pagination)
+ * @route   GET      /api/blogComment/blog/:id/comment/:id/counterCommentPage/:counterCommentPage/counterCommentLimit/:counterCommentLimit
+ * @access  Public
+ */
+router.get(
+  "/blog/:blogId/comment/:commentId/counterCommentPage/:counterCommentPage/counterCommentLimit/:counterCommentLimit",
+  getBlogCounterCommentsPagination
+);
 
 module.exports = router;

@@ -10,6 +10,21 @@ const {
 
 exports.voteForArticleComment = async (req, res, next) => {
   try {
+    let exist = await ArticleCommentVote.findOne({
+      comment: req.body.comment,
+      user: req.userData.userId,
+    });
+    if (exist) {
+      let resultUpdated = await ArticleCommentVote.findOneAndUpdate(
+        { comment: req.body.comment, user: req.userData.userId },
+        { $set: req.body },
+        { new: true }
+      );
+      return res
+        .status(200)
+        .json({ success: true, voteGiven: true, vote: resultUpdated.vote });
+    }
+
     const articleCommentVote = new ArticleCommentVote({
       article: req.body.article,
       user: req.userData.userId,
@@ -39,18 +54,8 @@ exports.voteForArticleComment = async (req, res, next) => {
 
     await ChangeInUserNotification(notification, "upvote-comment-on-article");
 
-    res.status(201).json({ success: true, message: "vote has been added" });
+    res.status(201).json({ success: true, voteGiven: true, vote: result.vote });
   } catch (error) {
-    if (error.code == 11000) {
-      await ArticleCommentVote.findOneAndUpdate(
-        { article: req.body.article, user: req.userData.userId },
-        { $set: req.body }
-      );
-      return res
-        .status(200)
-        .json({ success: true, message: "vote has been updated" });
-    }
-    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };
@@ -140,6 +145,26 @@ exports.getVoteStatusForArticleComment = async (req, res, next) => {
       };
     }
     res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getVotes = async (req, res, next) => {
+  try {
+    let comment = mongoose.Types.ObjectId(req.params.comment);
+
+    const upvoteCount = await ArticleCommentVote.countDocuments({
+      comment,
+      vote: true,
+    });
+    const downvoteCount = await ArticleCommentVote.countDocuments({
+      comment,
+      vote: false,
+    });
+    res
+      .status(200)
+      .json({ success: true, data: { upvoteCount, downvoteCount } });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

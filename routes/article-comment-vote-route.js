@@ -7,6 +7,7 @@ const {
   getarticlecommentvotecount,
   getAllVotesForArticleComment,
   getVoteStatusForArticleComment,
+  getVotes,
 } = require("../controllers/articlecommentvote");
 
 /**
@@ -46,5 +47,7 @@ router.get(
   "/page/:page/limit/:limit/:comment/:vote",
   getAllVotesForArticleComment
 );
+
+router.get("/getVotes/comment/:comment", getVotes);
 
 module.exports = router;

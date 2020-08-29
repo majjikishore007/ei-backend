@@ -80,7 +80,11 @@ exports.deleteBlogComment = async (req, res, next) => {
   try {
     const id = req.params.id;
     const userId = req.userData.userId;
-    await BlogComment.deleteOne({ $and: [{ _id: id }, { user: userId }] });
+    await Promise.all([
+      BlogComment.deleteOne({ $and: [{ _id: id }, { user: userId }] }),
+      BlogCommentVote.deleteMany({ comment: id }),
+      BlogCounterComment.deleteMany({ parent_comment: id }),
+    ]);
     res
       .status(200)
       .json({ success: true, message: "Comment remove from Blog" });

@@ -12,6 +12,8 @@ const {
   updateCommentById,
   getCommentsInAggregateByArticles,
   getCommentsByArticleId,
+  getCommentsPagination,
+  getCounterCommentsPagination,
 } = require("../controllers/comment");
 
 /**validation function */
@@ -94,4 +96,26 @@ router.get(
   "/article/:articleId/page/:page/limit/:limit",
   getCommentsByArticleId
 );
+
+/**
+ * @description   this route is used to get articleComment with upvotec count and loggedin user upvote status
+ *  with counter comments(pagination)
+ * @route   GET      /api/articleComment/article/:id/commentPage/:commentPage/commentLimit/:commentLimit/counterCommentPage/:counterCommentPage/counterCommentLimit/:counterCommentLimit
+ * @access  Public
+ */
+router.get(
+  "/article/:id/commentPage/:commentPage/commentLimit/:commentLimit/counterCommentPage/:counterCommentPage/counterCommentLimit/:counterCommentLimit",
+  getCommentsPagination
+);
+
+/**
+ * @description   this route is used to get article counter Comments(pagination)
+ * @route   GET      /api/articleComment/article/:id/comment/:id/counterCommentPage/:counterCommentPage/counterCommentLimit/:counterCommentLimit
+ * @access  Public
+ */
+router.get(
+  "/article/:articleId/comment/:commentId/counterCommentPage/:counterCommentPage/counterCommentLimit/:counterCommentLimit",
+  getCounterCommentsPagination
+);
+
 module.exports = router;

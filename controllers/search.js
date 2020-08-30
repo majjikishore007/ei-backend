@@ -6,9 +6,11 @@ const Cartoon = require("../models/cartoon");
 const Debate = require("../models/debate");
 const Audio = require("../models/audio");
 const Video = require("../models/video");
+const User = require("../models/user");
 
 const sw = require("stopword");
 const stringSimilarity = require("string-similarity");
+const eventEmitter = require("../notification/event-emitter");
 
 exports.getSuggestionsForSearch = async (req, res, next) => {
   try {
@@ -58,7 +60,6 @@ exports.getSearchResultForSearch = async (req, res, next) => {
 
     let search = sw.removeStopwords(req.body.searchText.split(" "));
     let strippedText = search.join(" ");
-    let parallelProcess = [];
     /**article result */
     let articlesPrm = Article.aggregate([
       {
@@ -73,12 +74,24 @@ exports.getSearchResultForSearch = async (req, res, next) => {
       { $sort: { _id: -1 } },
       { $skip: page * limit },
       { $limit: limit },
+      {
+        $lookup: {
+          from: Publisher.collection.name,
+          localField: "publisher",
+          foreignField: "_id",
+          as: "publisherData",
+        },
+      },
+      { $unwind: "$publisherData" },
     ]);
-
-    parallelProcess.push(articlesPrm);
+    articlesPrm.then((response) => {
+      eventEmitter.emit("searching", {
+        articles: response,
+      });
+    });
 
     /**publisher result */
-    let publishersPrm = await Publisher.aggregate([
+    let publishersPrm = Publisher.aggregate([
       { $match: { $text: { $search: strippedText } } },
       { $sort: { score: { $meta: "textScore" } } },
       { $sort: { _id: -1 } },
@@ -86,70 +99,123 @@ exports.getSearchResultForSearch = async (req, res, next) => {
       { $limit: limit },
     ]);
 
-    parallelProcess.push(publishersPrm);
+    publishersPrm.then((response) => {
+      eventEmitter.emit("searching", {
+        publishers: response,
+      });
+    });
 
     /**blog result */
-    let blogsPrm = await Blog.aggregate([
+    let blogsPrm = Blog.aggregate([
       { $match: { $text: { $search: strippedText } } },
       { $sort: { score: { $meta: "textScore" } } },
       { $sort: { _id: -1 } },
       { $skip: page * limit },
       { $limit: limit },
+      {
+        $lookup: {
+          from: User.collection.name,
+          localField: "author",
+          foreignField: "_id",
+          as: "authorData",
+        },
+      },
+      { $unwind: "$authorData" },
     ]);
 
-    parallelProcess.push(blogsPrm);
+    blogsPrm.then((response) => {
+      eventEmitter.emit("searching", {
+        blogs: response,
+      });
+    });
 
     /**cartoon result */
-    let cartoonsPrm = await Cartoon.aggregate([
+    let cartoonsPrm = Cartoon.aggregate([
       { $match: { $text: { $search: strippedText } } },
       { $sort: { score: { $meta: "textScore" } } },
       { $sort: { _id: -1 } },
       { $skip: page * limit },
       { $limit: limit },
     ]);
-    parallelProcess.push(cartoonsPrm);
+
+    cartoonsPrm.then((response) => {
+      eventEmitter.emit("searching", {
+        cartoons: response,
+      });
+    });
 
     /**debate result */
-    let debatesPrm = await Debate.aggregate([
+    let debatesPrm = Debate.aggregate([
       { $match: { $text: { $search: strippedText } } },
       { $sort: { score: { $meta: "textScore" } } },
       { $sort: { _id: -1 } },
       { $skip: page * limit },
       { $limit: limit },
     ]);
-    parallelProcess.push(debatesPrm);
+    debatesPrm.then((response) => {
+      eventEmitter.emit("searching", {
+        debates: response,
+      });
+    });
 
     /**audio result */
-    let audiosPrm = await Audio.aggregate([
+    let audiosPrm = Audio.aggregate([
       { $match: { $text: { $search: strippedText } } },
       { $sort: { score: { $meta: "textScore" } } },
       { $sort: { _id: -1 } },
       { $skip: page * limit },
       { $limit: limit },
+      {
+        $lookup: {
+          from: Publisher.collection.name,
+          localField: "publisher",
+          foreignField: "_id",
+          as: "publisherData",
+        },
+      },
+      { $unwind: "$publisherData" },
     ]);
-    parallelProcess.push(audiosPrm);
+
+    audiosPrm.then((response) => {
+      eventEmitter.emit("searching", {
+        audios: response,
+      });
+    });
 
     /**video result */
-    let videosPrm = await Video.aggregate([
+    let videosPrm = Video.aggregate([
       { $match: { $text: { $search: strippedText } } },
       { $sort: { score: { $meta: "textScore" } } },
       { $sort: { _id: -1 } },
       { $skip: page * limit },
       { $limit: limit },
+      {
+        $lookup: {
+          from: Publisher.collection.name,
+          localField: "publisher",
+          foreignField: "_id",
+          as: "publisherData",
+        },
+      },
+      { $unwind: "$publisherData" },
     ]);
-    parallelProcess.push(videosPrm);
 
-    let results = await Promise.all(parallelProcess);
+    videosPrm.then((response) => {
+      eventEmitter.emit("searching", {
+        videos: response,
+      });
+    });
+
     res.status(200).json({
       success: true,
       data: {
-        articles: results[0],
-        publishers: results[1],
-        blogs: results[2],
-        cartoons: results[3],
-        debates: results[4],
-        audios: results[5],
-        videos: results[6],
+        // articles: results[0],
+        // publishers: results[1],
+        // blogs: results[2],
+        // cartoons: results[3],
+        // debates: results[4],
+        // audios: results[5],
+        // videos: results[6],
       },
     });
   } catch (error) {

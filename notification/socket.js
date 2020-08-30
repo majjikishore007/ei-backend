@@ -13,6 +13,10 @@ module.exports = (server) => {
       socket.userId = data.userId;
     });
 
+    eventEmitter.on("searching", (data) => {
+      socket.emit("searching", data);
+    });
+
     eventEmitter.on("comment-on-article", (data) => {
       if (socket.userId && socket.userId == data.reciever) {
         socket.emit("comment-on-article", data);

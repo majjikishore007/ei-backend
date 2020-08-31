@@ -224,6 +224,144 @@ exports.getSearchResultForSearch = async (req, res, next) => {
   }
 };
 
+exports.getSearchResourceOnly = async (req, res, next) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
+    let search = sw.removeStopwords(req.body.searchText.split(" "));
+    let strippedText = search.join(" ");
+    let result;
+    if (req.params.resource == "article") {
+      /**article result */
+      result = await Article.aggregate([
+        {
+          $match: {
+            $and: [
+              { $text: { $search: strippedText } },
+              { $or: [{ device: "both" }, { device: req.params.device }] },
+            ],
+          },
+        },
+        { $sort: { score: { $meta: "textScore" } } },
+        { $sort: { _id: -1 } },
+        { $skip: page * limit },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: Publisher.collection.name,
+            localField: "publisher",
+            foreignField: "_id",
+            as: "publisherData",
+          },
+        },
+        { $unwind: "$publisherData" },
+      ]);
+    }
+
+    if (req.params.resource == "publisher") {
+      /**publisher result */
+      result = await Publisher.aggregate([
+        { $match: { $text: { $search: strippedText } } },
+        { $sort: { score: { $meta: "textScore" } } },
+        { $sort: { _id: -1 } },
+        { $skip: page * limit },
+        { $limit: limit },
+      ]);
+    }
+
+    if (req.params.resource == "blog") {
+      /**blog result */
+      result = await Blog.aggregate([
+        { $match: { $text: { $search: strippedText } } },
+        { $sort: { score: { $meta: "textScore" } } },
+        { $sort: { _id: -1 } },
+        { $skip: page * limit },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: User.collection.name,
+            localField: "author",
+            foreignField: "_id",
+            as: "authorData",
+          },
+        },
+        { $unwind: "$authorData" },
+      ]);
+    }
+
+    if (req.params.resource == "cartoon") {
+      /**cartoon result */
+      result = await Cartoon.aggregate([
+        { $match: { $text: { $search: strippedText } } },
+        { $sort: { score: { $meta: "textScore" } } },
+        { $sort: { _id: -1 } },
+        { $skip: page * limit },
+        { $limit: limit },
+      ]);
+    }
+
+    if (req.params.resource == "debate") {
+      /**debate result */
+      result = await Debate.aggregate([
+        { $match: { $text: { $search: strippedText } } },
+        { $sort: { score: { $meta: "textScore" } } },
+        { $sort: { _id: -1 } },
+        { $skip: page * limit },
+        { $limit: limit },
+      ]);
+    }
+
+    if (req.params.resource == "audio") {
+      /**audio result */
+      result = await Audio.aggregate([
+        { $match: { $text: { $search: strippedText } } },
+        { $sort: { score: { $meta: "textScore" } } },
+        { $sort: { _id: -1 } },
+        { $skip: page * limit },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: Publisher.collection.name,
+            localField: "publisher",
+            foreignField: "_id",
+            as: "publisherData",
+          },
+        },
+        { $unwind: "$publisherData" },
+      ]);
+    }
+
+    if (req.params.resource == "video") {
+      /**video result */
+      result = await Video.aggregate([
+        { $match: { $text: { $search: strippedText } } },
+        { $sort: { score: { $meta: "textScore" } } },
+        { $sort: { _id: -1 } },
+        { $skip: page * limit },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: Publisher.collection.name,
+            localField: "publisher",
+            foreignField: "_id",
+            as: "publisherData",
+          },
+        },
+        { $unwind: "$publisherData" },
+      ]);
+    }
+
+    res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
 function mySorter(a, b) {
   var x = a.rating;
   var y = b.rating;

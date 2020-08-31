@@ -3,6 +3,7 @@ const authCheck = require("../middleware/check-auth");
 const {
   getSuggestionsForSearch,
   getSearchResultForSearch,
+  getSearchResourceOnly,
 } = require("../controllers/search");
 
 /**
@@ -20,6 +21,16 @@ router.post("/", getSuggestionsForSearch);
 router.post(
   "/searchResult/page/:page/limit/:limit/device/:device",
   getSearchResultForSearch
+);
+
+/**
+ * @description   this route is used to get searched results for single resource
+ * @route   POST      /api/search/searchResult/:resource/page/:page/limit/:limit/device/:device
+ * @access  Public
+ */
+router.post(
+  "/searchResult/:resource/page/:page/limit/:limit/device/:device",
+  getSearchResourceOnly
 );
 
 module.exports = router;

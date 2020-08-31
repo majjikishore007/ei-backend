@@ -172,6 +172,12 @@ cron.schedule("*/2 * * * *", () => {
   insertRssIntoAllContent();
 });
 
+/**declare scheduler to execute every 3 hours */
+cron.schedule("0 0 */3 * * *", () => {
+  require("./util/newsfeed").saveNewsfeedForMobile();
+  require("./util/newsfeed").saveNewsfeedForWebsite();
+});
+
 //Start Server: Listen on port 8080
 let server = app.listen(port, () => {
   console.log("Listening on port 8080");

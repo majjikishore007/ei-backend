@@ -4,7 +4,26 @@ const Audio = require("../models/audio");
 const Video = require("../models/video");
 const Publisher = require("../models/publisher");
 const Keyword = require("../models/keyword");
+const Newsfeed = require("../models/newsfeed");
 const mongoose = require("mongoose");
+
+exports.fetchFeedMobile = async (req, res, next) => {
+  try {
+    let result = await Newsfeed.findOne({ user: req.userData.userId });
+    res.status(200).json({ success: true, data: result.mobileFeed });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.fetchFeedWebsite = async (req, res, next) => {
+  try {
+    let result = await Newsfeed.findOne({ user: req.userData.userId });
+    res.status(200).json({ success: true, data: result.websiteFeed });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
 
 exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
   req,

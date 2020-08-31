@@ -11,7 +11,13 @@ const {
   getMediaForMobile,
   getNextMediaForMobile,
   getOnlyMediaForMobile,
+  fetchFeedMobile,
+  fetchFeedWebsite,
 } = require("../controllers/newsfeed");
+
+router.get("/mobile/feed", checkAuth, fetchFeedMobile);
+
+router.get("/website/feed", checkAuth, fetchFeedWebsite);
 
 /**
  * @description   this route is used to get articles, audios, videos for a specific keyword

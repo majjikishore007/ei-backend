@@ -17,6 +17,7 @@ exports.registerUser = async (req, res, next) => {
         "https://storage.googleapis.com/extra-insights-images/user.png",
       role: { subscriber: true, author: false, admin: false },
       phone: req.body.phone,
+      refcode: req.body.refcode,
       phone_verified: false,
       otp,
       email_verified: false,

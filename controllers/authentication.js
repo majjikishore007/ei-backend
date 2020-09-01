@@ -133,7 +133,7 @@ exports.loginUser = async (req, res) => {
         expiresIn: "30d",
       });
 
-      res.status(200).json({ success: true, token: token, user: user._id , subscribed : user.role.subscriber , expires : user.expireDate });
+      res.status(200).json({ success: true, token: token, user: user._id  , expires : user.expireDate });
     }
   })(req, res);
 };

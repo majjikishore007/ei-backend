@@ -10,7 +10,11 @@ const mongoose = require("mongoose");
 exports.fetchFeedMobile = async (req, res, next) => {
   try {
     let result = await Newsfeed.findOne({ user: req.userData.userId });
-    res.status(200).json({ success: true, data: result.mobileFeed });
+    if (result) {
+      res.status(200).json({ success: true, data: result.mobileFeed });
+    } else {
+      res.status(200).json({ success: true, data: null });
+    }
   } catch (error) {
     res.status(500).json({ success: false, error });
   }
@@ -19,7 +23,11 @@ exports.fetchFeedMobile = async (req, res, next) => {
 exports.fetchFeedWebsite = async (req, res, next) => {
   try {
     let result = await Newsfeed.findOne({ user: req.userData.userId });
-    res.status(200).json({ success: true, data: result.websiteFeed });
+    if (result) {
+      res.status(200).json({ success: true, data: result.websiteFeed });
+    } else {
+      res.status(200).json({ success: true, data: null });
+    }
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

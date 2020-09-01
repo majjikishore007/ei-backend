@@ -180,6 +180,7 @@ exports.saveNewsfeedForMobile = async () => {
 exports.saveNewsfeedForWebsite = async () => {
   try {
     let users = await User.find({}).sort({ _id: -1 });
+
     /**only fetch for those users
      * 1. paid / trial
      * 2. email verified

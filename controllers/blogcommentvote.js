@@ -10,6 +10,21 @@ const {
 
 exports.voteForBlogComment = async (req, res, next) => {
   try {
+    let exist = await BlogCommentVote.findOne({
+      comment: req.body.comment,
+      user: req.userData.userId,
+    });
+    if (exist) {
+      let resultUpdated = await BlogCommentVote.findOneAndUpdate(
+        { comment: req.body.comment, user: req.userData.userId },
+        { $set: req.body },
+        { new: true }
+      );
+      return res
+        .status(200)
+        .json({ success: true, voteGiven: true, vote: resultUpdated.vote });
+    }
+
     const blogCommentVote = new BlogCommentVote({
       blog: req.body.blog,
       user: req.userData.userId,
@@ -27,7 +42,9 @@ exports.voteForBlogComment = async (req, res, next) => {
 
     let usernotification = new UserNotification({
       notificationType: "upvote-comment-on-blog",
-      message: `${userResult.displayName} Upvoted your comment`,
+      message: req.body.vote
+        ? `${userResult.displayName} Upvoted your comment`
+        : `${userResult.displayName} Downvoted your comment`,
       sender: req.userData.userId,
       reciever: originalComment.user,
       blog: req.body.blog,
@@ -38,20 +55,8 @@ exports.voteForBlogComment = async (req, res, next) => {
     let notification = await usernotification.save();
     await ChangeInUserNotification(notification, "upvote-comment-on-blog");
 
-    res
-      .status(201)
-      .json({ success: true, message: "vote has been adeed", data: result });
+    res.status(201).json({ success: true, voteGiven: true, vote: result.vote });
   } catch (error) {
-    console.log(error);
-    if (error.code == 11000) {
-      await BlogCommentVote.findOneAndUpdate(
-        { blog: req.body.blog, user: req.userData.userId },
-        { $set: req.body }
-      );
-      return res
-        .status(200)
-        .json({ success: true, message: "vote has been updated" });
-    }
     res.status(500).json({ success: false, error });
   }
 };
@@ -125,6 +130,26 @@ exports.getVoteStatusForBlogComment = async (req, res, next) => {
       };
     }
     res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getVotes = async (req, res, next) => {
+  try {
+    let comment = mongoose.Types.ObjectId(req.params.comment);
+
+    const upvoteCount = await BlogCommentVote.countDocuments({
+      comment,
+      vote: true,
+    });
+    const downvoteCount = await BlogCommentVote.countDocuments({
+      comment,
+      vote: false,
+    });
+    res
+      .status(200)
+      .json({ success: true, data: { upvoteCount, downvoteCount } });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

@@ -113,6 +113,9 @@ const userSchema = new Schema({
     author: { type: Boolean },
     admin: { type: Boolean },
   },
+  refcode: {
+    type: String,
+  },
   token: { type: String },
   expireDate: { type: Date },
   otp: { type: String },

@@ -75,7 +75,9 @@ exports.addCounterCommentForBlog = async (req, res, next) => {
     let notification = await usernotification.save();
     await ChangeInUserNotification(notification, "counter-comment-on-blog");
 
-    res.status(201).json({ success: true, data: result });
+    let datas = JSON.parse(JSON.stringify(result));
+    datas.userData = userResult;
+    res.status(201).json({ success: true, data: datas });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

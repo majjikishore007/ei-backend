@@ -1,7 +1,10 @@
 const Article = require("../models/article");
 const Comment = require("../models/comment");
+const ArticleCounterComment = require("../models/article_counter_comment");
+const ArticleCommentVote = require("../models/article_comment_vote");
 const User = require("../models/user");
 const Publishernotification = require("../models/publishernotification");
+const mongoose = require("mongoose");
 
 const {
   ChangeInPublisherNotification,
@@ -64,7 +67,11 @@ exports.saveComment = async (req, res, next) => {
     });
     let notification = await publishernotification.save();
     await ChangeInPublisherNotification(notification, "comment-on-article");
-    res.status(201).json({ success: true, message: "Comment added" });
+
+    let datas = JSON.parse(JSON.stringify(savedComment));
+    datas.userData = userResult;
+
+    res.status(201).json({ success: true, data: datas });
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, error });
@@ -116,7 +123,11 @@ exports.updateCommentById = async (req, res, next) => {
 exports.deleteCommentById = async (req, res, next) => {
   try {
     const id = req.params.id;
-    await Comment.deleteOne({ _id: id });
+    await Promise.all([
+      Comment.deleteOne({ _id: id }),
+      ArticleCommentVote.deleteMany({ comment: id }),
+      ArticleCounterComment.deleteMany({ parent_comment: id }),
+    ]);
     res.json({ success: true, message: "message has been deleted" });
   } catch (error) {
     res.status(500).json({ success: false, error });
@@ -158,5 +169,134 @@ exports.getCommentsByArticleId = async (req, res, next) => {
     res.json({ success: true, data: comments });
   } catch (error) {
     res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getCommentsPagination = async (req, res, next) => {
+  try {
+    /**article id */
+    let articleId = req.params.id;
+
+    /**comment */
+    let commentPage = parseInt(req.params.commentPage);
+    let commentLimit = parseInt(req.params.commentLimit);
+
+    /**counter comment */
+    let counterCommentPage = parseInt(req.params.counterCommentPage);
+    let counterCommentLimit = parseInt(req.params.counterCommentLimit);
+
+    let articleComments = await Comment.aggregate([
+      { $match: { article: mongoose.Types.ObjectId(articleId) } },
+      { $sort: { _id: -1 } },
+      { $skip: commentPage * commentLimit },
+      { $limit: commentLimit },
+      {
+        $lookup: {
+          from: User.collection.name,
+          localField: "user",
+          foreignField: "_id",
+          as: "userData",
+        },
+      },
+      { $unwind: "$userData" },
+      {
+        $lookup: {
+          from: ArticleCounterComment.collection.name,
+          let: { commentId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ["$parent_comment", "$$commentId"] }],
+                },
+              },
+            },
+            { $sort: { _id: -1 } },
+            { $skip: counterCommentPage * counterCommentLimit },
+            { $limit: counterCommentLimit },
+            {
+              $lookup: {
+                from: User.collection.name,
+                localField: "user",
+                foreignField: "_id",
+                as: "userData",
+              },
+            },
+            { $unwind: "$userData" },
+          ],
+          as: "counterComments",
+        },
+      },
+      {
+        $lookup: {
+          from: ArticleCommentVote.collection.name,
+          let: { commentId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [{ $eq: ["$comment", "$$commentId"] }],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: User.collection.name,
+                localField: "user",
+                foreignField: "_id",
+                as: "userData",
+              },
+            },
+            { $unwind: "$userData" },
+          ],
+          as: "commentVotes",
+        },
+      },
+    ]);
+    res.status(200).json({ success: true, data: articleComments });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error: error });
+  }
+};
+
+exports.getCounterCommentsPagination = async (req, res, next) => {
+  try {
+    /**article id */
+    let articleId = req.params.articleId;
+
+    /**comment id */
+    let commentId = req.params.commentId;
+
+    /**counter comment */
+    let counterCommentPage = parseInt(req.params.counterCommentPage);
+    let counterCommentLimit = parseInt(req.params.counterCommentLimit);
+
+    let articleCounterComments = await ArticleCounterComment.aggregate([
+      {
+        $match: {
+          $and: [
+            { article: mongoose.Types.ObjectId(articleId) },
+            { parent_comment: mongoose.Types.ObjectId(commentId) },
+          ],
+        },
+      },
+      { $sort: { _id: -1 } },
+      { $skip: counterCommentPage * counterCommentLimit },
+      { $limit: counterCommentLimit },
+      {
+        $lookup: {
+          from: User.collection.name,
+          localField: "user",
+          foreignField: "_id",
+          as: "userData",
+        },
+      },
+      { $unwind: "$userData" },
+    ]);
+
+    res.status(200).json({ success: true, data: articleCounterComments });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error });
   }
 };

@@ -4,7 +4,34 @@ const Audio = require("../models/audio");
 const Video = require("../models/video");
 const Publisher = require("../models/publisher");
 const Keyword = require("../models/keyword");
+const Newsfeed = require("../models/newsfeed");
 const mongoose = require("mongoose");
+
+exports.fetchFeedMobile = async (req, res, next) => {
+  try {
+    let result = await Newsfeed.findOne({ user: req.userData.userId });
+    if (result) {
+      res.status(200).json({ success: true, data: result.mobileFeed });
+    } else {
+      res.status(200).json({ success: true, data: null });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.fetchFeedWebsite = async (req, res, next) => {
+  try {
+    let result = await Newsfeed.findOne({ user: req.userData.userId });
+    if (result) {
+      res.status(200).json({ success: true, data: result.websiteFeed });
+    } else {
+      res.status(200).json({ success: true, data: null });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
 
 exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
   req,
@@ -268,6 +295,24 @@ exports.getArticlesWithLimitedPreferencesAndLimitedKeywords = async (
       finalList,
       lastPreferenceId,
     };
+    let existUser = await Newsfeed.findOne({ user: userId });
+    if (existUser) {
+      await Newsfeed.findOneAndUpdate(
+        { user: userId },
+        {
+          $set: {
+            websiteFeed: data,
+            updatedAt: new Date(),
+          },
+        },
+        { new: true }
+      );
+    } else {
+      await new Newsfeed({
+        user: userId,
+        websiteFeed: data,
+      }).save();
+    }
     /**response back to frontend with response object */
     res.status(200).json({ success: true, data });
   } catch (error) {
@@ -818,6 +863,24 @@ exports.getArticlesForMobile = async (req, res, next) => {
       finalList,
       lastPreferenceId,
     };
+    let exist = await Newsfeed.findOne({ user: userId });
+    if (exist) {
+      await Newsfeed.findOneAndUpdate(
+        { user: userId },
+        {
+          $set: {
+            mobileFeed: data,
+            updatedAt: new Date(),
+          },
+        },
+        { new: true }
+      );
+    } else {
+      await new Newsfeed({
+        user: userId,
+        mobileFeed: data,
+      }).save();
+    }
     /**response back to frontend with response object */
     res.status(200).json({ success: true, data });
   } catch (error) {

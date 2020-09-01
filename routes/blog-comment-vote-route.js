@@ -6,6 +6,7 @@ const {
   getAllVotesForBlogComment,
   getblogcommentvotecount,
   getVoteStatusForBlogComment,
+  getVotes,
 } = require("../controllers/blogcommentvote");
 
 /**
@@ -37,4 +38,6 @@ router.get(
  * @access  Public
  */
 router.get("/getnoofvotes/:commentid/:blogid", getblogcommentvotecount);
+
+router.get("/getVotes/comment/:comment", getVotes);
 module.exports = router;

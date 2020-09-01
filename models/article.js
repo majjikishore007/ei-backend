@@ -26,7 +26,7 @@ const articleSchema = new Schema({
   },
   urlStr: { type: String },
   public: { type: Boolean, default: false },
-  device: { type: String, enum: ["app", "website", "both"] },
+  device: { type: String, enum: ["app", "website", "both"], default: "both" },
 });
 
 articleSchema.index({ category: 1 });

@@ -112,7 +112,11 @@ exports.deleteDebateComment = async (req, res, next) => {
   try {
     const id = req.params.id;
     const userId = req.userData.userId;
-    await DebateComment.deleteOne({ $and: [{ _id: id }, { user: userId }] });
+    await Promise.all([
+      DebateComment.deleteOne({ $and: [{ _id: id }, { user: userId }] }),
+      DebateCommentVote.deleteMany({ comment: id }),
+      DebateCounterComment.deleteMany({ parent_comment: id }),
+    ]);
     res
       .status(200)
       .json({ success: true, message: "Comment remove from debate" });

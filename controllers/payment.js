@@ -251,10 +251,12 @@ exports.freeTrial = async (req, res, next) => {
     const update_user = {
       expireDate: expireDate,
     };
-    await User.findOneAndUpdate(
+    let updated_value = await User.findOneAndUpdate(
       { _id: req.userData.userId },
-      { $set: update_user }
+      { $set: update_user },
+      { new: true }
     );
+    console.log(updated_value)
     let expDt =
       expireDate.getDate() +
       "/" +
@@ -266,6 +268,7 @@ exports.freeTrial = async (req, res, next) => {
       message: `Your Free Trial is valid upto ${expDt}`,
     });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ success: false, error });
   }
 };

@@ -7,7 +7,6 @@ const Video = require("../models/video");
 const Publisher = require("../models/publisher");
 const Keyword = require("../models/keyword");
 const mongoose = require("mongoose");
-const { set } = require("../config/mail-setup");
 
 exports.getSimilarArticles = async (req, res, next) => {
   try {
@@ -118,12 +117,13 @@ const getUnique = (array) => {
   return uniqueArray;
 };
 
-exports.getTopFiveLatestArticles = async (req, res, next) => {
+exports.getLatestArticles = async (req, res, next) => {
   try {
+    let limit = parseInt(req.params.limit);
     let articles = await Article.aggregate([
       { $match: { $or: [{ device: "both" }, { device: req.params.device }] } },
       { $sort: { _id: -1 } },
-      { $limit: 5 },
+      { $limit: limit },
       {
         $project: {
           _id: 0,
@@ -152,8 +152,9 @@ exports.getTopFiveLatestArticles = async (req, res, next) => {
   }
 };
 
-exports.getLastSevenDaysTopFiveMostViewedArticles = async (req, res, next) => {
+exports.getLastSevenDaysMostViewedArticles = async (req, res, next) => {
   try {
+    let limit = parseInt(req.params.limit);
     let fromDate = calculateExpireDate(new Date(), 7);
     let articles = await View.aggregate([
       {
@@ -176,7 +177,7 @@ exports.getLastSevenDaysTopFiveMostViewedArticles = async (req, res, next) => {
         },
       },
       { $sort: { viewCount: -1, article: -1 } },
-      { $limit: 5 },
+      { $limit: limit },
       {
         $lookup: {
           from: Article.collection.name,
@@ -237,8 +238,9 @@ const calculateExpireDate = (date, days) => {
   return expDate;
 };
 
-exports.getToptenTopRatedArticles = async (req, res, next) => {
+exports.getTopRatedArticles = async (req, res, next) => {
   try {
+    let limit = parseInt(req.params.limit);
     let result = await Rating.aggregate([
       {
         $group: {
@@ -256,7 +258,7 @@ exports.getToptenTopRatedArticles = async (req, res, next) => {
       {
         $sort: { article: -1, average: -1 },
       },
-      { $limit: 10 },
+      { $limit: limit },
       {
         $lookup: {
           from: Article.collection.name,

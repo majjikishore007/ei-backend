@@ -1,5 +1,7 @@
 const Publisher = require("../models/publisher");
 const Article = require("../models/article");
+const Follow = require("../models/follow");
+const mongoose = require("mongoose");
 
 exports.getPublishers = async (req, res, next) => {
   try {
@@ -153,6 +155,49 @@ exports.getPublisherByAggregate = async (req, res, next) => {
     }
     res.status(200).json({ success: true, data: publishers, counts: output });
   } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getPublisherByAggregatePagination = async (req, res, next) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
+    let publishers = await Publisher.aggregate([
+      { $sort: { _id: 1 } },
+      { $skip: page * limit },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: Article.collection.name,
+          localField: "_id",
+          foreignField: "publisher",
+          as: "articles",
+        },
+      },
+      {
+        $project: {
+          feedurl: 1,
+          income: 1,
+          verified: 1,
+          name: 1,
+          email: 1,
+          about: 1,
+          website: 1,
+          address: 1,
+          logo: 1,
+          userId: 1,
+          city: 1,
+          zip: 1,
+          urlStr: 1,
+          articleCount: { $size: "$articles" },
+        },
+      },
+    ]);
+    res.status(200).json({ success: true, data: publishers });
+  } catch (error) {
+    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };

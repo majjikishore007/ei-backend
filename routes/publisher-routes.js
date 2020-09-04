@@ -14,6 +14,7 @@ const {
   deletePublisherById,
   updatePublisherLogo,
   getPublisherByAggregate,
+  getPublisherByAggregatePagination,
 } = require("../controllers/publisher");
 
 /**validation */
@@ -102,6 +103,18 @@ router.patch(
 router.get(
   "/fullDetails/publishersInfoWithArticleCount",
   getPublisherByAggregate
+);
+
+/**
+ * @description   this route is used to get all publishers logo of publisher by its Id with pagination
+ * @param id - publisherId
+ * @route   GET      /api/publisher/fullDetails/publishersInfoWithArticleCount
+ * @access  Public
+ */
+router.get(
+  "/fullDetails/publishersInfoWithArticleCount/page/:page/limit/:limit",
+  checkAuth,
+  getPublisherByAggregatePagination
 );
 
 module.exports = router;

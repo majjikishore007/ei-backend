@@ -6,6 +6,7 @@ const images = require("../config/cloud-storage-setup");
 
 const {
   getAllDebates,
+  getAllDebatesPagination,
   getDebateById,
   getDebateWithArticles,
   addNewDebate,
@@ -36,6 +37,13 @@ router.get("/debate/:id", getDebateById);
  * @access  Public
  */
 router.get("/:id", getDebateWithArticles);
+
+/**
+ * @description   this route is used to get all debates paginationwise
+ * @route   GET      /api/debate/page/:page/limit/:limit
+ * @access  Public
+ */
+router.get("/page/:page/limit/:limit", getAllDebatesPagination);
 
 /**
  * @description   this route is used to post a debate

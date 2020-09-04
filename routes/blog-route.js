@@ -5,6 +5,7 @@ const checkAuthAdmin = require("../middleware/check-auth-admin");
 /**controller functions for blog */
 const {
   getAllBlogPosts,
+  getAllBlogsPagination,
   getBlogsFilteredByCategory,
   getBlogById,
   getBlogByTitle,
@@ -85,5 +86,12 @@ router.get("/getInitials/:limitCount", getAllBlogPosts);
  * @access  Public
  */
 router.get("/nextbatch/:limitCount/:lastBlogId", getNextBatchBlogs);
+
+/**
+ * @description   this route is used to get blog posts paginationwise
+ * @route   GET      /api/blog/page/:page/limit/:limit
+ * @access  Public
+ */
+router.get("/page/:page/limit/:limit", getAllBlogsPagination);
 
 module.exports = router;

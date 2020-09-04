@@ -12,6 +12,21 @@ exports.getInitialcartoons = async (req, res, next) => {
   }
 };
 
+exports.getAllCartoonsPagination = async (req, res, next) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
+    let cartoons = await Cartoon.find()
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit);
+    res.status(200).json({ success: true, data: cartoons });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
 exports.getNextbatchCartoons = async (req, res, next) => {
   try {
     let lastCartoonId = req.params.lastCartoonId;

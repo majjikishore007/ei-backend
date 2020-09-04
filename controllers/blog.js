@@ -12,6 +12,21 @@ exports.getAllBlogPosts = async (req, res, next) => {
     res.status(500).json({ success: false, error });
   }
 };
+
+exports.getAllBlogsPagination = async (req, res, next) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+    let blogs = await Blog.find()
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("author", "displayName thumbnail");
+    res.status(200).json({ success: true, count: blogs.length, data: blogs });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
 exports.getNextBatchBlogs = async (req, res, next) => {
   try {
     const lastBlogId = req.params.lastBlogId;

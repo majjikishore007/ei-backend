@@ -27,6 +27,37 @@ exports.getAllDebates = async (req, res, next) => {
   }
 };
 
+exports.getAllDebatesPagination = async (req, res, next) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
+    let docs = await Debate.find()
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit);
+    const response = {
+      success: true,
+      count: docs.length,
+      debates: docs.map((doc) => {
+        return {
+          title: doc.title,
+          description: doc.description,
+          cover: doc.cover,
+          keywords: doc.keywords.split(","),
+          moderator: doc.moderator,
+          start_date: doc.start_date,
+          end_date: doc.end_date,
+          id: doc._id,
+        };
+      }),
+    };
+    res.status(200).json(response);
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
 exports.getDebateById = async (req, res, next) => {
   try {
     const id = req.params.id;

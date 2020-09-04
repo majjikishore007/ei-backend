@@ -6,6 +6,7 @@ const checkAuthAuthorOrAdmin = require("../middleware/check-auth-authorOrAdmin")
 /**controller fuctons for cartoons */
 const {
   getInitialcartoons,
+  getAllCartoonsPagination,
   getCartoonById,
   saveCartoon,
   editCartoonById,
@@ -83,5 +84,12 @@ router.get("/getInital/:limitCount", getInitialcartoons);
  * @access  Public
  */
 router.get("/nextbatch/:limitCount/:lastCartoonId", getNextbatchCartoons);
+
+/**
+ * @description   this route is used to get cartoons paginationwise
+ * @route   GET      /api/cartoon/page/:page/limit/:limit
+ * @access  Public
+ */
+router.get("/page/:page/limit/:limit", getAllCartoonsPagination);
 
 module.exports = router;

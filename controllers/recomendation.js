@@ -78,6 +78,15 @@ exports.getSimilarArticles = async (req, res, next) => {
       { $sort: { _id: -1 } },
       { $limit: limit },
       {
+        $lookup: {
+          from: Publisher.collection.name,
+          localField: "publisher",
+          foreignField: "_id",
+          as: "publisherData",
+        },
+      },
+      { $unwind: "$publisherData" },
+      {
         $project: {
           _id: 0,
           title: 1,
@@ -124,6 +133,15 @@ exports.getLatestArticles = async (req, res, next) => {
       { $match: { $or: [{ device: "both" }, { device: req.params.device }] } },
       { $sort: { _id: -1 } },
       { $limit: limit },
+      {
+        $lookup: {
+          from: Publisher.collection.name,
+          localField: "publisher",
+          foreignField: "_id",
+          as: "publisherData",
+        },
+      },
+      { $unwind: "$publisherData" },
       {
         $project: {
           _id: 0,
@@ -198,6 +216,15 @@ exports.getLastSevenDaysMostViewedArticles = async (req, res, next) => {
                 },
               },
             },
+            {
+              $lookup: {
+                from: Publisher.collection.name,
+                localField: "publisher",
+                foreignField: "_id",
+                as: "publisherData",
+              },
+            },
+            { $unwind: "$publisherData" },
           ],
           as: "articleData",
         },
@@ -212,7 +239,7 @@ exports.getLastSevenDaysMostViewedArticles = async (req, res, next) => {
           price: "$articleData.price",
           author: "$articleData.author",
           cover: "$articleData.cover",
-          publisher: "$articleData.publisher",
+          publisher: "$articleData.publisherData",
           website: "$articleData.website",
           category: "$articleData.category",
           time: "$articleData.time",

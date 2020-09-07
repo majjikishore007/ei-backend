@@ -72,6 +72,7 @@ const notificationLastVisit = require("./routes/notificationlastvisit-route");
 const landingRoute = require("./routes/landing");
 const searchRoute = require("./routes/search");
 const recomendationRoute = require("./routes/recomendation-route");
+const PushnotificationRoute = require("./routes/push-notification");
 
 mongoose.Promise = global.Promise;
 mongoose.connect(
@@ -118,6 +119,7 @@ app.use("/api/payment", paymentRoute);
 app.use("/api/credit", creditRoutes);
 app.use("/api/comment", commentRoute);
 app.use("/api/publishernotification", PublishernotificationRoute);
+app.use("/api/pushnotification", PushnotificationRoute);
 app.use("/api/usernotification", UsernotificationRoute);
 app.use("/api/bookmark", bookmarkRoute);
 app.use("/api/rating", ratingRoute);

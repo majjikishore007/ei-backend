@@ -1,3 +1,5 @@
+const PushNotification = require("../models/push-notification");
+
 exports.sendPushNotification = async (
   admin,
   notification,
@@ -64,11 +66,23 @@ exports.sendPushNotification = async (
       id: data.id.toString(),
     },
   };
+  /**save push notifications */
+
+  let prm = [];
+  for (let i = 0; i < tokens.length - 1; i++) {
+    let insrt = {
+      notification: payload.notification,
+      data: payload.data,
+      device: tokens[i],
+    };
+    prm.push(insrt);
+  }
+
+  await PushNotification.insertMany(prm);
   admin
     .messaging()
     .sendToDevice(tokens, payload)
     .then((result) => {
-      console.log(result);
       console.log("success");
     })
     .catch((err) => {

@@ -39,6 +39,7 @@ const {
   getArticlesByPublisherIdAndCategoryForMobilePagination,
   getArticlesWithCommentsAndRatings,
   getCountOfTotalArticles,
+  getAllArticlesAdmin,
 } = require("../controllers/article");
 
 /**validation functions */
@@ -56,6 +57,17 @@ router.get("/topten/device/:device", getToptenArticles);
  * @access  Public
  */
 router.get("/page/:num/limit/:limit/device/:device", getArticlesForMobile);
+
+/**
+ * @description   this route is used to get articles for admin panel all articles
+ * @route   GET      /api/article/admin/page/:page/limit/:limit
+ * @access  Public
+ */
+router.get(
+  "/admin/page/:page/limit/:limit",
+  checkAuthAdmin,
+  getAllArticlesAdmin
+);
 
 /**
  * @description   this route is used to upload an article by admin

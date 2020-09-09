@@ -969,10 +969,54 @@ exports.getArticlesWithCommentsAndRatings = async (req, res, next) => {
 
 exports.getCountOfTotalArticles = async (req, res, next) => {
   try {
-    let articleCount = await Article.countDocuments({
-      $or: [{ device: "both" }, { device: req.params.device }],
-    });
+    let articleCount = await Article.countDocuments();
     res.status(200).json({ success: true, count: articleCount });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getAllArticlesAdmin = async (req, res, next) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
+    let docs = await Article.find()
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("publisher");
+
+    if (docs.length > 0) {
+      let restructuredResult = docs.map((doc) => {
+        return {
+          title: doc.title,
+          description: doc.description,
+          price: doc.price,
+          author: doc.author,
+          cover: doc.cover,
+          publisher: doc.publisher,
+          website: doc.website,
+          category: doc.category,
+          time: doc.time,
+          date: doc.publishingDate,
+          id: doc._id,
+          lan: doc.lan,
+          urlStr: doc.urlStr,
+          public: doc.public,
+          altImage: doc.altImage,
+          seo: doc.seo,
+          publisherId: doc.publisher ? doc.publisher._id : null,
+        };
+      });
+      res.status(200).json({
+        success: true,
+        count: restructuredResult.length,
+        data: restructuredResult,
+      });
+    } else {
+      res.status(404).json({ success: false, message: "No entries found" });
+    }
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

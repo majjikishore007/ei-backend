@@ -142,7 +142,7 @@ exports.paymentCallbackWithOrderId = async (req, res, next) => {
 
 const calculateExpireDate = (date, days) => {
   const expDate = new Date(Number(date));
-  expDate.setDate(date.getDate() + days);
+  expDate.setDate(date.getDate() + math.round(days));
   return expDate;
 };
 
@@ -201,10 +201,10 @@ exports.paymentCallbackWithOrderIdToSubscribe = async (req, res, next) => {
           return res.json({ success: false, error: "Document not found" });
         }
         /**update payment status */
-        let ret = await Payment.updateOne(
+        let ret = await Payment.findOneAndUpdate(
           { order: info.order_id },
           { $set: data },
-          { new: true, useFindAndModify: false }
+          { new: true }
         );
         if (!ret) {
           return res.json({ success: false, error: "Document not found" });
@@ -215,8 +215,10 @@ exports.paymentCallbackWithOrderIdToSubscribe = async (req, res, next) => {
         };
         await User.findOneAndUpdate(
           { _id: result.userId },
-          { $set: update_user }
+          { $set: update_user },
+          { new: true }
         );
+
         res.json({
           success: true,
           message: `Subscription is valid upto ${result.expireDate}`,
@@ -256,7 +258,7 @@ exports.freeTrial = async (req, res, next) => {
       { $set: update_user },
       { new: true }
     );
-    console.log(updated_value)
+    console.log(updated_value);
     let expDt =
       expireDate.getDate() +
       "/" +
@@ -268,7 +270,7 @@ exports.freeTrial = async (req, res, next) => {
       message: `Your Free Trial is valid upto ${expDt}`,
     });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };

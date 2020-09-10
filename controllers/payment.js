@@ -142,7 +142,7 @@ exports.paymentCallbackWithOrderId = async (req, res, next) => {
 
 const calculateExpireDate = (date, days) => {
   const expDate = new Date(Number(date));
-  expDate.setDate(date.getDate() + math.round(days));
+  expDate.setDate(date.getDate() + Math.round(days));
   return expDate;
 };
 

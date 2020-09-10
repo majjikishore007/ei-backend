@@ -4,17 +4,20 @@ const passport = require("passport");
 const config = require("../config/database");
 const maildata = require("../config/mail-data");
 const transpoter = require("../config/mail-setup");
-var hbs = require('nodemailer-express-handlebars');
-transpoter.use('compile', hbs({
-  viewEngine: {
-      extName: '.hbs',
-      partialsDir: './view/',
-      layoutsDir: './view/',
-      defaultLayout: 'index.hbs',
+var hbs = require("nodemailer-express-handlebars");
+transpoter.use(
+  "compile",
+  hbs({
+    viewEngine: {
+      extName: ".hbs",
+      partialsDir: "./view/",
+      layoutsDir: "./view/",
+      defaultLayout: "index.hbs",
     },
-    viewPath: './view/',
-    extName: '.hbs',
-}));
+    viewPath: "./view/",
+    extName: ".hbs",
+  })
+);
 exports.registerUser = async (req, res, next) => {
   try {
     let otp = Math.floor(100000 + Math.random() * 900000) + "";
@@ -78,11 +81,13 @@ exports.registerUser = async (req, res, next) => {
           from: maildata.welcomeMail.form,
           to: req.body.email,
           subject: maildata.welcomeMail.subject,
-          text: "<p> Hello " +
-          req.body.displayName.split(" ")[0] +
-          ","+ maildata.welcomeMail.title + "</p>",
-          template: 'index'
-           
+          text:
+            "<p> Hello " +
+            req.body.displayName.split(" ")[0] +
+            "," +
+            maildata.welcomeMail.title +
+            "</p>",
+          template: "index",
         };
 
         const emailVerify = {
@@ -104,7 +109,7 @@ exports.registerUser = async (req, res, next) => {
         [mailOption, emailVerify].map((option) => {
           transpoter.sendMail(option, (er, information) => {
             if (er) {
-               console.log(er);
+              console.log(er);
             } else {
               console.log("success");
             }
@@ -124,7 +129,6 @@ exports.registerUser = async (req, res, next) => {
   }
 };
 
-
 exports.loginUser = async (req, res) => {
   passport.authenticate("local", (err, user, info) => {
     if (err) {
@@ -136,7 +140,15 @@ exports.loginUser = async (req, res) => {
         expiresIn: "30d",
       });
 
-      res.status(200).json({ success: true, token: token, user: user._id  , expires : user.expireDate });
+      res
+        .status(200)
+        .json({
+          success: true,
+          token: token,
+          user: user._id,
+          expires: user.expireDate,
+          email_verified: user.email_verified,
+        });
     }
   })(req, res);
 };

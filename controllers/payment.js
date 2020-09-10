@@ -206,6 +206,7 @@ exports.paymentCallbackWithOrderIdToSubscribe = async (req, res, next) => {
           { $set: data },
           { new: true }
         );
+
         if (!ret) {
           return res.json({ success: false, error: "Document not found" });
         }
@@ -258,7 +259,7 @@ exports.freeTrial = async (req, res, next) => {
       { $set: update_user },
       { new: true }
     );
-    console.log(updated_value);
+
     let expDt =
       expireDate.getDate() +
       "/" +
@@ -270,7 +271,6 @@ exports.freeTrial = async (req, res, next) => {
       message: `Your Free Trial is valid upto ${expDt}`,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };

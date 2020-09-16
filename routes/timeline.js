@@ -110,7 +110,7 @@ router.get(
 );
 
 /**
- * @description   this route is used to get timelines articles sorted by dates paginationwise
+ * @description   this route is used to get timelines articles  paginationwise
  * @route   GET      /api/timeline/:timelinepage/:timelinelimit/:articlepage/:articlelimit/:carouselSize
  * @access  Private
  */

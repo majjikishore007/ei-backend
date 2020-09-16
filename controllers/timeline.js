@@ -23,6 +23,8 @@ exports.saveNewTimeline = async (req, res, next) => {
         shortDescription: req.body.timeline[i].shortDescription,
         longDescription: req.body.timeline[i].longDescription,
         articles: req.body.timeline[i].articles,
+        audio: req.body.timeline[i].audio,
+        video: req.body.timeline[i].video,
       };
       let y = new Timeline(obj).save();
       prm.push(y);
@@ -130,7 +132,19 @@ exports.getSingleTimelineData = async (req, res, next) => {
         path: "publisher",
         model: "Publisher",
       },
-    });
+    }).populate({
+      path: "audio",
+      populate: {
+        path: "publisher",
+        model: "Publisher",
+      },
+    }).populate({
+      path: "video",
+      populate: {
+        path: "publisher",
+        model: "Publisher",
+      },
+    })
 
     let timelineTopicData = await TimelineTopic.findOne({
       _id: timelineTopic,
@@ -293,6 +307,12 @@ exports.getArticlesfromGivenDate = async (req, res, next) => {
           articleList: {
             $push: "$articles",
           },
+          audioList: {
+            $push: "$audio",
+          },
+          videoist: {
+            $push: "$video",
+          },
         },
       },
       {
@@ -384,6 +404,12 @@ exports.getTimelineDataPagewiseLimitwise = async (req, res, next) => {
             articleList: {
               $push: "$articles",
             },
+            audioList: {
+               $push: "$audio",
+             },
+             videoist: {
+               $push: "$video",
+             },
             dateList: {
               $push: "$date",
             },

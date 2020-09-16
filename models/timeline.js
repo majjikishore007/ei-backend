@@ -14,6 +14,8 @@ const timelineSchema = new Schema({
   shortDescription: { type: String, require: true },
   longDescription: { type: String },
   articles: [{ type: Schema.Types.ObjectId, ref: "Article" }],
+  audio: [{ type: Schema.Types.ObjectId, ref: "Audio" }],
+  video: [{ type: Schema.Types.ObjectId, ref: "Video" }],
 });
 
 module.exports = mongoose.model("Timeline", timelineSchema);

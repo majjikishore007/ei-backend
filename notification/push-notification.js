@@ -48,6 +48,11 @@ exports.sendPushNotification = async (
     publisher = true;
   }
 
+  let custom_notification = false;
+  if (type == "custom-notification") {
+    custom_notification = true;
+  }
+
   var payload = {
     notification,
     data: {
@@ -63,11 +68,13 @@ exports.sendPushNotification = async (
         ? data.parentComment.toString()
         : "",
       publisher: publisher ? (1).toString() : (0).toString(),
+      custom_notification: custom_notification
+        ? (1).toString()
+        : (0).toString(),
       id: data.id.toString(),
     },
   };
   /**save push notifications */
-
   let prm = [];
   for (let i = 0; i < tokens.length - 1; i++) {
     let insrt = {

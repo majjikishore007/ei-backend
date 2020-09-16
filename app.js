@@ -74,6 +74,7 @@ const searchRoute = require("./routes/search");
 const recomendationRoute = require("./routes/recomendation-route");
 const PushnotificationRoute = require("./routes/push-notification");
 const TimelineRoute = require("./routes/timeline");
+const customNotificationRoute = require("./routes/custom-notification-route");
 
 mongoose.Promise = global.Promise;
 mongoose.connect(
@@ -165,6 +166,9 @@ app.use("/api/landing", landingRoute);
 app.use("/api/search", searchRoute);
 app.use("/api/recomendation", recomendationRoute);
 app.use("/api/timeline", TimelineRoute);
+
+/**custom notification */
+app.use("/api/customnotification", customNotificationRoute);
 
 //Connect server to Angular index.html file
 app.get("*", (req, res) => {

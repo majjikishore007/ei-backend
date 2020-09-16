@@ -673,6 +673,74 @@ exports.ChangeInUserNotification = async (resourceDocument, resourceType) => {
           );
         }
       }
+
+      /**custom notifications */
+      if (resourceType == "custom-notification") {
+        /**send notification to user*/
+
+        /**for all users */
+        let results = [];
+        if (result.allUser == true) {
+          results = await Subscriber.aggregate([
+            {
+              $group: {
+                _id: "user",
+                tokens: {
+                  $push: "$device",
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                tokens: 1,
+              },
+            },
+          ]);
+        } else {
+          results = await Subscriber.aggregate([
+            {
+              $match: {
+                user: { $in: result.userList },
+              },
+            },
+            {
+              $group: {
+                _id: "user",
+                tokens: {
+                  $push: "$device",
+                },
+              },
+            },
+            {
+              $project: {
+                _id: 0,
+                tokens: 1,
+              },
+            },
+          ]);
+        }
+
+        if (results.length > 0) {
+          let notification = {
+            title: result.title,
+            body: result.description,
+            image: result.thumbnail,
+          };
+          let data = {
+            id: result._id,
+            articleList: result.articleList,
+          };
+
+          await sendPushNotification(
+            admin,
+            notification,
+            "custom-notification",
+            results[0].tokens,
+            data
+          );
+        }
+      }
     }
   } catch (error) {
     console.log(error);

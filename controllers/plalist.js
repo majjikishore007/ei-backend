@@ -1,4 +1,4 @@
-const Plalist = require("../models/playlist");
+const Playlist = require("../models/playlist");
 
 const Article = require("../models/article");
 const Publisher = require("../models/publisher");
@@ -9,7 +9,7 @@ const { secret } = require("../config/database");
 
 exports.saveNewPlaylist = async (req, res, next) => {
   try {
-    let plalist = {
+    let playlist = {
       title: req.body.title,
       thumbnail: req.body.thumbnail,
       shortDescription: req.body.description,
@@ -18,10 +18,11 @@ exports.saveNewPlaylist = async (req, res, next) => {
       video: req.body.video,
     };
     
-    const addedplalist = new Plalist(plalist);
+    const addedplalist = new Playlist(playlist);
     await addedplalist.save();
     res.status(201).json({ success: true, message: "Playlist saved" });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ success: false, error });
   }
 };
@@ -30,7 +31,7 @@ exports.editPlaylistDetails = async (req, res, next) => {
   try {
     let playlistId = mongoose.Types.ObjectId(req.params.PlaylistId);
     
-    await Plalist.findOneAndUpdate(
+    await Playlist.findOneAndUpdate(
       {
         _id: playlistId,
       },
@@ -50,7 +51,7 @@ exports.editPlaylistDetails = async (req, res, next) => {
 exports.deletePlaylist = async (req, res, next) => {
   try {
     let playlistId = mongoose.Types.ObjectId(req.params.PlaylistId);
-    await Plalist.remove({ _id: playlistId });
+    await Playlist.remove({ _id: playlistId });
     res
       .status(200)
       .json({ success: true, message: "playlist is deleted" });
@@ -62,9 +63,11 @@ exports.deletePlaylist = async (req, res, next) => {
 
 exports.getAllPlaylistData = async (req, res, next) => {
    try {
-      let playlists = await Plalist.find()
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+    let playlistcount = []
+    let playlists = await Playlist.find()
         .sort({ _id: -1 })
-        .limit(+req.params.limitCount)
         .populate({
          path: "articles",
          populate: {
@@ -84,7 +87,10 @@ exports.getAllPlaylistData = async (req, res, next) => {
            model: "Publisher",
          },
        })
-      res.status(200).json({ success: true, count: playlists.length, data: playlists });
+       .skip(page * limit)
+       .limit(limit);
+
+      res.status(200).json({ success: true, count: playlists.length, data: playlists});
     } catch (error) {
       res.status(500).json({ success: false, error });
     }
@@ -94,7 +100,8 @@ exports.getAllPlaylistData = async (req, res, next) => {
 exports.getSinglePlaylistData = async (req, res, next) => {
   try {
    let playlistId = mongoose.Types.ObjectId(req.params.PlaylistId);
-    let playlist = await Plalist.find(
+   
+    let playlist = await Playlist.find(
       {
         _id: playlistId,
       }
@@ -120,20 +127,26 @@ exports.getSinglePlaylistData = async (req, res, next) => {
 
 
     
-    let audiodata = playlist.audio
-    let videodata = playlist.video
-    let articleData = playlist.articles
-    let finalarray = [...audiodata , ...videodata , ...articleData]
-    let finalarraylimitwise = finalarray.splice(req.params.skipvalue , req.params.limit)
-    let arraysuffled = finalarraylimitwise.sort(() => Math.random() - 0.5)
+   // let audiodata =  playlist[audio]
+   // let videodata =  playlist[video]
+    //let articledata =  playlist[articles]
+  //  let finalarray = [...audiodata , ...videodata , ...articleData]
+    //let finalarraylimitwise = finalarray.splice(req.params.skipvalue , req.params.limit)
+    //let arraysuffled = finalarraylimitwise.sort(() => Math.random() - 0.5)
     let responseObj = {
       title : playlist.title ,
        thumbnail: playlist.thumbnail,
       shortDescription: playlist.shortDescription,
-      content : arraysuffled
+      articles : playlist.articles,
+      audio : playlist.audio,
+      video : playlist.video
     }
-    res.status(200).json({ success: true, data: responseObj });
+
+console.log(responseObj)
+
+    res.status(200).json({ success: true, data: playlist  });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ success: false, error });
   }
 };

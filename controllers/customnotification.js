@@ -1,4 +1,5 @@
 const CustomNotification = require("../models/custom_notification");
+const Article = require("../models/article");
 const {
   ChangeInUserNotification,
 } = require("../notification/collection-watch");
@@ -41,6 +42,27 @@ exports.getAllCustomNotificationsForUserIdPagination = async (
     res.status(200).json({ success: true, data });
   } catch (error) {
     console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getArticlesByCategoryFilterPagination = async (req, res, next) => {
+  try {
+    const cat = req.params.categorySearch;
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+    let articles = await Article.find({
+      category: new RegExp(cat, "i"),
+      public: true,
+      $or: [{ device: "both" }, { device: req.params.device }],
+    })
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
+      .populate("publisher");
+
+    res.status(200).json({ success: true, data: articles });
+  } catch (error) {
     res.status(500).json({ success: false, error });
   }
 };
@@ -129,12 +151,10 @@ exports.uploadThumbnail = async (req, res, next) => {
         .status(200)
         .json({ success: true, data: req.file.cloudStoragePublicUrl });
     } else {
-      res
-        .status(200)
-        .json({
-          success: false,
-          message: "Server error while uploading thumbnail",
-        });
+      res.status(200).json({
+        success: false,
+        message: "Server error while uploading thumbnail",
+      });
     }
   } catch (error) {
     console.log(error);
@@ -147,23 +167,27 @@ exports.createNotification = async (req, res, next) => {
     let notification = new CustomNotification({
       title: req.body.title,
       description: req.body.description,
-      thumbnail: req.body.thumbnail,
+      thumbnail: req.file.cloudStoragePublicUrl,
       category: req.body.category,
-      articleList: req.body.articleList,
+      articleList: JSON.parse(req.body.articleList),
       allUser: req.body.allUser,
-      userList: req.body.userList,
+      userList: JSON.parse(req.body.userList),
     });
 
     let newNotification = await notification.save();
 
+    let newN = await CustomNotification.findOne({
+      _id: newNotification._id,
+    }).populate("articleList");
+
     /**push notification to users */
 
-    await ChangeInUserNotification(newNotification, "custom-notification");
+    // await ChangeInUserNotification(newNotification, "custom-notification");
 
     res.status(201).json({
       success: true,
       message: "Notification saved and pushed to users",
-      data: newNotification,
+      data: newN,
     });
   } catch (error) {
     console.log(error);
@@ -200,13 +224,26 @@ exports.updateNotificationById = async (req, res, next) => {
         ],
       },
       {
-        $set: req.body,
+        $set: {
+          title: req.body.title,
+          description: req.body.description,
+          category: req.body.category,
+          articleList: JSON.parse(req.body.articleList),
+          allUser: req.body.allUser,
+          userList: JSON.parse(req.body.userList),
+        },
       },
       { new: true }
     );
-    res
-      .status(200)
-      .json({ success: true, message: "Notification Updated", data });
+    let updatedData = await CustomNotification.findOne({
+      _id: data._id,
+    }).populate("articleList");
+
+    res.status(200).json({
+      success: true,
+      message: "Notification Updated",
+      data: updatedData,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).json({ success: false, error });

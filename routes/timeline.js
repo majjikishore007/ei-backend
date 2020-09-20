@@ -10,6 +10,7 @@ const {
   getSingleTimelineTopic,
   getSingleTimelineData,
   getTimelinesForAdminPaginationWise,
+  getAllTimelinesForAdminPaginationWise,
   getNextbatchArticles,
   getArticlesfromGivenDate,
   getTimelineDataPagewiseLimitwise,
@@ -75,7 +76,7 @@ router.get("/:timelineTopic", checkAuthAdmin, getSingleTimelineTopic);
 router.get("/admin/:timelineTopic", checkAuthAdmin, getSingleTimelineData);
 
 /**
- * @description   this route is used to get timelines with pagination
+ * @description   this route is used to get timelines with pagination from topic
  * @param page
  * @param limit
  * @route   GET      /api/timeline/admin/:page/:limit
@@ -86,6 +87,20 @@ router.get(
   checkAuthAdmin,
   getTimelinesForAdminPaginationWise
 );
+
+/**
+ * @description   this route is used to get all timelines with pagination
+ * @param page
+ * @param limit
+ * @route   GET      /alltimeline/:page/:limit
+ * @access  Private(admin)
+ */
+router.get(
+  "/alltimeline/:page/:limit",
+  checkAuthAdmin,
+  getAllTimelinesForAdminPaginationWise
+);
+
 
 /***api endpoints for newsfeed page */
 

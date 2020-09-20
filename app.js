@@ -74,6 +74,7 @@ const searchRoute = require("./routes/search");
 const recomendationRoute = require("./routes/recomendation-route");
 const PushnotificationRoute = require("./routes/push-notification");
 const TimelineRoute = require("./routes/timeline");
+const PlaylistRoute = require("./routes/playlist-route");
 const customNotificationRoute = require("./routes/custom-notification-route");
 
 mongoose.Promise = global.Promise;
@@ -166,6 +167,7 @@ app.use("/api/landing", landingRoute);
 app.use("/api/search", searchRoute);
 app.use("/api/recomendation", recomendationRoute);
 app.use("/api/timeline", TimelineRoute);
+app.use("/api/playlist", PlaylistRoute);
 
 /**custom notification */
 app.use("/api/customnotification", customNotificationRoute);

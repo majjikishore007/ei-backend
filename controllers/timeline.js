@@ -210,6 +210,45 @@ exports.getTimelinesForAdminPaginationWise = async (req, res, next) => {
   }
 };
 
+
+exports.getAllTimelinesForAdminPaginationWise = async (req, res, next) => {
+   try {
+     let page = parseInt(req.params.page);
+     let limit = parseInt(req.params.limit);
+     let timeline = await Timeline.find()
+     .populate('timelineTopic')
+     .populate({
+      path: "articles",
+      populate: {
+        path: "publisher",
+        model: "Publisher",
+      },
+    }).populate({
+      path: "audio",
+      populate: {
+        path: "publisher",
+        model: "Publisher",
+      },
+    }).populate({
+      path: "video",
+      populate: {
+        path: "publisher",
+        model: "Publisher",
+      },
+    })
+       .skip(page * limit)
+       .limit(limit);
+       
+     
+      res.status(200).json({ success: true, data: timeline });
+     
+
+   } catch (error) {
+     res.status(500).json({ success: false, error });
+   }
+ };
+
+
 /** api controllers for newsfeed fetch section */
 
 exports.getNextbatchArticles = async (req, res, next) => {

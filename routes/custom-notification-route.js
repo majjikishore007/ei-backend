@@ -15,6 +15,7 @@ const {
   pushExistingNotification,
   updateNotificationById,
   deleteNotificationById,
+  getArticlesByCategoryFilterPagination,
 } = require("../controllers/customnotification");
 
 /**
@@ -61,12 +62,29 @@ router.get(
 router.get("/notificationId/:id", checkAuth, getSingleNotification);
 
 /**
+ * @description   this route is used to fetch articles for category
+ * @route   GET      /api/customnotification/getArticles/category/:categorySearch/page/:page/limit/:limit/device/:device
+ * @access  Private
+ */
+
+router.get(
+  "/getArticles/category/:categorySearch/page/:page/limit/:limit/device/:device",
+  getArticlesByCategoryFilterPagination
+);
+
+/**
  * @description   this route is used to create custom notification and push that notification
  * @route   POST      /api/customnotification
  * @access admin
  * @access  Private
  */
-router.post("/", checkAuthAdmin, createNotification);
+router.post(
+  "/",
+  checkAuthAdmin,
+  images.multer.single("thumbnail"),
+  images.sendUploadToGCS,
+  createNotification
+);
 
 /**
  * @description   this route is used to upload custom notification thumbnail

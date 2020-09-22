@@ -1,4 +1,6 @@
 const View = require("../models/view");
+const Article = require("../models/article");
+const Publisher = require("../models/publisher");
 const mongoose = require("mongoose");
 
 exports.saveView = async (req, res, next) => {
@@ -10,7 +12,7 @@ exports.saveView = async (req, res, next) => {
       date: Date.now(),
     });
     await view.save();
-    res.status(200).json({ success: true, message: "Page view" });
+    res.status(200).json({ success: true, message: "Page viewed" });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }
@@ -66,6 +68,110 @@ exports.aggregateByArticleId = async (req, res, next) => {
     } else {
       res.status(200).json({ success: false, data: 0 });
     }
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getViewArticleByUser = async (req, res, next) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
+    let articleViews = await View.aggregate([
+      {
+        $match: {
+          user: mongoose.Types.ObjectId(req.userData.userId),
+        },
+      },
+      {
+        $sort: { _id: -1 },
+      },
+      {
+        $skip: page * limit,
+      },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: Article.collection.name,
+          let: { articleId: "$article" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$_id", "$$articleId"],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: Publisher.collection.name,
+                localField: "publisher",
+                foreignField: "_id",
+                as: "publisherData",
+              },
+            },
+            { $unwind: "$publisherData" },
+            {
+              $project: {
+                title: 1,
+                description: 1,
+                price: 1,
+                author: 1,
+                cover: 1,
+                publisher: "$publisherData",
+                website: 1,
+                category: 1,
+                time: 1,
+                date: "$publishingDate",
+                id: "$_id",
+                _id: 0,
+                lan: 1,
+                urlStr: 1,
+                public: 1,
+                altImage: 1,
+                seo: 1,
+                publisherId: "$publisherData._id" ? "$publisherData._id" : null,
+              },
+            },
+          ],
+          as: "articleData",
+        },
+      },
+      { $unwind: "$articleData" },
+      {
+        $project: {
+          value: 1,
+          article: "$articleData",
+          date: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json({ success: true, data: articleViews });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getAllViews = async (req, res, next) => {
+  try {
+    let page = parseInt(req.params.page);
+    let limit = parseInt(req.params.limit);
+
+    let articleViews = await View.find({})
+      .sort({ _id: -1 })
+      .skip(page * limit)
+      .limit(limit)
+      .populate({
+        path: "article",
+        populate: {
+          path: "publisher",
+          model: "Publisher",
+        },
+      });
+    res.status(200).json({ success: true, data: articleViews });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

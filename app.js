@@ -188,6 +188,15 @@ cron.schedule("0 0 */3 * * *", () => {
   require("./util/newsfeed").saveNewsfeedForWebsite();
 });
 
+/**cron job for checking users who are being expires n next 2 days
+ * and also those users who are being expire on current date
+ * send email to them
+ * run this block of code at 11 AM everyday
+ */
+// cron.schedule("0 11 * * *", () => {
+//   require("./notification/emailNotify").sendExpireNotificationMail();
+// });
+
 //Start Server: Listen on port 8080
 let server = app.listen(port, () => {
   console.log("Listening on port 8080");

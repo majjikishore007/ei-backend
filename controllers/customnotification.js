@@ -136,6 +136,12 @@ exports.getSingleNotification = async (req, res, next) => {
         { allUser: true },
         { userList: mongoose.Types.ObjectId(req.userData.userId) },
       ],
+    }).populate({
+      path: "articleList",
+      populate: {
+        path: "publisher",
+        model: "Publisher",
+      },
     });
     res.status(200).json({ success: true, data });
   } catch (error) {
@@ -182,7 +188,7 @@ exports.createNotification = async (req, res, next) => {
 
     /**push notification to users */
 
-    // await ChangeInUserNotification(newNotification, "custom-notification");
+    await ChangeInUserNotification(newNotification, "custom-notification");
 
     res.status(201).json({
       success: true,

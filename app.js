@@ -116,7 +116,7 @@ app.use("/social", socialMediaLogin);
 app.use("/profile", userPage);
 app.use("/api/article", articleRoute);
 app.use("/api/articletop", articletopRoute);
-app.use("/api/view", view);
+// app.use("/api/view", view);
 app.use("/api/publisher", publisherRoute);
 app.use("/api/payment", paymentRoute);
 app.use("/api/credit", creditRoutes);

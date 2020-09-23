@@ -109,10 +109,25 @@ exports.deleteTimelineDate = async (req, res, next) => {
 exports.getSingleTimelineTopic = async (req, res, next) => {
   try {
     let timelineTopicId = mongoose.Types.ObjectId(req.params.timelineTopic);
-    let timelineTopic = await TimelineTopic.findOne({
-      _id: timelineTopicId,
-    }).populate("keyword", "keyword");
+    let timelineTopic = await TimelineTopic.find({
+      _id : timelineTopicId
+    }).populate("keyword");
     res.status(200).json({ success: true, data: timelineTopic });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.getSingleTimelinedetails = async (req, res, next) => {
+  try {
+    let timelineTopicId = mongoose.Types.ObjectId(req.params.timelineTopic);
+    let timelineTopic = await TimelineTopic.findOne({
+      _id : timelineTopicId
+    }).populate("keyword");
+    let timeline = await Timeline.find({
+      timelineTopic: timelineTopicId,
+    }).populate("timelineTopic");
+    res.status(200).json({ success: true, topic :timelineTopic , data: timeline });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

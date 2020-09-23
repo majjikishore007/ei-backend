@@ -7,7 +7,7 @@ const {
   editTimelineForDateWithTimeineTopicId,
   deleteTimelineTopic,
   deleteTimelineDate,
-  getSingleTimelineTopic,
+  getSingleTimelinedetails,
   getSingleTimelineData,
   getTimelinesForAdminPaginationWise,
   getAllTimelinesForAdminPaginationWise,
@@ -60,12 +60,12 @@ router.delete("/:timelineTopicId", checkAuthAdmin, deleteTimelineTopic);
 router.delete("/:timelineTopicId/:date", checkAuthAdmin, deleteTimelineDate);
 
 /**
- * @description   this route is used to get single timeline topic details
+ * @description   this route is used to get single timeline  details
  * @param timelineTopic - timelineTopicId
  * @route   GET      /api/timeline/:timelineTopic
  * @access  Private(admin)
  */
-router.get("/:timelineTopic", checkAuthAdmin, getSingleTimelineTopic);
+router.get("/:timelineTopic", checkAuthAdmin, getSingleTimelinedetails);
 
 /**
  * @description   this route is used to get single timeline topic with timeline dates

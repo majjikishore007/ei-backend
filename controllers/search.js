@@ -206,6 +206,29 @@ exports.getSearchResultForSearch = async (req, res, next) => {
       });
     });
 
+    /**author wise result */
+    let articlByAuthor = Article.aggregate([
+      { $match: { author: new RegExp(strippedText, "i") } },
+      { $sort: { _id: -1 } },
+      { $skip: page * limit },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: Publisher.collection.name,
+          localField: "publisher",
+          foreignField: "_id",
+          as: "publisherData",
+        },
+      },
+      { $unwind: "$publisherData" },
+    ]);
+
+    articlByAuthor.then((response) => {
+      eventEmitter.emit("searching", {
+        authorArticles: response,
+      });
+    });
+
     res.status(200).json({
       success: true,
       data: {
@@ -337,6 +360,32 @@ exports.getSearchResourceOnly = async (req, res, next) => {
       result = await Video.aggregate([
         { $match: { $text: { $search: strippedText } } },
         { $sort: { score: { $meta: "textScore" } } },
+        { $sort: { _id: -1 } },
+        { $skip: page * limit },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: Publisher.collection.name,
+            localField: "publisher",
+            foreignField: "_id",
+            as: "publisherData",
+          },
+        },
+        { $unwind: "$publisherData" },
+      ]);
+    }
+
+    if (req.params.resource == "articleByauthor") {
+      /**article result */
+      result = await Article.aggregate([
+        {
+          $match: {
+            $and: [
+              { author: new RegExp(strippedText, "i") },
+              { $or: [{ device: "both" }, { device: req.params.device }] },
+            ],
+          },
+        },
         { $sort: { _id: -1 } },
         { $skip: page * limit },
         { $limit: limit },

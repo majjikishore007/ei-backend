@@ -5,6 +5,8 @@ const Payment = require("../models/payment");
 const Credit = require("../models/credit");
 const User = require("../models/user");
 
+const { paymentAckMail } = require("../notification/emailNotify");
+
 var instance = new razorpay({
   key_id: config.keys.razorpay.keyId,
   key_secret: config.keys.razorpay.keySecret,
@@ -219,6 +221,8 @@ exports.paymentCallbackWithOrderIdToSubscribe = async (req, res, next) => {
           { $set: update_user },
           { new: true }
         );
+
+        // await paymentAckMail(result.userId);
 
         res.json({
           success: true,

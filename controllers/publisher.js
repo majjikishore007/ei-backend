@@ -45,6 +45,9 @@ exports.createNewPublisher = async (req, res, next) => {
       zip: req.body.zip,
       logo: req.file.cloudStoragePublicUrl,
       userId: req.userData.userId,
+      urlStr: req.body.name
+        .trim()
+        .replace(/[&\/\\#, +()$~%.'":;*?<>{}]+/gi, "-"),
     };
     if (req.body.feedurl) {
       obj.feedurl = req.body.feedurl;

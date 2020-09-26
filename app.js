@@ -76,6 +76,7 @@ const PushnotificationRoute = require("./routes/push-notification");
 const TimelineRoute = require("./routes/timeline");
 const PlaylistRoute = require("./routes/playlist-route");
 const customNotificationRoute = require("./routes/custom-notification-route");
+const authorPageRoute = require("./routes/author-page");
 
 mongoose.Promise = global.Promise;
 mongoose.connect(
@@ -172,6 +173,9 @@ app.use("/api/playlist", PlaylistRoute);
 /**custom notification */
 app.use("/api/customnotification", customNotificationRoute);
 
+/**author page */
+app.use("/api/authorPage", authorPageRoute);
+
 //Connect server to Angular index.html file
 app.get("*", (req, res) => {
   res.json("invalid");
@@ -187,6 +191,15 @@ cron.schedule("0 0 */3 * * *", () => {
   require("./util/newsfeed").saveNewsfeedForMobile();
   require("./util/newsfeed").saveNewsfeedForWebsite();
 });
+
+/**cron job for checking users who are being expires n next 2 days
+ * and also those users who are being expire on current date
+ * send email to them
+ * run this block of code at 11 AM everyday
+ */
+// cron.schedule("0 11 * * *", () => {
+//   require("./notification/emailNotify").sendExpireNotificationMail();
+// });
 
 //Start Server: Listen on port 8080
 let server = app.listen(port, () => {

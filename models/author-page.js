@@ -31,5 +31,6 @@ const authorPageSchema = new Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 authorPageSchema.index({ name: 1 });
+authorPageSchema.index({ urlStr: 1 });
 
 module.exports = mongoose.model("AuthorPage", authorPageSchema);

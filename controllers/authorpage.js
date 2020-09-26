@@ -25,13 +25,25 @@ exports.createNewAuthorPage = async (req, res, next) => {
         new Date().valueOf(),
     });
     let authorPage = await newAuthorPage.save();
+    let insertedObj = await AuthorPage.findOne({
+      urlStr: authorPage.urlStr,
+    })
+      .populate({
+        path: "articleList",
+        populate: {
+          path: "publisher",
+          model: "Publisher",
+        },
+      })
+      .populate("claims.claimByUser")
+      .populate("authorizedUser");
+
     res.status(201).json({
       success: true,
       message: "Author Page Created",
-      data: authorPage,
+      data: insertedObj,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ success: false, error });
   }
 };
@@ -59,14 +71,23 @@ exports.updateInfoWithUrlStr = async (req, res, next) => {
   try {
     let updatedPageInfo = await AuthorPage.findOneAndUpdate(
       {
-        urlStr: req.param.urlStr,
+        urlStr: req.params.urlStr,
         authorizedUser: req.userData.userId,
       },
       {
         $set: req.body,
       },
       { new: true }
-    );
+    )
+      .populate({
+        path: "articleList",
+        populate: {
+          path: "publisher",
+          model: "Publisher",
+        },
+      })
+      .populate("claims.claimByUser")
+      .populate("authorizedUser");
     res.status(200).json({
       success: true,
       message: "Author Page Updated",
@@ -79,17 +100,22 @@ exports.updateInfoWithUrlStr = async (req, res, next) => {
 
 exports.claimRequestAuthorPage = async (req, res, next) => {
   try {
-    let exist = await AuthorPage.findOne({ urlStr: req.param.urlStr });
-    exist.claims.push({
+    let temp = [];
+    let exist = await AuthorPage.findOne({ urlStr: req.params.urlStr });
+    let obj = {
       claimByUser: req.userData.userId,
       claimingDocumentType: req.body.claimingDocumentType,
       claimingDocument: req.body.claimingDocument,
-    });
+    };
+    if (exist.claims) {
+      temp = [...exist.claims];
+      temp.push(obj);
+    }
 
     let updatedPageInfo = await AuthorPage.findOneAndUpdate(
       {
         $and: [
-          { urlStr: req.param.urlStr },
+          { urlStr: req.params.urlStr },
           {
             $or: [
               { claimStatus: "NONE" },
@@ -101,11 +127,20 @@ exports.claimRequestAuthorPage = async (req, res, next) => {
       {
         $set: {
           claimStatus: "UNDER_VERIFICATION",
-          claims: exist.claims,
+          claims: temp,
         },
       },
       { new: true }
-    );
+    )
+      .populate({
+        path: "articleList",
+        populate: {
+          path: "publisher",
+          model: "Publisher",
+        },
+      })
+      .populate("claims.claimByUser")
+      .populate("authorizedUser");
     res.status(200).json({
       success: true,
       message: "Author Page Updated",
@@ -124,7 +159,16 @@ exports.getAllAuthorPagePagination = async (req, res, next) => {
     let pages = await AuthorPage.find()
       .sort({ _id: -1 })
       .skip(page * limit)
-      .limit(limit);
+      .limit(limit)
+      .populate({
+        path: "articleList",
+        populate: {
+          path: "publisher",
+          model: "Publisher",
+        },
+      })
+      .populate("claims.claimByUser")
+      .populate("authorizedUser");
     res.status(200).json({ success: true, data: pages });
   } catch (error) {
     res.status(500).json({ success: false, error });
@@ -141,7 +185,16 @@ exports.viewClaimsAuthorPagepagination = async (req, res, next) => {
     })
       .sort({ _id: -1 })
       .skip(page * limit)
-      .limit(limit);
+      .limit(limit)
+      .populate({
+        path: "articleList",
+        populate: {
+          path: "publisher",
+          model: "Publisher",
+        },
+      })
+      .populate("claims.claimByUser")
+      .populate("authorizedUser");
     res.status(200).json({ success: true, data: pages });
   } catch (error) {
     res.status(500).json({ success: false, error });
@@ -152,7 +205,7 @@ exports.verifyClaimAuthorPage = async (req, res, next) => {
   try {
     let updatedPageInfo = await AuthorPage.findOneAndUpdate(
       {
-        urlStr: req.param.urlStr,
+        urlStr: req.params.urlStr,
         authorizedUser: req.userData.userId,
       },
       {
@@ -163,12 +216,53 @@ exports.verifyClaimAuthorPage = async (req, res, next) => {
         },
       },
       { new: true }
-    );
+    )
+      .populate({
+        path: "articleList",
+        populate: {
+          path: "publisher",
+          model: "Publisher",
+        },
+      })
+      .populate("claims.claimByUser")
+      .populate("authorizedUser");
     res.status(200).json({
       success: true,
       message: "Author Page Verified & Updated",
       data: updatedPageInfo,
     });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
+exports.checkIfAlreadyClaimed = async (req, res, next) => {
+  try {
+    let exist = await AuthorPage.findOne({
+      $and: [
+        { urlStr: req.params.urlStr },
+        {
+          $or: [{ claimStatus: "NONE" }, { claimStatus: "UNDER_VERIFICATION" }],
+        },
+        {
+          "claims.claimByUser": req.userData.userId,
+        },
+      ],
+    })
+      .populate({
+        path: "articleList",
+        populate: {
+          path: "publisher",
+          model: "Publisher",
+        },
+      })
+      .populate("claims.claimByUser")
+      .populate("authorizedUser");
+    if (exist) {
+      res.status(200).json({ success: true, claimed: true, data: exist });
+    } else {
+      res.status(200).json({ success: true, claimed: false, data: null });
+    }
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

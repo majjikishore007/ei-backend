@@ -133,6 +133,41 @@ exports.getSingleTimelinedetails = async (req, res, next) => {
   }
 };
 
+
+exports.getSingleTimelinedetailswithpopulation = async (req, res, next) => {
+  try {
+    let timelineTopicId = mongoose.Types.ObjectId(req.params.timelineTopic);
+    let timelineTopic = await TimelineTopic.findOne({
+      _id : timelineTopicId
+    }).populate("keyword");
+    let timeline = await Timeline.find({
+      timelineTopic: timelineTopicId,
+    }).populate("timelineTopic")
+    .populate({
+      path: "articles",
+      populate: {
+        path: "publisher",
+        model: "Publisher",
+      },
+    }).populate({
+      path: "audio",
+      populate: {
+        path: "publisher",
+        model: "Publisher",
+      },
+    }).populate({
+      path: "video",
+      populate: {
+        path: "publisher",
+        model: "Publisher",
+      },
+    })
+    res.status(200).json({ success: true, topic :timelineTopic , data: timeline });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
 exports.getSingleTimelineData = async (req, res, next) => {
   try {
     let timelineTopic = mongoose.Types.ObjectId(req.params.timelineTopic);

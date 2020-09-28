@@ -107,7 +107,7 @@ exports.getBlogCommentsForBlogId = async (req, res, next) => {
 
     res.status(200).json({ success: true, data: result });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ success: false, error: error });
   }
 };
@@ -201,7 +201,7 @@ exports.getBlogCommentsPagination = async (req, res, next) => {
       { $match: { blog: mongoose.Types.ObjectId(blogId) } },
       { $sort: { _id: -1 } },
       { $skip: commentPage * commentLimit },
-      { $limit: commentLimit },
+      { $limit: commentLimit + 1 },
       {
         $lookup: {
           from: User.collection.name,
@@ -225,7 +225,7 @@ exports.getBlogCommentsPagination = async (req, res, next) => {
             },
             { $sort: { _id: -1 } },
             { $skip: counterCommentPage * counterCommentLimit },
-            { $limit: counterCommentLimit },
+            { $limit: counterCommentLimit + 1 },
             {
               $lookup: {
                 from: User.collection.name,
@@ -264,9 +264,37 @@ exports.getBlogCommentsPagination = async (req, res, next) => {
           as: "commentVotes",
         },
       },
+      {
+        $project: {
+          moreCounterCommentExist: {
+            $cond: [
+              { $eq: [{ $size: "$counterComments" }, counterCommentLimit + 1] },
+              true,
+              false,
+            ],
+          },
+          counterComments: {
+            $slice: ["$counterComments", 0, counterCommentLimit],
+          },
+          userData: 1,
+          commentVotes: 1,
+          message: 1,
+          blog: 1,
+          updated_at: 1,
+          created_at: 1,
+          user: 1,
+        },
+      },
     ]);
 
-    res.status(200).json({ success: true, data: blogComments });
+    let moreCommentExist =
+      blogComments.length == commentLimit + 1 ? true : false;
+    let response = {
+      success: true,
+      data: blogComments.slice(0, commentLimit),
+      moreCommentExist,
+    };
+    res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ success: false, error: error });
   }
@@ -295,7 +323,7 @@ exports.getBlogCounterCommentsPagination = async (req, res, next) => {
       },
       { $sort: { _id: -1 } },
       { $skip: counterCommentPage * counterCommentLimit },
-      { $limit: counterCommentLimit },
+      { $limit: counterCommentLimit + 1 },
       {
         $lookup: {
           from: User.collection.name,
@@ -306,8 +334,14 @@ exports.getBlogCounterCommentsPagination = async (req, res, next) => {
       },
       { $unwind: "$userData" },
     ]);
-
-    res.status(200).json({ success: true, data: blogCounterComments });
+    let moreCounterCommentExist =
+      blogCounterComments.length == counterCommentLimit + 1 ? true : false;
+    let response = {
+      success: true,
+      data: blogCounterComments.slice(0, counterCommentLimit),
+      moreCounterCommentExist,
+    };
+    res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ success: false, error: error });
   }

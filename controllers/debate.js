@@ -102,7 +102,7 @@ exports.addNewDebate = async (req, res, next) => {
       end_date: req.body.end_date,
       urlStr: req.body.title
         .trim()
-        .replace(/[&\/\\#=, +()$~%.'":;*?<>{}]+/gi, "-"),
+        .replace(/[&\/\\#=, +()$~%.'":;*?!<>{}]+/gi, "-"),
     });
     let result = await debate.save();
     res.status(200).json({ success: true, data: result });

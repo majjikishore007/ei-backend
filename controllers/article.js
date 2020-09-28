@@ -216,7 +216,7 @@ exports.uploadArticleAdmin = async (req, res, next) => {
       },
       urlStr: req.body.title
         .trim()
-        .replace(/[&\/\\#, +()$~%.'":;*?<>{}]+/gi, "-"),
+        .replace(/[&\/\\#, +()$~%.'":;*?!<>{}]+/gi, "-"),
       public: true,
       device: req.body.device,
     });
@@ -272,7 +272,7 @@ exports.uploadArticlePublisher = async (req, res, next) => {
       lan: req.body.lan,
       urlStr: req.body.title
         .trim()
-        .replace(/[&\/\\#=, +()$~%.'":;*?<>{}]+/gi, "-"),
+        .replace(/[&\/\\#=, +()$~%.'":;*?!<>{}]+/gi, "-"),
       device: req.body.device,
     });
     await article.save();

@@ -160,7 +160,7 @@ exports.getDebateCommentsPagination = async (req, res, next) => {
       { $match: { debate: mongoose.Types.ObjectId(debateId) } },
       { $sort: { _id: -1 } },
       { $skip: commentPage * commentLimit },
-      { $limit: commentLimit },
+      { $limit: commentLimit + 1 },
       {
         $lookup: {
           from: User.collection.name,
@@ -184,7 +184,7 @@ exports.getDebateCommentsPagination = async (req, res, next) => {
             },
             { $sort: { _id: -1 } },
             { $skip: counterCommentPage * counterCommentLimit },
-            { $limit: counterCommentLimit },
+            { $limit: counterCommentLimit + 1 },
             {
               $lookup: {
                 from: User.collection.name,
@@ -223,9 +223,39 @@ exports.getDebateCommentsPagination = async (req, res, next) => {
           as: "commentVotes",
         },
       },
+      {
+        $project: {
+          moreCounterCommentExist: {
+            $cond: [
+              { $eq: [{ $size: "$counterComments" }, counterCommentLimit + 1] },
+              true,
+              false,
+            ],
+          },
+          counterComments: {
+            $slice: ["$counterComments", 0, counterCommentLimit],
+          },
+          userData: 1,
+          commentVotes: 1,
+          message: 1,
+          debate: 1,
+          updated_at: 1,
+          created_at: 1,
+          type: 1,
+          user: 1,
+        },
+      },
     ]);
 
-    res.status(200).json({ success: true, data: debateComments });
+    let moreCommentExist =
+      debateComments.length == commentLimit + 1 ? true : false;
+    let response = {
+      success: true,
+      data: debateComments.slice(0, commentLimit),
+      moreCommentExist,
+    };
+
+    res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ success: false, error: error });
   }
@@ -254,7 +284,7 @@ exports.getDebateCounterCommentsPagination = async (req, res, next) => {
       },
       { $sort: { _id: -1 } },
       { $skip: counterCommentPage * counterCommentLimit },
-      { $limit: counterCommentLimit },
+      { $limit: counterCommentLimit + 1 },
       {
         $lookup: {
           from: User.collection.name,
@@ -266,7 +296,14 @@ exports.getDebateCounterCommentsPagination = async (req, res, next) => {
       { $unwind: "$userData" },
     ]);
 
-    res.status(200).json({ success: true, data: debateCounterComments });
+    let moreCounterCommentExist =
+      debateCounterComments.length == counterCommentLimit + 1 ? true : false;
+    let response = {
+      success: true,
+      data: debateCounterComments.slice(0, counterCommentLimit),
+      moreCounterCommentExist,
+    };
+    res.status(200).json(response);
   } catch (error) {
     res.status(500).json({ success: false, error: error });
   }

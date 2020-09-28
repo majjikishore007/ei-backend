@@ -54,7 +54,7 @@ exports.addNewTopic = async (req, res, next) => {
       user: req.userData.userId,
       urlStr: req.body.title
         .trim()
-        .replace(/[&\/\\#=, +()$~%.'":;*?<>{}]+/gi, "-"),
+        .replace(/[&\/\\#=, +()$~%.'":;*?!<>{}]+/gi, "-"),
     });
     let addedTopic = await topic.save();
     res.status(200).json({ success: true, data: addedTopic });

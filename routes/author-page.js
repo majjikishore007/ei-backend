@@ -9,6 +9,7 @@ const checkAuth = require("../middleware/check-auth");
  */
 const {
   createNewAuthorPage,
+  getArticlesByAuthorFilter,
   uploadImage,
   updateInfoWithUrlStr,
   claimRequestAuthorPage,
@@ -66,6 +67,18 @@ router.get(
   "/all/page/:page/limit/:limit",
   checkAuthAdmin,
   getAllAuthorPagePagination
+);
+
+/**
+ * @description   this route is used to get articles by author filter
+ * @access all
+ * @route   GET      /api/authorpage/:authorSearch
+ * @access  Public
+ */
+router.get(
+  "/:authorSearch",
+ 
+  getArticlesByAuthorFilter,
 );
 
 /**

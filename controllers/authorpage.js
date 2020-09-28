@@ -1,5 +1,5 @@
 const AuthorPage = require("../models/author-page");
-
+const Article = require("../models/article");
 const mongoose = require("mongoose");
 
 exports.createNewAuthorPage = async (req, res, next) => {
@@ -44,9 +44,53 @@ exports.createNewAuthorPage = async (req, res, next) => {
       data: insertedObj,
     });
   } catch (error) {
+    console.log(error)
     res.status(500).json({ success: false, error });
   }
 };
+
+
+exports.getArticlesByAuthorFilter = async (req, res, next) => {
+  try {
+    const author = req.params.authorSearch;
+    let articles = await Article.find({
+      author: new RegExp(author, "i"),
+      public: true,
+      $or: [{ device: "both" }, { device: req.params.device }],
+    })
+      .sort({ _id: -1 })
+      .limit(5)
+      .populate("publisher");
+
+    let restructuredResult = articles.map((doc) => {
+      return {
+        id:doc._id ,
+        title: doc.title,
+        description: doc.description,
+        price: doc.price,
+        author: doc.author,
+        cover: doc.cover,
+        publisher: doc.publisher,
+        website: doc.website,
+        category: doc.category,
+        time: doc.time,
+        date: doc.publishingDate,
+        id: doc._id,
+        lan: doc.lan,
+        urlStr: doc.urlStr,
+        public: doc.public,
+        altImage: doc.altImage,
+        seo: doc.seo,
+        publisherId: doc.publisher ? doc.publisher._id : null,
+      };
+    });
+
+    res.status(200).json({ success: true, data: restructuredResult });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
+
 
 exports.uploadImage = async (req, res, next) => {
   try {

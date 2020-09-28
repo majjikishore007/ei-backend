@@ -54,7 +54,7 @@ exports.saveCartoon = async (req, res, next) => {
       created_at: Date.now(),
       urlStr: req.body.title
         .trim()
-        .replace(/[&\/\\#, +()$~%.'":*?<>{}]+/gi, "-"),
+        .replace(/[&\/\\#, +()$~%.'":*?!<>{}]+/gi, "-"),
     });
     await cartoon.save();
     res.status(201).json({

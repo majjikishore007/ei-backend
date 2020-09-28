@@ -54,7 +54,7 @@ exports.savePdfPublisher = async (req, res, next) => {
       },
       urlStr: req.body.title
         .trim()
-        .replace(/[&\/\\#, +()$~%.'":;*?<>{}]+/gi, "-"),
+        .replace(/[&\/\\#, +()$~%.'":;*?!<>{}]+/gi, "-"),
       public: true,
     });
     await newPdf.save();

@@ -90,7 +90,7 @@ exports.saveBlog = async (req, res, next) => {
       },
       urlStr: req.body.title
         .trim()
-        .replace(/[&\/\\#, +()$~%.'":*?<>{}]+/gi, "-"),
+        .replace(/[&\/\\#, +()$~%.'":*?!<>{}]+/gi, "-"),
     });
     let savedBlog = await blog.save();
     res.status(200).json({ success: true, data: savedBlog });

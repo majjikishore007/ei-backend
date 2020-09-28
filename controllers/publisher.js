@@ -47,7 +47,7 @@ exports.createNewPublisher = async (req, res, next) => {
       userId: req.userData.userId,
       urlStr: req.body.name
         .trim()
-        .replace(/[&\/\\#, +()$~%.'":;*?<>{}]+/gi, "-"),
+        .replace(/[&\/\\#, +()$~%.'":;*?!<>{}]+/gi, "-"),
     };
     if (req.body.feedurl) {
       obj.feedurl = req.body.feedurl;

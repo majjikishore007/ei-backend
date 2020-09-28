@@ -20,7 +20,7 @@ exports.createNewAuthorPage = async (req, res, next) => {
       publisher: req.body.publisher,
       organization: req.body.organization,
       urlStr:
-        req.body.name.trim().replace(/[&\/\\#, +()$~%.'":;*?<>{}]+/gi, "-") +
+        req.body.name.trim().replace(/[&\/\\#, +()$~%.'":;*?!<>{}]+/gi, "-") +
         "-" +
         new Date().valueOf(),
     });

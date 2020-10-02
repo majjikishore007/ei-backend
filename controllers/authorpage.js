@@ -219,6 +219,28 @@ exports.getAllAuthorPagePagination = async (req, res, next) => {
   }
 };
 
+
+exports.getSingleAuthorPage = async (req, res, next) => {
+  try {
+   let urlStr = req.params.urlStr
+
+    let pages = await AuthorPage.findOne({urlStr : urlStr})
+      .sort({ _id: -1 })
+      
+      .populate({
+        path: "articleList",
+        populate: {
+          path: "publisher",
+          model: "Publisher",
+        },
+      })
+      .populate("claims.claimByUser")
+      .populate("authorizedUser");
+    res.status(200).json({ success: true, data: pages });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};
 exports.viewClaimsAuthorPagepagination = async (req, res, next) => {
   try {
     let page = parseInt(req.params.page);

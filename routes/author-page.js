@@ -14,6 +14,7 @@ const {
   updateInfoWithUrlStr,
   claimRequestAuthorPage,
   getAllAuthorPagePagination,
+  getSingleAuthorPage,
   viewClaimsAuthorPagepagination,
   verifyClaimAuthorPage,
   checkIfAlreadyClaimed,
@@ -67,6 +68,18 @@ router.get(
   "/all/page/:page/limit/:limit",
   checkAuthAdmin,
   getAllAuthorPagePagination
+);
+
+/**
+ * @description   this route is used to get author page by urlstr
+ * @access all
+ * @route   GET      /api/authorpage/:urlStr
+ * @access  Public
+ */
+router.get(
+  "/:urlStr",
+  
+  getSingleAuthorPage
 );
 
 /**

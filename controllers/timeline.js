@@ -40,7 +40,7 @@ exports.editTimelineTopicDetails = async (req, res, next) => {
   try {
     let timelineTopicId = mongoose.Types.ObjectId(req.params.timelineTopicId);
     let date = req.params.date;
-    await TimelineTopic.findOneAndUpdate(
+    await Timeline.findOneAndUpdate(
       {
         _id: timelineTopicId,
       },
@@ -49,7 +49,7 @@ exports.editTimelineTopicDetails = async (req, res, next) => {
     );
     res
       .status(200)
-      .json({ success: true, message: "Timeline Topic details is Updated" });
+      .json({ success: true, message: "Timeline  details is Updated" });
   } catch (error) {
     res.status(500).json({ success: false, error });
   }

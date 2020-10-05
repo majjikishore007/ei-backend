@@ -44,12 +44,12 @@
         src="https://storage.googleapis.com/extra-insights-images/1600855680478BlogBanner_SubscriptionAd.jpg"
         alt="extra insights" />
     <div style="margin-left: 5%; margin-right: 5%">
-        <p>Hi {{userName}},</p>
+        <p>Hi ${userName},</p>
         <p>
             I am Anuj Agarwal, Founder, EXTRA! INSIGHTS! I hope you are enjoying
             EXTRA! INSIGHTS' curation and content on our <a
                 href="https://play.google.com/store/apps/details?id=xyz.extrainsights" target="_blank">App</a> and
-            Website <a href="https://extrainsights.in" target="_blank">EXTRA! Insights.</a> Our curators dig deep into
+            <a href="https://extrainsights.in" target="_blank"> Website.</a> Our curators dig deep into
             the
             internet to
             find the best content out there so that you can spend your time reading,
@@ -59,24 +59,25 @@
         </p>
         <div style="padding-left: 40px">
             <p>
-                Your 7 day trial shall expire on {{expireDate}}. To continue enjoying our
+                Your 7 day trial shall expire on ${expireDate}. To continue enjoying our
                 curation <strong>until 31st December 2020</strong>, please subscribe
                 to EXTRA! INSIGHTS, through a
                 <strong>one time payment of ₹50</strong>.
             </p>
             <form action="https://extrainsights.in/payment" target="_blank">
                 <button type="submit" style="
-              display: block;
-              margin: auto;
-              border: none;
-              border-spacing: 0;
-              border-radius: 25px;
-              height: 40px;
-              background-color: rgb(24, 168, 168);
-              color: white;
-              cursor: pointer;
-            ">
-                    <span>&nbsp; &nbsp; &nbsp; Subscribe Now &nbsp; &nbsp;&nbsp;</span>
+                        display: block;
+                        margin: auto;
+                        border: none;
+                        border-spacing: 0;
+                        border-radius: 25px;
+                        height: 40px;
+                        background-color: rgb(24, 168, 168);
+                        color: white;
+                        cursor: pointer;
+                        outline: 0;
+                      ">
+                    &nbsp; &nbsp; &nbsp; Subscribe Now &nbsp; &nbsp;&nbsp;
                 </button>
             </form>
         </div>

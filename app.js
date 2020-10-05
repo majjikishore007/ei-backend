@@ -197,9 +197,9 @@ cron.schedule("0 0 */3 * * *", () => {
  * send email to them
  * run this block of code at 11 AM everyday
  */
-// cron.schedule("0 11 * * *", () => {
-//   require("./notification/emailNotify").sendExpireNotificationMail();
-// });
+cron.schedule("0 11 * * *", () => {
+  require("./notification/emailNotify").sendExpireNotificationMail();
+});
 
 //Start Server: Listen on port 8080
 let server = app.listen(port, () => {

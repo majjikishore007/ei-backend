@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -44,7 +43,7 @@
         src="https://storage.googleapis.com/extra-insights-images/1600855680478BlogBanner_SubscriptionAd.jpg"
         alt="extra insights" />
     <div style="margin-left: 5%; margin-right: 5%">
-        <p>Hi {{userName}},</p>
+        <p>Hi ${userName},</p>
         <p>I am Anuj Agarwal, Founder, EXTRA! INSIGHTS! Thank you for Subscribing to EXTRA! INSIGHTS. Your subscription
             shall keep our curators looking for the most credible, in-dpth and reliable content for you and shall also
             help the news media industry move away from the broken advertisement based business model towards a more
@@ -52,26 +51,27 @@
         <p>
         <p>I hope you are enjoying EXTRA! INSIGHTS' curation and content on our <a
                 href="https://play.google.com/store/apps/details?id=xyz.extrainsights" target="_blank">App</a> and
-            Website <a href="https://extrainsights.in" target="_blank">EXTRA! Insights</a>. Our curators dig deep into
+            <a href="https://extrainsights.in" target="_blank">Website</a>. Our curators dig deep into
             the internet to find the best content out there so that you can
             spend your time reading, watching, listening and learning, not searching. We strive to be an essential tool
             for you to gain more insights and understand the How & Why behind every What.</p>
 
-        <p>Your subscription is valid till {{expireDate}}.</p>
+        <p>Your subscription is valid till ${expireDate}.</p>
         <div style="padding-left: 40px">
             <form action="https://extrainsights.in" target="_blank">
                 <button type="submit" style="
-              display: block;
-              margin: auto;
-              border: none;
-              border-spacing: 0;
-              border-radius: 25px;
-              height: 40px;
-              background-color: rgb(24, 168, 168);
-              color: white;
-              cursor: pointer;
-            ">
-                    <span>&nbsp; &nbsp; &nbsp; Continue to EXTRA! INSIGHTS &nbsp; &nbsp;&nbsp;</span>
+                      display: block;
+                      margin: auto;
+                      border: none;
+                      border-spacing: 0;
+                      border-radius: 25px;
+                      height: 40px;
+                      background-color: rgb(24, 168, 168);
+                      color: white;
+                      cursor: pointer;
+                      outline:0;
+                    ">
+                    &nbsp; &nbsp; &nbsp; Continue to EXTRA! INSIGHTS &nbsp; &nbsp;&nbsp;
                 </button>
             </form>
         </div>

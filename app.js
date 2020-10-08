@@ -201,6 +201,16 @@ cron.schedule("0 11 * * *", () => {
   require("./notification/emailNotify").sendExpireNotificationMail();
 });
 
+/**cron job for getting trending keywords from twitter at every hour */
+cron.schedule("*/60 * * * *", () => {
+  require("./controllers/twittertrend").collectLatestKeywords();
+});
+
+/**cron job for getting latest tweets for every 6 hour */
+cron.schedule("0 0 */6 * * *", () => {
+  require("./controllers/tweet").insertLatestTweets();
+});
+
 //Start Server: Listen on port 8080
 let server = app.listen(port, () => {
   console.log("Listening on port 8080");

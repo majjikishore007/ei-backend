@@ -77,6 +77,7 @@ const TimelineRoute = require("./routes/timeline");
 const PlaylistRoute = require("./routes/playlist-route");
 const customNotificationRoute = require("./routes/custom-notification-route");
 const authorPageRoute = require("./routes/author-page");
+const keywordRankingRoute = require("./routes/keyword-ranking");
 
 mongoose.Promise = global.Promise;
 mongoose.connect(
@@ -176,6 +177,9 @@ app.use("/api/customnotification", customNotificationRoute);
 /**author page */
 app.use("/api/authorPage", authorPageRoute);
 
+/**keyword ranking */
+app.use("/api/keyword-ranking", keywordRankingRoute);
+
 //Connect server to Angular index.html file
 app.get("*", (req, res) => {
   res.json("invalid");
@@ -210,6 +214,7 @@ cron.schedule("*/60 * * * *", () => {
 cron.schedule("0 0 */6 * * *", () => {
   require("./controllers/tweet").insertLatestTweets();
 });
+
 
 //Start Server: Listen on port 8080
 let server = app.listen(port, () => {

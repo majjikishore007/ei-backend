@@ -764,7 +764,7 @@ exports.NewResourceUploadNotification = async (
         let followers = await Follow.aggregate([
           {
             $match: {
-              publisher: mongoose.Types.ObjectId(event.fullDocument.publisher),
+              publisher: mongoose.Types.ObjectId(event.fullDocument.publisher._id),
             },
           },
           {
@@ -834,9 +834,12 @@ exports.NewResourceUploadNotification = async (
         ]);
         if (results.length > 0) {
           /**create notification data */
+          let catArr = event.fullDocument.category.split(",");
+          let ct = catArr.length >=2? catArr[0] + "," + catArr[1]:catArr[0];
+          let modifiedTitle = event.fullDocument.publisher.name + "|" + ct;
           let notification = {
-            title: event.fullDocument.title,
-            body: event.fullDocument.description,
+            title: modifiedTitle,
+            body: event.fullDocument.title,
             image: event.fullDocument.cover,
           };
           let data = {

@@ -78,6 +78,7 @@ const PlaylistRoute = require("./routes/playlist-route");
 const customNotificationRoute = require("./routes/custom-notification-route");
 const authorPageRoute = require("./routes/author-page");
 const keywordRankingRoute = require("./routes/keyword-ranking");
+const curatorApplicationRoute = require("./routes/curator-application");
 
 mongoose.Promise = global.Promise;
 mongoose.connect(
@@ -179,6 +180,9 @@ app.use("/api/authorPage", authorPageRoute);
 
 /**keyword ranking */
 app.use("/api/keyword-ranking", keywordRankingRoute);
+
+/**curator application */
+app.use('/api/curator-application',curatorApplicationRoute)
 
 //Connect server to Angular index.html file
 app.get("*", (req, res) => {

@@ -14,10 +14,17 @@ exports.createNewAuthorPage = async (req, res, next) => {
       coverImage: req.body.coverImage,
       profilePic: req.body.profilePic,
       bio: req.body.bio,
+      journalist: req.body.journalist,
+      publishers:req.body.publishers,
       website: req.body.website,
+      socialLinks:req.body.socialLinks,
+      speciality:req.body.speciality,
+      categories:req.body.categories,
+      languages:req.body.languages,
+      contactEmailVisible:req.body.contactEmailVisible,
+      associationDetail:req.body.associationDetail,
       articleList: req.body.articleList,
       authorizedUser: req.userData.userId,
-      publisher: req.body.publisher,
       organization: req.body.organization,
       urlStr:
         req.body.name.trim().replace(/[&\/\\#, +()$~%.'":;*?!<>{}]+/gi, "-") +
@@ -28,6 +35,7 @@ exports.createNewAuthorPage = async (req, res, next) => {
     let insertedObj = await AuthorPage.findOne({
       urlStr: authorPage.urlStr,
     })
+    .populate("publishers.existingPublishers")
       .populate({
         path: "articleList",
         populate: {
@@ -123,6 +131,7 @@ exports.updateInfoWithUrlStr = async (req, res, next) => {
       },
       { new: true }
     )
+    .populate("publishers.existingPublishers")
       .populate({
         path: "articleList",
         populate: {
@@ -176,6 +185,7 @@ exports.claimRequestAuthorPage = async (req, res, next) => {
       },
       { new: true }
     )
+    .populate("publishers.existingPublishers")
       .populate({
         path: "articleList",
         populate: {
@@ -204,6 +214,7 @@ exports.getAllAuthorPagePagination = async (req, res, next) => {
       .sort({ _id: -1 })
       .skip(page * limit)
       .limit(limit)
+      .populate("publishers.existingPublishers")
       .populate({
         path: "articleList",
         populate: {
@@ -226,7 +237,7 @@ exports.getSingleAuthorPage = async (req, res, next) => {
 
     let pages = await AuthorPage.findOne({urlStr : urlStr})
       .sort({ _id: -1 })
-      
+      .populate("publishers.existingPublishers")
       .populate({
         path: "articleList",
         populate: {
@@ -252,6 +263,7 @@ exports.viewClaimsAuthorPagepagination = async (req, res, next) => {
       .sort({ _id: -1 })
       .skip(page * limit)
       .limit(limit)
+      .populate("publishers.existingPublishers")
       .populate({
         path: "articleList",
         populate: {
@@ -283,6 +295,7 @@ exports.verifyClaimAuthorPage = async (req, res, next) => {
       },
       { new: true }
     )
+    .populate("publishers.existingPublishers")
       .populate({
         path: "articleList",
         populate: {
@@ -315,6 +328,7 @@ exports.checkIfAlreadyClaimed = async (req, res, next) => {
         },
       ],
     })
+    .populate("publishers.existingPublishers")
       .populate({
         path: "articleList",
         populate: {

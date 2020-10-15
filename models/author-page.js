@@ -9,7 +9,26 @@ const authorPageSchema = new Schema({
   coverImage: { type: String },
   profilePic: { type: String },
   bio: { type: String },
+  journalist:{type:Boolean},
+  publishers:{
+    existingPublishers:[{type: Schema.Types.ObjectId, ref: "Publisher"}],
+    nominatedPublishers:{type:String}
+  },
   website: { type: String },
+  socialLinks:{
+      facebook:{type:String},
+      twitter:{type:String},
+      instagram:{type:String},
+      linkedin:{type:String},
+  },
+  speciality:{type:String},
+  categories:{type:String},
+  languages:{type:String},
+  contactEmailVisible:{type:Boolean},
+  associationDetail:{
+    role:{type:String},
+    university:{type:String}
+  },
   articleList: [{ type: Schema.Types.ObjectId, ref: "Article" }],
   authorizedUser: { type: mongoose.Types.ObjectId, ref: "User" },
   claimStatus: {
@@ -17,7 +36,6 @@ const authorPageSchema = new Schema({
     enum: ["NONE", "UNDER_VERIFICATION", "VERIFIED"],
     default: "NONE",
   },
-  publisher: { type: Schema.Types.ObjectId, ref: "Publisher" },
   organization: { type: String },
   claims: [
     {

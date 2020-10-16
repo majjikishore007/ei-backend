@@ -121,6 +121,9 @@ exports.checkEmailExist = async (req, res, next) => {
 
 exports.changePassword = async (req, res, next) => {
   try {
+    if(req.body.password == ''){
+      return res.status(200).json({success:false, message:"Password is required"})
+    }
     bcrypt.hash(req.body.password, 10, async (err, hash) => {
       if (err) {
         res.status(500).json({ success: false, error: "Hasing error" });

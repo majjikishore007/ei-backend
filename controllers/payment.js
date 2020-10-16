@@ -222,7 +222,8 @@ exports.paymentCallbackWithOrderIdToSubscribe = async (req, res, next) => {
           { new: true }
         );
 
-        // await paymentAckMail(result.userId);
+        /**send user email for payment acknowledgement and information related to subscription */
+        await paymentAckMail(result.userId);
 
         res.json({
           success: true,

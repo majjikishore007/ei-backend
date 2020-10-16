@@ -75,6 +75,6 @@ router.get("/checkMailExisting/:email", checkEmailExist);
  * @route   PATH      /profile/changePassword
  * @access  Private
  */
-router.patch("/changePassword", authCheck, changePassword);
+router.patch("/changePassword",  changePassword);
 
 module.exports = router;

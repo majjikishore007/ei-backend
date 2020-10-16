@@ -77,7 +77,9 @@ const TimelineRoute = require("./routes/timeline");
 const PlaylistRoute = require("./routes/playlist-route");
 const customNotificationRoute = require("./routes/custom-notification-route");
 const authorPageRoute = require("./routes/author-page");
-const media = require("./routes/media");
+const keywordRankingRoute = require("./routes/keyword-ranking");
+const curatorApplicationRoute = require("./routes/curator-application");
+
 mongoose.Promise = global.Promise;
 mongoose.connect(
   config.uri,
@@ -152,7 +154,7 @@ app.use("/api/blogComment", blogCommentRoute);
 app.use("/api/blogCommentVote", blogCommentVoteRoute);
 app.use("/api/blogCounterComment", blogCounterCommentRoute);
 app.use("/api/newsfeed", newsFeed);
-app.use("/api/media", media);
+
 app.use("/api/nominatepublisher", nominatePublisher);
 app.use("/api/newslettersubscribe", newsletterSubscriber);
 app.use("/api/like", likeRoute);
@@ -177,6 +179,12 @@ app.use("/api/customnotification", customNotificationRoute);
 /**author page */
 app.use("/api/authorPage", authorPageRoute);
 
+/**keyword ranking */
+app.use("/api/keyword-ranking", keywordRankingRoute);
+
+/**curator application */
+app.use('/api/curator-application',curatorApplicationRoute)
+
 //Connect server to Angular index.html file
 app.get("*", (req, res) => {
   res.json("invalid");
@@ -198,9 +206,20 @@ cron.schedule("0 0 */3 * * *", () => {
  * send email to them
  * run this block of code at 11 AM everyday
  */
-// cron.schedule("0 11 * * *", () => {
-//   require("./notification/emailNotify").sendExpireNotificationMail();
-// });
+cron.schedule("0 11 * * *", () => {
+  require("./notification/emailNotify").sendExpireNotificationMail();
+});
+
+/**cron job for getting trending keywords from twitter at every hour */
+cron.schedule("*/60 * * * *", () => {
+  require("./controllers/twittertrend").collectLatestKeywords();
+});
+
+/**cron job for getting latest tweets for every 6 hour */
+cron.schedule("0 0 */6 * * *", () => {
+  require("./controllers/tweet").insertLatestTweets();
+});
+
 
 //Start Server: Listen on port 8080
 let server = app.listen(port, () => {

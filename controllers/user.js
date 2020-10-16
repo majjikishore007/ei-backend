@@ -131,7 +131,7 @@ exports.changePassword = async (req, res, next) => {
           password: hash,
           role: { subscriber: true, author: false, admin: false },
         };
-        await User.updateOne({ _id: req.userData.userId }, { $set: data });
+        await User.updateOne({ token: req.body.token }, { $set: data });
 
         res
           .status(200)

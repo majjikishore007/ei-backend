@@ -221,12 +221,14 @@ exports.uploadArticleAdmin = async (req, res, next) => {
       device: req.body.device,
     });
     let uploadedArticle = await article.save();
+
+    let articleData = await Article.findOne({_id:uploadedArticle._id}).populate('publisher');
     /**for collecting keywords from categories */
     if (req.body.category) {
       await addToDatabase(req.body.category);
     }
     /**to send notification while uploading article */
-    await NewResourceUploadNotification(uploadedArticle, "article");
+    await NewResourceUploadNotification(articleData, "article");
     res.status(201).json({
       success: true,
       message: "article has been submitted",

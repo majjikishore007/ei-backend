@@ -176,3 +176,12 @@ exports.getAllViews = async (req, res, next) => {
     res.status(500).json({ success: false, error });
   }
 };
+
+exports.getTotalViewCount =  async (req, res, next) => {
+  try {
+    let totalViewCount = await View.countDocuments({})
+    res.status(200).json({ success: true, data: totalViewCount });
+  } catch (error) {
+    res.status(500).json({ success: false, error });
+  }
+};

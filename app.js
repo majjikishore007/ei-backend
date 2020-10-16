@@ -80,6 +80,7 @@ const authorPageRoute = require("./routes/author-page");
 const keywordRankingRoute = require("./routes/keyword-ranking");
 const curatorApplicationRoute = require("./routes/curator-application");
 const curatorPageRoute = require("./routes/curator-page");
+const publisherAnalyticsRoute = require("./routes/publisher-analytics");
 
 mongoose.Promise = global.Promise;
 mongoose.connect(
@@ -188,6 +189,9 @@ app.use('/api/curator-application',curatorApplicationRoute)
 
 /**curator page */
 app.use('/api/curatorpage',curatorPageRoute)
+
+/**publisher analytics page */
+app.use('/api/publisher-analytics',publisherAnalyticsRoute)
 
 //Connect server to Angular index.html file
 app.get("*", (req, res) => {

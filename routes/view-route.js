@@ -7,9 +7,12 @@ const {
   getViewByArticleId,
   aggregateByArticleId,
   getViewArticleByUser,
+  getTotalViewCount
 } = require("../controllers/view");
 
 router.post("/", checkAuth, saveView);
+
+router.get('/totalCount',getTotalViewCount);
 
 router.get("/article/:id", getViewByArticleId);
 

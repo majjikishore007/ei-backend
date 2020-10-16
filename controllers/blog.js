@@ -1,5 +1,6 @@
 const Blog = require("../models/blog");
 const mongoose = require("mongoose");
+const urlify = require('../util/util')
 
 exports.getAllBlogPosts = async (req, res, next) => {
   try {
@@ -88,9 +89,7 @@ exports.saveBlog = async (req, res, next) => {
         metaKeywords: req.body.metaKeywords,
         metaDescription: req.body.metaDescription,
       },
-      urlStr: req.body.title
-        .trim()
-        .replace(/[&\/\\#, +()$~%.'":*?!<>{}]+/gi, "-"),
+      urlStr: urlify(req.body.title),
     });
     let savedBlog = await blog.save();
     res.status(200).json({ success: true, data: savedBlog });

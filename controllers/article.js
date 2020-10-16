@@ -12,6 +12,7 @@ const {
 } = require("../notification/collection-watch");
 
 const mongoose = require("mongoose");
+const urlify = require('../util/util');
 
 exports.getInitialArticles = async (req, res, next) => {
   try {
@@ -214,9 +215,7 @@ exports.uploadArticleAdmin = async (req, res, next) => {
         metaDescription: req.body.metaDescription,
         metaKeywords: req.body.metaKeywords,
       },
-      urlStr: req.body.title
-        .trim()
-        .replace(/[&\/\\#, +()$~%.'":;*?!<>{}]+/gi, "-"),
+      urlStr: urlify(req.body.title),
       public: true,
       device: req.body.device,
     });
@@ -272,9 +271,7 @@ exports.uploadArticlePublisher = async (req, res, next) => {
       publishingDate: req.body.publishingDate,
       created_at: Date.now(),
       lan: req.body.lan,
-      urlStr: req.body.title
-        .trim()
-        .replace(/[&\/\\#=, +()$~%.'":;*?!<>{}]+/gi, "-"),
+      urlStr: urlify(req.body.title),
       device: req.body.device,
     });
     await article.save();

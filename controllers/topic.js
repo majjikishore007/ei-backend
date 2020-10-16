@@ -1,5 +1,6 @@
 const Topic = require("../models/topic");
 const Article = require("../models/article");
+const urlify = require('../util/util')
 
 exports.getAllTopics = async (req, res, next) => {
   try {
@@ -52,9 +53,7 @@ exports.addNewTopic = async (req, res, next) => {
       cover: req.file.cloudStoragePublicUrl,
       keywords: req.body.keywords,
       user: req.userData.userId,
-      urlStr: req.body.title
-        .trim()
-        .replace(/[&\/\\#=, +()$~%.'":;*?!<>{}]+/gi, "-"),
+      urlStr: urlify(req.body.title),
     });
     let addedTopic = await topic.save();
     res.status(200).json({ success: true, data: addedTopic });

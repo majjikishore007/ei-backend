@@ -1,6 +1,7 @@
 const Pdf = require("../models/pdf");
 const Publisher = require("../models/publisher");
 const mongoose = require("mongoose");
+const urlify = require('../util/util')
 
 const { addToDatabase } = require("./keyword");
 
@@ -52,9 +53,7 @@ exports.savePdfPublisher = async (req, res, next) => {
           ? req.body.metaKeywords
           : req.body.category,
       },
-      urlStr: req.body.title
-        .trim()
-        .replace(/[&\/\\#, +()$~%.'":;*?!<>{}]+/gi, "-"),
+      urlStr: urlify(req.body.title),
       public: true,
     });
     await newPdf.save();

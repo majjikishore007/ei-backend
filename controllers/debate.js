@@ -1,6 +1,7 @@
 const Debate = require("../models/debate");
 const authCheck = require("../middleware/check-auth");
 const Article = require("../models/article");
+const urlify = require('../util/util')
 
 exports.getAllDebates = async (req, res, next) => {
   try {
@@ -100,9 +101,7 @@ exports.addNewDebate = async (req, res, next) => {
       moderator: req.userData.userId,
       start_date: req.body.start_date,
       end_date: req.body.end_date,
-      urlStr: req.body.title
-        .trim()
-        .replace(/[&\/\\#=, +()$~%.'":;*?!<>{}]+/gi, "-"),
+      urlStr: urlify(req.body.title),
     });
     let result = await debate.save();
     res.status(200).json({ success: true, data: result });

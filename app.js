@@ -77,7 +77,7 @@ const TimelineRoute = require("./routes/timeline");
 const PlaylistRoute = require("./routes/playlist-route");
 const customNotificationRoute = require("./routes/custom-notification-route");
 const authorPageRoute = require("./routes/author-page");
-
+const media = require("./routes/media");
 mongoose.Promise = global.Promise;
 mongoose.connect(
   config.uri,
@@ -152,6 +152,7 @@ app.use("/api/blogComment", blogCommentRoute);
 app.use("/api/blogCommentVote", blogCommentVoteRoute);
 app.use("/api/blogCounterComment", blogCounterCommentRoute);
 app.use("/api/newsfeed", newsFeed);
+app.use("/api/media", media);
 app.use("/api/nominatepublisher", nominatePublisher);
 app.use("/api/newslettersubscribe", newsletterSubscriber);
 app.use("/api/like", likeRoute);

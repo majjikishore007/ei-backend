@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const { getVideoDurationInSeconds } = require("get-video-duration");
 
 const { addToDatabase } = require("./keyword");
+const urlify = require('../util/util')
 
 exports.getVideosPageWiseLimitWise = async (req, res, next) => {
   try {
@@ -56,9 +57,7 @@ exports.saveVideoPublisher = async (req, res, next) => {
           ? req.body.metaKeywords
           : req.body.category,
       },
-      urlStr: req.body.title
-        .trim()
-        .replace(/[&\/\\#, +()$~%.'":;*?!<>{}]+/gi, "-"),
+      urlStr: urlify(req.body.title),
       public: true,
     });
     await video.save();

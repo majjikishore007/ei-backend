@@ -1,5 +1,6 @@
 const Cartoon = require("../models/cartoon");
 const mongoose = require("mongoose");
+const urlify = require('../util/util')
 
 exports.getInitialcartoons = async (req, res, next) => {
   try {
@@ -52,9 +53,7 @@ exports.saveCartoon = async (req, res, next) => {
       date: req.body.date,
       updated_at: Date.now(),
       created_at: Date.now(),
-      urlStr: req.body.title
-        .trim()
-        .replace(/[&\/\\#, +()$~%.'":*?!<>{}]+/gi, "-"),
+      urlStr: urlify(req.body.title),
     });
     await cartoon.save();
     res.status(201).json({

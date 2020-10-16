@@ -41,6 +41,7 @@
     "socket.io": "^2.3.0",
     "stopword": "^1.0.1",
     "string-similarity": "^4.0.2",
-    "twitter-woeid": "^1.0.2"
+    "twitter-woeid": "^1.0.2",
+    "urlify": "^0.3.6"
   }
 }

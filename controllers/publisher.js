@@ -2,6 +2,7 @@ const Publisher = require("../models/publisher");
 const Article = require("../models/article");
 const Follow = require("../models/follow");
 const mongoose = require("mongoose");
+const urlify = require('../util/util')
 
 exports.getPublishers = async (req, res, next) => {
   try {
@@ -45,9 +46,7 @@ exports.createNewPublisher = async (req, res, next) => {
       zip: req.body.zip,
       logo: req.file.cloudStoragePublicUrl,
       userId: req.userData.userId,
-      urlStr: req.body.name
-        .trim()
-        .replace(/[&\/\\#, +()$~%.'":;*?!<>{}]+/gi, "-"),
+      urlStr: urlify(req.body.name),
     };
     if (req.body.feedurl) {
       obj.feedurl = req.body.feedurl;

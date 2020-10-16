@@ -1,6 +1,7 @@
 const AuthorPage = require("../models/author-page");
 const Article = require("../models/article");
 const mongoose = require("mongoose");
+const urlify = require('../util/util')
 
 exports.createNewAuthorPage = async (req, res, next) => {
   try {
@@ -26,8 +27,7 @@ exports.createNewAuthorPage = async (req, res, next) => {
       articleList: req.body.articleList,
       authorizedUser: req.userData.userId,
       organization: req.body.organization,
-      urlStr:
-        req.body.name.trim().replace(/[&\/\\#, +()$~%.'":;*?!<>{}]+/gi, "-") +
+      urlStr:urlify(req.body.name) +
         "-" +
         new Date().valueOf(),
     });

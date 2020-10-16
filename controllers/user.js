@@ -126,10 +126,10 @@ exports.changePassword = async (req, res, next) => {
         res.status(500).json({ success: false, error: "Hasing error" });
       } else {
         const data = {
-          displayName: req.body.displayName,
-          phone: req.body.phone,
+          //displayName: req.body.displayName,
+         // phone: req.body.phone,
           password: hash,
-          role: { subscriber: true, author: false, admin: false },
+         // role: { subscriber: true, author: false, admin: false },
         };
         await User.updateOne({ token: req.body.token }, { $set: data });
 
